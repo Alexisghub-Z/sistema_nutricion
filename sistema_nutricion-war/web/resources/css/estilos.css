@@ -1,0 +1,141 @@
+/* ==========================================================
+   Estilos del sistema de nutrición (sobre el tema aristo de PrimeFaces 5)
+   ========================================================== */
+:root {
+    --verde: #2f855a;
+    --verde-oscuro: #22543d;
+    --verde-claro: #f0fff4;
+    --texto: #1f2933;
+    --texto-suave: #616e7c;
+    --borde: #e4e7eb;
+    --fondo: #f5f7f6;
+    --blanco: #ffffff;
+    --rojo: #c53030;
+    --radio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    color: var(--texto);
+    background: var(--fondo);
+}
+
+h1 { font-size: 26px; margin: 0 0 16px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+a { color: var(--verde); }
+
+/* Los componentes de PrimeFaces heredan la tipografía de la página */
+.ui-widget, .ui-widget .ui-widget, .ui-widget input, .ui-widget select,
+.ui-widget textarea, .ui-widget button { font-family: inherit; font-size: 14px; }
+
+/* ---------- top ---------- */
+#top { background: var(--blanco); border-bottom: 1px solid var(--borde); }
+.barra {
+    max-width: 1200px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--texto); font-size: 20px; }
+.marca strong { color: var(--verde); }
+.marca-logo { width: 34px; height: 34px; }
+.nav-publica { display: flex; gap: 18px; flex-wrap: wrap; }
+.nav-publica a { text-decoration: none; color: var(--texto-suave); font-weight: 500; }
+.nav-publica a:hover { color: var(--verde); }
+.nav-publica .nav-acceso { color: var(--verde); }
+.sesion { display: flex; align-items: center; gap: 12px; }
+.sesion-nombre { color: var(--texto-suave); }
+
+/* ---------- content ---------- */
+.center_content { max-width: 1200px; margin: 0 auto; padding: 28px 20px; min-height: calc(100vh - 140px); }
+
+/* Panel: menú lateral + contenido */
+#cuerpo { display: flex; min-height: calc(100vh - 120px); }
+#menu { width: 220px; flex-shrink: 0; background: var(--blanco); border-right: 1px solid var(--borde); padding: 20px 12px; }
+.panel .center_content { flex: 1; max-width: none; margin: 0; min-width: 0; }
+.menu-lateral { display: flex; flex-direction: column; gap: 4px; }
+.menu-lateral a {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    text-decoration: none; color: var(--texto); font-weight: 500;
+}
+.menu-lateral a:hover { background: var(--fondo); }
+.menu-lateral a.activo { background: var(--verde-claro); color: var(--verde-oscuro); }
+.menu-lateral .ico { width: 20px; text-align: center; color: var(--verde); }
+
+/* ---------- bottom ---------- */
+#bottom { background: var(--verde-oscuro); color: #c6f6d5; }
+.pie {
+    max-width: 1200px; margin: 0 auto; padding: 16px 20px; font-size: 13px;
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+
+/* ---------- bloques comunes ---------- */
+.tarjeta {
+    background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio);
+    padding: 20px; margin-bottom: 20px;
+}
+.encabezado-pagina { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.encabezado-pagina h1 { margin: 0; }
+.buscador { margin-bottom: 14px; }
+.buscador input { width: 100%; max-width: 380px; }
+
+.rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo-ancho { grid-column: 1 / -1; }
+.campo input, .campo textarea, .campo .ui-calendar, .campo .ui-calendar input { width: 100%; }
+.campo .ui-selectonemenu { width: 100% !important; }
+.acciones-form { display: flex; gap: 10px; margin-top: 18px; }
+
+/* Botones */
+.ui-button.btn-primario { background: var(--verde); border-color: var(--verde); color: #fff; text-shadow: none; }
+.ui-button.btn-primario:hover { background: var(--verde-oscuro); }
+.ui-button.btn-secundario { background: var(--blanco); border-color: var(--borde); color: var(--texto); text-shadow: none; }
+.ui-button.btn-peligro { background: var(--rojo); border-color: var(--rojo); color: #fff; text-shadow: none; }
+.btn-bloque { width: 100%; }
+.boton {
+    display: inline-block; padding: 12px 22px; border-radius: 8px; text-decoration: none; font-weight: 600;
+}
+.boton-primario { background: var(--verde); color: #fff; }
+.boton-primario:hover { background: var(--verde-oscuro); }
+
+/* Indicadores del inicio */
+.indicadores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.indicador {
+    background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio);
+    padding: 18px; display: flex; flex-direction: column; gap: 4px;
+}
+.indicador-valor { font-size: 28px; font-weight: 700; color: var(--verde-oscuro); }
+.indicador-nombre { color: var(--texto-suave); font-size: 13px; }
+
+/* ---------- página pública ---------- */
+.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: center; padding: 24px 0 40px; }
+.etiqueta { color: var(--verde); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; margin: 0 0 8px; }
+.hero h1 { font-size: 40px; line-height: 1.15; }
+.hero-sub { color: var(--texto-suave); font-size: 17px; line-height: 1.6; max-width: 520px; }
+.acciones { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.hero-tarjeta { background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio); padding: 24px; }
+.pasos { margin: 0; padding-left: 20px; line-height: 1.9; }
+.servicios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.servicio { background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px; }
+.servicio h3 { margin: 0 0 8px; color: var(--verde-oscuro); }
+.servicio p { margin: 0; color: var(--texto-suave); line-height: 1.5; }
+
+/* Acceso */
+.acceso { display: flex; justify-content: center; padding-top: 20px; }
+.tarjeta-acceso { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
+.tarjeta-acceso h1 { font-size: 22px; margin: 0; text-align: center; }
+.acceso-logo { width: 56px; height: 56px; align-self: center; }
+.tarjeta-acceso input { width: 100%; }
+.nota { font-size: 12px; color: var(--texto-suave); text-align: center; margin: 0; }
+
+/* ---------- pantallas angostas ---------- */
+@media (max-width: 860px) {
+    .hero, .servicios, .rejilla { grid-template-columns: 1fr; }
+    .indicadores { grid-template-columns: 1fr 1fr; }
+    #cuerpo { flex-direction: column; }
+    #menu { width: auto; border-right: 0; border-bottom: 1px solid var(--borde); padding: 8px; }
+    .menu-lateral { flex-direction: row; overflow-x: auto; }
+    .hero h1 { font-size: 30px; }
+}

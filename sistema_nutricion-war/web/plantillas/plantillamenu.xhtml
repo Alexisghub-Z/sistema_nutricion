@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<!-- Plantilla del panel del nutriólogo: top / menu / content / bottom -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view locale="es_MX">
+    <ui:insert name="metadata" />
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <h:outputStylesheet name="css/estilos.css" />
+        <link rel="icon" href="#{request.contextPath}/resources/img/logo.svg" type="image/svg+xml" />
+        <title><ui:insert name="titulo">Panel</ui:insert> · NutriVida</title>
+    </h:head>
+
+    <h:body styleClass="panel">
+
+        <div id="top">
+            <ui:insert name="top">
+                <div class="barra">
+                    <h:link outcome="/vistas/dashboard" styleClass="marca">
+                        <h:graphicImage name="img/logo.svg" alt="" styleClass="marca-logo" />
+                        <span>Nutri<strong>Vida</strong></span>
+                    </h:link>
+                    <h:form id="frmSesion" styleClass="sesion">
+                        <span class="sesion-nombre">#{loginBean.usuario.nombre}</span>
+                        <p:commandButton value="Salir" action="#{loginBean.salir}" ajax="false"
+                                         icon="ui-icon-power" styleClass="btn-secundario" />
+                    </h:form>
+                </div>
+            </ui:insert>
+        </div>
+
+        <div id="cuerpo">
+            <div id="menu">
+                <ui:insert name="menu">
+                    <nav class="menu-lateral">
+                        <h:link outcome="/vistas/dashboard" styleClass="#{view.viewId eq '/vistas/dashboard.xhtml' ? 'activo' : ''}">
+                            <span class="ico">▦</span> Inicio
+                        </h:link>
+                        <h:link outcome="/vistas/pacientes/lista" styleClass="#{view.viewId.startsWith('/vistas/pacientes') ? 'activo' : ''}">
+                            <span class="ico">☺</span> Pacientes
+                        </h:link>
+                        <h:link outcome="/index" target="_blank">
+                            <span class="ico">↗</span> Sitio público
+                        </h:link>
+                    </nav>
+                </ui:insert>
+            </div>
+
+            <div id="content" class="center_content">
+                <p:growl id="growl" showDetail="false" life="5000" globalOnly="true" />
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes btn-peligro" icon="ui-icon-check" />
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no btn-secundario" icon="ui-icon-close" />
+                </p:confirmDialog>
+                <ui:insert name="content">Content</ui:insert>
+            </div>
+        </div>
+
+        <div id="bottom">
+            <ui:insert name="bottom">
+                <div class="pie">
+                    <span>NutriVida · Sistema de gestión nutricional</span>
+                    <span>Java EE 8 · Payara 5 · PrimeFaces 5.0</span>
+                </div>
+            </ui:insert>
+        </div>
+
+        <h:outputScript name="js/locale-es.js" />
+    </h:body>
+    </f:view>
+
+</html>

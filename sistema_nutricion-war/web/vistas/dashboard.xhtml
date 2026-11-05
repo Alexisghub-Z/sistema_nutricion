@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Inicio</ui:define>
+
+    <ui:define name="content">
+        <h1>Hola, #{loginBean.usuario.nombre}</h1>
+
+        <div class="indicadores">
+            <div class="indicador">
+                <span class="indicador-valor">#{dashboardBean.totalPacientes}</span>
+                <span class="indicador-nombre">Pacientes</span>
+            </div>
+            <div class="indicador">
+                <span class="indicador-valor">#{dashboardBean.citasHoy.size()}</span>
+                <span class="indicador-nombre">Citas hoy</span>
+            </div>
+            <div class="indicador">
+                <span class="indicador-valor">#{dashboardBean.consultasMes}</span>
+                <span class="indicador-nombre">Consultas este mes</span>
+            </div>
+            <div class="indicador">
+                <span class="indicador-valor">
+                    <h:outputText value="#{dashboardBean.ingresosMes}">
+                        <f:convertNumber type="currency" currencySymbol="$" locale="es_MX" />
+                    </h:outputText>
+                </span>
+                <span class="indicador-nombre">Ingresos del mes</span>
+            </div>
+        </div>
+
+        <div class="tarjeta">
+            <h2>Próximas citas</h2>
+            <p:dataTable value="#{dashboardBean.proximas}" var="c" emptyMessage="No hay citas pendientes.">
+                <p:column headerText="Fecha">
+                    <h:outputText value="#{c.fechaHora}">
+                        <f:convertDateTime pattern="EEE dd/MM/yyyy HH:mm" locale="es_MX" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Paciente">#{c.paciente.nombre}</p:column>
+                <p:column headerText="Motivo">#{c.motivo}</p:column>
+                <p:column headerText="Modalidad">#{c.tipo.etiqueta}</p:column>
+            </p:dataTable>
+        </div>
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,1180 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+*** GENERATED FROM project.xml - DO NOT EDIT  ***
+***         EDIT ../build.xml INSTEAD         ***
+
+For the purpose of easier reading the script
+is divided into following sections:
+
+  - initialization
+  - compilation
+  - dist
+  - execution
+  - debugging
+  - javadoc
+  - cleanup
+
+        --><project name="sistema_nutricion-ejb-impl" default="default" basedir=".." xmlns:ejbjarproject3="http://www.netbeans.org/ns/j2ee-ejbjarproject/3" xmlns:ejbjarproject2="http://www.netbeans.org/ns/j2ee-ejbjarproject/2" xmlns:ejbjarproject1="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+    <import file="ant-deploy.xml"/>
+    <fail message="Please build using Ant 1.7.1 or higher.">
+        <condition>
+            <not>
+                <antversion atleast="1.7.1"/>
+            </not>
+        </condition>
+    </fail>
+    <target name="default" depends="dist,javadoc" description="Build whole project."/>
+    <!-- 
+                INITIALIZATION SECTION 
+            -->
+    <target name="-pre-init">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-init-private" depends="-pre-init">
+        <property file="nbproject/private/private.properties"/>
+    </target>
+    <target name="-init-userdir" depends="-pre-init,-init-private">
+        <property name="user.properties.file" location="${netbeans.user}/build.properties"/>
+    </target>
+    <target name="-init-user" depends="-pre-init,-init-private,-init-userdir">
+        <property file="${user.properties.file}"/>
+        <!-- The two properties below are usually overridden -->
+        <!-- by the active platform. Just a fallback. -->
+        <property name="default.javac.source" value="1.4"/>
+        <property name="default.javac.target" value="1.4"/>
+    </target>
+    <target name="-init-project" depends="-pre-init,-init-private,-init-userdir,-init-user">
+        <property file="nbproject/project.properties"/>
+    </target>
+    <target name="-do-init" depends="-pre-init,-init-private,-init-userdir,-init-user,-init-project,-init-macrodef-property">
+        <!-- Ensure configuration directory exists. -->
+        <mkdir dir="${meta.inf}"/>
+        <property name="runmain.jvmargs" value=""/>
+        <condition property="have.tests">
+            <or>
+                <available file="${test.src.dir}"/>
+            </or>
+        </condition>
+        <condition property="have.sources">
+            <or>
+                <available file="${src.dir}"/>
+            </or>
+        </condition>
+        <condition property="netbeans.home+have.tests">
+            <and>
+                <isset property="netbeans.home"/>
+                <isset property="have.tests"/>
+            </and>
+        </condition>
+        <condition property="no.javadoc.preview">
+            <isfalse value="${javadoc.preview}"/>
+        </condition>
+        <available file="${meta.inf}/MANIFEST.MF" property="has.custom.manifest"/>
+        <!--
+                    Variables needed to support directory deployment.
+                -->
+        <condition property="do.package.with.custom.manifest.not.directory.deploy">
+            <and>
+                <isset property="has.custom.manifest"/>
+                <isfalse value="${directory.deployment.supported}"/>
+            </and>
+        </condition>
+        <condition property="do.package.without.custom.manifest.not.directory.deploy">
+            <and>
+                <not>
+                    <isset property="has.custom.manifest"/>
+                </not>
+                <isfalse value="${directory.deployment.supported}"/>
+            </and>
+        </condition>
+        <!--End Variables needed to support directory deployment.-->
+        <condition property="classes.dir" value="${build.ear.classes.dir}">
+            <isset property="dist.ear.dir"/>
+        </condition>
+        <property name="classes.dir" value="${build.classes.dir}"/>
+        <condition property="no.deps">
+            <and>
+                <istrue value="${no.dependencies}"/>
+            </and>
+        </condition>
+        <condition property="no.dist.ear.dir">
+            <not>
+                <isset property="dist.ear.dir"/>
+            </not>
+        </condition>
+        <property name="source.encoding" value="${file.encoding}"/>
+        <condition property="javadoc.encoding.used" value="${javadoc.encoding}">
+            <and>
+                <isset property="javadoc.encoding"/>
+                <not>
+                    <equals arg1="${javadoc.encoding}" arg2=""/>
+                </not>
+            </and>
+        </condition>
+        <property name="javadoc.encoding.used" value="${source.encoding}"/>
+        <property name="includes" value="**"/>
+        <property name="excludes" value=""/>
+        <path id="endorsed.classpath.path" path="${endorsed.classpath}"/>
+        <condition property="endorsed.classpath.cmd.line.arg" value="-Xbootclasspath/p:'${toString:endorsed.classpath.path}'" else="">
+            <and>
+                <isset property="endorsed.classpath"/>
+                <length length="0" string="${endorsed.classpath}" when="greater"/>
+            </and>
+        </condition>
+        <condition property="is.server.weblogic" value="true">
+            <equals arg1="${j2ee.server.type}" arg2="WebLogic9"/>
+        </condition>
+        <condition property="is.jars.in.ejbjar" value="true">
+            <equals arg1="${jars.in.ejbjar}" arg2="true"/>
+        </condition>
+        <condition property="jdkBug6558476" else="false">
+            <and>
+                <matches string="${java.specification.version}" pattern="1\.[56]"/>
+                <not>
+                    <os family="unix"/>
+                </not>
+            </and>
+        </condition>
+        <property name="javac.fork" value="${jdkBug6558476}"/>
+        <condition property="junit.available">
+            <or>
+                <available classname="org.junit.Test" classpath="${run.test.classpath}"/>
+                <available classname="junit.framework.Test" classpath="${run.test.classpath}"/>
+            </or>
+        </condition>
+        <condition property="testng.available">
+            <available classname="org.testng.annotations.Test" classpath="${run.test.classpath}"/>
+        </condition>
+        <condition property="junit+testng.available">
+            <and>
+                <istrue value="${junit.available}"/>
+                <istrue value="${testng.available}"/>
+            </and>
+        </condition>
+        <condition property="testng.mode" value="mixed" else="testng">
+            <istrue value="${junit+testng.available}"/>
+        </condition>
+        <condition property="testng.debug.mode" value="-mixed" else="">
+            <istrue value="${junit+testng.available}"/>
+        </condition>
+    </target>
+    <target name="-init-cos" depends="init" unless="deploy.on.save">
+        <condition property="deploy.on.save" value="true">
+            <or>
+                <istrue value="${j2ee.deploy.on.save}"/>
+                <istrue value="${j2ee.compile.on.save}"/>
+            </or>
+        </condition>
+    </target>
+    <target name="-post-init">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-init-check" depends="-pre-init,-init-private,-init-userdir,-init-user,-init-project,-do-init">
+        <fail unless="src.dir">Must set src.dir</fail>
+        <fail unless="test.src.dir">Must set test.src.dir</fail>
+        <fail unless="build.dir">Must set build.dir</fail>
+        <fail unless="build.generated.dir">Must set build.generated.dir</fail>
+        <fail unless="dist.dir">Must set dist.dir</fail>
+        <fail unless="build.classes.dir">Must set build.classes.dir</fail>
+        <fail unless="dist.javadoc.dir">Must set dist.javadoc.dir</fail>
+        <fail unless="build.classes.excludes">Must set build.classes.excludes</fail>
+        <fail unless="dist.jar">Must set dist.jar</fail>
+        <condition property="missing.j2ee.server.home">
+            <and>
+                <matches pattern="j2ee.server.home" string="${j2ee.platform.classpath}"/>
+                <not>
+                    <isset property="j2ee.server.home"/>
+                </not>
+            </and>
+        </condition>
+        <fail if="missing.j2ee.server.home">
+The Java EE server classpath is not correctly set up - server home directory is missing.
+Either open the project in the IDE and assign the server or setup the server classpath manually.
+For example like this:
+   ant -Dj2ee.server.home=&lt;app_server_installation_directory&gt;
+                </fail>
+        <fail unless="j2ee.platform.classpath">
+The Java EE server classpath is not correctly set up. Your active server type is ${j2ee.server.type}.
+Either open the project in the IDE and assign the server or setup the server classpath manually.
+For example like this:
+   ant -Duser.properties.file=&lt;path_to_property_file&gt; (where you put the property "j2ee.platform.classpath" in a .properties file)
+or ant -Dj2ee.platform.classpath=&lt;server_classpath&gt; (where no properties file is used)
+                </fail>
+    </target>
+    <target name="-init-macrodef-property">
+        <macrodef name="property" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+            <attribute name="name"/>
+            <attribute name="value"/>
+            <sequential>
+                <property name="@{name}" value="${@{value}}"/>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-javac-with-processors" depends="-init-ap-cmdline-properties" if="ap.supported.internal">
+        <macrodef name="javac" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <attribute name="classpath" default="${javac.classpath}:${j2ee.platform.classpath}"/>
+            <attribute name="processorpath" default="${javac.processorpath}"/>
+            <attribute name="apgeneratedsrcdir" default="${build.generated.sources.dir}/ap-source-output"/>
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="debug" default="${javac.debug}"/>
+            <attribute name="gensrcdir" default="${empty.dir}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <property name="javac.compilerargs" value=""/>
+                <property name="empty.dir" location="${build.dir}/empty"/>
+                <mkdir dir="${empty.dir}"/>
+                <mkdir dir="@{apgeneratedsrcdir}"/>
+                <javac srcdir="@{srcdir}" destdir="@{destdir}" debug="@{debug}" deprecation="${javac.deprecation}" encoding="${source.encoding}" source="${javac.source}" target="${javac.target}" includes="@{includes}" excludes="@{excludes}" fork="${javac.fork}" includeantruntime="false">
+                    <src>
+                        <dirset dir="@{gensrcdir}" erroronmissingdir="false">
+                            <include name="*"/>
+                        </dirset>
+                    </src>
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <compilerarg line="${endorsed.classpath.cmd.line.arg}"/>
+                    <compilerarg line="${javac.compilerargs}"/>
+                    <compilerarg value="-processorpath"/>
+                    <compilerarg path="@{processorpath}:${empty.dir}"/>
+                    <compilerarg line="${ap.processors.internal}"/>
+                    <compilerarg value="-s"/>
+                    <compilerarg path="@{apgeneratedsrcdir}"/>
+                    <compilerarg line="${ap.proc.none.internal}"/>
+                    <customize/>
+                </javac>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-javac-without-processors" depends="-init-ap-cmdline-properties" unless="ap.supported.internal">
+        <macrodef name="javac" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <attribute name="classpath" default="${javac.classpath}:${j2ee.platform.classpath}"/>
+            <attribute name="processorpath" default="${javac.processorpath}"/>
+            <attribute name="apgeneratedsrcdir" default="${build.generated.sources.dir}/ap-source-output"/>
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="debug" default="${javac.debug}"/>
+            <attribute name="gensrcdir" default="${empty.dir}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <property name="javac.compilerargs" value=""/>
+                <property name="empty.dir" location="${build.dir}/empty"/>
+                <mkdir dir="${empty.dir}"/>
+                <javac srcdir="@{srcdir}" destdir="@{destdir}" debug="@{debug}" deprecation="${javac.deprecation}" encoding="${source.encoding}" source="${javac.source}" target="${javac.target}" includes="@{includes}" excludes="@{excludes}" includeantruntime="false">
+                    <src>
+                        <dirset dir="@{gensrcdir}" erroronmissingdir="false">
+                            <include name="*"/>
+                        </dirset>
+                    </src>
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <compilerarg line="${endorsed.classpath.cmd.line.arg}"/>
+                    <compilerarg line="${javac.compilerargs}"/>
+                    <customize/>
+                </javac>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-javac" depends="-init-macrodef-javac-with-processors,-init-macrodef-javac-without-processors">
+        <macrodef name="depend" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <attribute name="classpath" default="${javac.classpath}:${j2ee.platform.classpath}"/>
+            <sequential>
+                <depend srcdir="@{srcdir}" destdir="@{destdir}" cache="${build.dir}/depcache" includes="${includes}" excludes="${excludes}">
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                </depend>
+            </sequential>
+        </macrodef>
+        <macrodef name="force-recompile" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="destdir" default="${build.classes.dir}"/>
+            <sequential>
+                <fail unless="javac.includes">Must set javac.includes</fail>
+                <pathconvert property="javac.includes.binary" pathsep="${line.separator}">
+                    <path>
+                        <filelist dir="@{destdir}" files="${javac.includes}"/>
+                    </path>
+                    <globmapper from="*.java" to="*.class"/>
+                </pathconvert>
+                <tempfile property="javac.includesfile.binary" deleteonexit="true"/>
+                <echo message="${javac.includes.binary}" file="${javac.includesfile.binary}"/>
+                <delete>
+                    <files includesfile="${javac.includesfile.binary}"/>
+                </delete>
+                <delete file="${javac.includesfile.binary}"/>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-init" if="${junit.available}">
+        <condition property="nb.junit.batch" value="true" else="false">
+            <and>
+                <istrue value="${junit.available}"/>
+                <not>
+                    <isset property="test.method"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="nb.junit.single" value="true" else="false">
+            <and>
+                <istrue value="${junit.available}"/>
+                <isset property="test.method"/>
+            </and>
+        </condition>
+    </target>
+    <target name="-init-test-properties">
+        <property name="test.binaryincludes" value="&lt;nothing&gt;"/>
+        <property name="test.binarytestincludes" value=""/>
+        <property name="test.binaryexcludes" value=""/>
+    </target>
+    <target name="-init-macrodef-junit-single" if="${nb.junit.single}" unless="${nb.junit.batch}">
+        <macrodef name="junit" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed" tempdir="${java.io.tmpdir}">
+                    <test todir="${build.test.results.dir}" name="@{testincludes}" methods="@{testmethods}"/>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg value="-ea"/>
+                    <customize/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-batch" if="${nb.junit.batch}" unless="${nb.junit.single}" depends="-init-test-properties">
+        <macrodef name="junit" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <property name="run.jvmargs.ide" value=""/>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed" tempdir="${build.dir}">
+                    <batchtest todir="${build.test.results.dir}">
+                        <fileset dir="${test.src.dir}" includes="@{includes}" excludes="@{excludes},${excludes}">
+                            <filename name="@{testincludes}"/>
+                        </fileset>
+                        <fileset dir="${build.test.classes.dir}" excludes="@{excludes},${excludes},${test.binaryexcludes}" includes="${test.binaryincludes}">
+                            <filename name="${test.binarytestincludes}"/>
+                        </fileset>
+                    </batchtest>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg value="-ea"/>
+                    <jvmarg line="${run.jvmargs.ide}"/>
+                    <customize/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit" if="${junit.available}" depends="-init-macrodef-junit-init,-init-macrodef-junit-single, -init-macrodef-junit-batch"/>
+    <target name="-init-macrodef-testng" if="${testng.available}">
+        <macrodef name="testng" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <condition property="testng.methods.arg" value="@{testincludes}.@{testmethods}" else="">
+                    <isset property="test.method"/>
+                </condition>
+                <union id="test.set">
+                    <fileset dir="${test.src.dir}" includes="@{includes}" excludes="@{excludes},**/*.xml,${excludes}">
+                        <filename name="@{testincludes}"/>
+                    </fileset>
+                </union>
+                <taskdef name="testng" classname="org.testng.TestNGAntTask" classpath="${run.test.classpath}"/>
+                <testng listeners="org.testng.reporters.VerboseReporter" mode="${testng.mode}" classfilesetref="test.set" workingDir="${basedir}" failureProperty="tests.failed" methods="${testng.methods.arg}" outputdir="${build.test.results.dir}" suitename="sistema_nutricion-ejb" testname="TestNG tests">
+                    <xmlfileset dir="${build.test.classes.dir}" includes="@{testincludes}"/>
+                    <propertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper from="test-sys-prop.*" to="*" type="glob"/>
+                    </propertyset>
+                    <customize/>
+                </testng>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-test-impl">
+        <macrodef name="test-impl" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true" implicit="true"/>
+            <sequential>
+                <echo>No tests executed.</echo>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-impl" depends="-init-macrodef-junit" if="${junit.available}">
+        <macrodef name="test-impl" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true" implicit="true"/>
+            <sequential>
+                <ejbjarproject2:junit includes="@{includes}" excludes="@{excludes}" testincludes="@{testincludes}" testmethods="@{testmethods}">
+                    <customize/>
+                </ejbjarproject2:junit>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-testng-impl" depends="-init-macrodef-testng" if="${testng.available}">
+        <macrodef name="test-impl" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true" implicit="true"/>
+            <sequential>
+                <ejbjarproject2:testng includes="@{includes}" excludes="@{excludes}" testincludes="@{testincludes}" testmethods="@{testmethods}">
+                    <customize/>
+                </ejbjarproject2:testng>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-test" depends="-init-macrodef-test-impl,-init-macrodef-junit-impl,-init-macrodef-testng-impl">
+        <macrodef name="test" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <sequential>
+                <ejbjarproject2:test-impl includes="@{includes}" excludes="@{excludes}" testincludes="@{testincludes}" testmethods="@{testmethods}">
+                    <customize>
+                        <classpath>
+                            <path path="${run.test.classpath}"/>
+                            <path path="${j2ee.platform.classpath}"/>
+                            <path path="${j2ee.platform.embeddableejb.classpath}"/>
+                        </classpath>
+                        <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
+                        <jvmarg line="${runmain.jvmargs}"/>
+                    </customize>
+                </ejbjarproject2:test-impl>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-debug" if="${junit.available}" unless="${nb.junit.batch}">
+        <macrodef name="junit-debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed" tempdir="${java.io.tmpdir}">
+                    <test todir="${build.test.results.dir}" name="@{testincludes}" methods="@{testmethods}"/>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg value="-ea"/>
+                    <jvmarg value="-agentlib:jdwp=transport=${debug-transport},address=${jpda.address}"/>
+                    <customize/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-debug-batch" if="${nb.junit.batch}" depends="-init-test-properties">
+        <macrodef name="junit-debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <property name="run.jvmargs.ide" value=""/>
+                <junit showoutput="true" fork="true" dir="${basedir}" failureproperty="tests.failed" errorproperty="tests.failed" tempdir="${build.dir}">
+                    <batchtest todir="${build.test.results.dir}">
+                        <fileset dir="${test.src.dir}" includes="@{includes}" excludes="@{excludes},${excludes}">
+                            <filename name="@{testincludes}"/>
+                        </fileset>
+                        <fileset dir="${build.test.classes.dir}" excludes="@{excludes},${excludes},${test.binaryexcludes}" includes="${test.binaryincludes}">
+                            <filename name="${test.binarytestincludes}"/>
+                        </fileset>
+                    </batchtest>
+                    <syspropertyset>
+                        <propertyref prefix="test-sys-prop."/>
+                        <mapper type="glob" from="test-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <formatter type="brief" usefile="false"/>
+                    <formatter type="xml"/>
+                    <jvmarg value="-ea"/>
+                    <jvmarg line="${run.jvmargs.ide}"/>
+                    <jvmarg value="-agentlib:jdwp=transport=${debug-transport},address=${jpda.address}"/>
+                    <customize/>
+                </junit>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-junit-debug-impl" depends="-init-macrodef-junit-debug,-init-macrodef-junit-debug-batch" if="${junit.available}">
+        <macrodef name="test-debug-impl" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <element name="customize" optional="true" implicit="true"/>
+            <sequential>
+                <ejbjarproject2:junit-debug includes="@{includes}" excludes="@{excludes}" testincludes="@{testincludes}" testmethods="@{testmethods}">
+                    <customize/>
+                </ejbjarproject2:junit-debug>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-testng-debug" if="${testng.available}">
+        <macrodef name="testng-debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="testClass" default="${main.class}"/>
+            <attribute name="testMethod" default=""/>
+            <element name="customize2" optional="true"/>
+            <sequential>
+                <condition property="test.class.or.method" value="-methods @{testClass}.@{testMethod}" else="-testclass @{testClass}">
+                    <isset property="test.method"/>
+                </condition>
+                <condition property="testng.cmd.args" value="@{testClass}" else="-suitename sistema_nutricion-ejb -testname @{testClass} ${test.class.or.method}">
+                    <matches string="@{testClass}" pattern=".*\.xml"/>
+                </condition>
+                <delete dir="${build.test.results.dir}" quiet="true"/>
+                <mkdir dir="${build.test.results.dir}"/>
+                <ejbjarproject1:debug args="${testng.cmd.args}" classname="org.testng.TestNG" classpath="${debug.test.classpath}:${j2ee.platform.embeddableejb.classpath}">
+                    <customize>
+                        <customize2/>
+                        <jvmarg value="-ea"/>
+                        <arg line="${testng.debug.mode}"/>
+                        <arg line="-d ${build.test.results.dir}"/>
+                        <arg line="-listener org.testng.reporters.VerboseReporter"/>
+                    </customize>
+                </ejbjarproject1:debug>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-testng-debug-impl" depends="-init-macrodef-testng-debug" if="${testng.available}">
+        <macrodef name="testng-debug-impl" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="testClass" default="${main.class}"/>
+            <attribute name="testMethod" default=""/>
+            <element name="customize2" optional="true" implicit="true"/>
+            <sequential>
+                <ejbjarproject2:testng-debug testClass="@{testClass}" testMethod="@{testMethod}">
+                    <customize2/>
+                </ejbjarproject2:testng-debug>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-test-debug-junit" depends="-init-macrodef-junit-debug-impl" if="${junit.available}">
+        <macrodef name="test-debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <attribute name="testClass" default="${main.class}"/>
+            <attribute name="testMethod" default=""/>
+            <sequential>
+                <ejbjarproject2:test-debug-impl includes="@{includes}" excludes="@{excludes}" testincludes="@{testincludes}" testmethods="@{testmethods}">
+                    <customize>
+                        <classpath>
+                            <path path="${run.test.classpath}"/>
+                            <path path="${j2ee.platform.classpath}"/>
+                            <path path="${j2ee.platform.embeddableejb.classpath}"/>
+                        </classpath>
+                        <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
+                        <jvmarg line="${runmain.jvmargs}"/>
+                    </customize>
+                </ejbjarproject2:test-debug-impl>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-test-debug-testng" depends="-init-macrodef-testng-debug-impl" if="${testng.available}">
+        <macrodef name="test-debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/2">
+            <attribute name="includes" default="${includes}"/>
+            <attribute name="excludes" default="${excludes}"/>
+            <attribute name="testincludes" default="**"/>
+            <attribute name="testmethods" default=""/>
+            <attribute name="testClass" default="${main.class}"/>
+            <attribute name="testMethod" default=""/>
+            <sequential>
+                <ejbjarproject2:testng-debug-impl testClass="@{testClass}" testMethod="@{testMethod}">
+                    <customize2>
+                        <syspropertyset>
+                            <propertyref prefix="test-sys-prop."/>
+                            <mapper from="test-sys-prop.*" to="*" type="glob"/>
+                        </syspropertyset>
+                    </customize2>
+                </ejbjarproject2:testng-debug-impl>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-test-debug" depends="-init-macrodef-test-debug-junit,-init-macrodef-test-debug-testng"/>
+    <target name="-init-macrodef-java">
+        <macrodef name="java" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/3">
+            <attribute name="classname" default="${main.class}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <java fork="true" classname="@{classname}">
+                    <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
+                    <jvmarg line="${runmain.jvmargs}"/>
+                    <classpath>
+                        <path path="${build.classes.dir}:${javac.classpath}:${j2ee.platform.classpath}"/>
+                    </classpath>
+                    <syspropertyset>
+                        <propertyref prefix="run-sys-prop."/>
+                        <mapper type="glob" from="run-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <customize/>
+                </java>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-macrodef-nbjpda" depends="-init-debug-args">
+        <macrodef name="nbjpdastart" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+            <attribute name="name" default="${main.class}"/>
+            <attribute name="classpath" default="${debug.classpath}"/>
+            <sequential>
+                <nbjpdastart transport="${debug-transport}" addressproperty="jpda.address" name="@{name}">
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                </nbjpdastart>
+            </sequential>
+        </macrodef>
+        <macrodef name="nbjpdareload" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+            <attribute name="dir" default="${build.classes.dir}"/>
+            <sequential>
+                <nbjpdareload>
+                    <fileset includes="${fix.classes}" dir="@{dir}">
+                        <include name="${fix.includes}*.class"/>
+                    </fileset>
+                </nbjpdareload>
+            </sequential>
+        </macrodef>
+        <macrodef name="nbjpdaappreloaded" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+            <sequential>
+                <nbjpdaappreloaded/>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-debug-args">
+        <condition property="debug-transport-by-os" value="dt_shmem" else="dt_socket">
+            <os family="windows"/>
+        </condition>
+        <condition property="debug-transport" value="${debug.transport}" else="${debug-transport-by-os}">
+            <isset property="debug.transport"/>
+        </condition>
+    </target>
+    <target name="-init-macrodef-debug" depends="-init-debug-args">
+        <macrodef name="debug" uri="http://www.netbeans.org/ns/j2ee-ejbjarproject/1">
+            <attribute name="classname" default="${main.class}"/>
+            <attribute name="classpath" default="${debug.classpath}"/>
+            <attribute name="args" default="${application.args}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <java fork="true" classname="@{classname}">
+                    <jvmarg value="-agentlib:jdwp=transport=${debug-transport},address=${jpda.address}"/>
+                    <jvmarg line="${runmain.jvmargs}"/>
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                    <arg line="@{args}"/>
+                    <customize/>
+                </java>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-init-taskdefs">
+        <fail unless="libs.CopyLibs.classpath">
+The libs.CopyLibs.classpath property is not set up.
+This property must point to 
+org-netbeans-modules-java-j2seproject-copylibstask.jar file which is part
+of NetBeans IDE installation and is usually located at 
+&lt;netbeans_installation&gt;/java&lt;version&gt;/ant/extra folder.
+Either open the project in the IDE and make sure CopyLibs library
+exists or setup the property manually. For example like this:
+ ant -Dlibs.CopyLibs.classpath=a/path/to/org-netbeans-modules-java-j2seproject-copylibstask.jar
+                </fail>
+        <taskdef resource="org/netbeans/modules/java/j2seproject/copylibstask/antlib.xml" classpath="${libs.CopyLibs.classpath}"/>
+    </target>
+    <target name="-init-ap-cmdline-properties">
+        <property name="annotation.processing.enabled" value="true"/>
+        <property name="annotation.processing.processors.list" value=""/>
+        <property name="annotation.processing.run.all.processors" value="true"/>
+        <property name="javac.processorpath" value="${javac.classpath}"/>
+        <property name="javac.test.processorpath" value="${javac.test.classpath}"/>
+        <condition property="ap.supported.internal" value="true">
+            <not>
+                <matches string="${javac.source}" pattern="1\.[0-5](\..*)?"/>
+            </not>
+        </condition>
+    </target>
+    <target name="-init-ap-cmdline-supported" depends="-init-ap-cmdline-properties" if="ap.supported.internal">
+        <condition property="ap.processors.internal" value="-processor ${annotation.processing.processors.list}" else="">
+            <isfalse value="${annotation.processing.run.all.processors}"/>
+        </condition>
+        <condition property="ap.proc.none.internal" value="-proc:none" else="">
+            <isfalse value="${annotation.processing.enabled}"/>
+        </condition>
+    </target>
+    <target name="-init-ap-cmdline" depends="-init-ap-cmdline-properties,-init-ap-cmdline-supported">
+        <property name="ap.cmd.line.internal" value=""/>
+    </target>
+    <!--
+                pre NB7.2 profiling section; consider it deprecated
+            -->
+    <target name="profile-init" depends="-profile-pre-init, init, -profile-post-init, -profile-init-check" if="profiler.info.jvmargs.agent"/>
+    <target name="-profile-pre-init" if="profiler.info.jvmargs.agent">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-profile-post-init" if="profiler.info.jvmargs.agent">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-profile-init-check" depends="-profile-pre-init, init, -profile-post-init" if="profiler.info.jvmargs.agent">
+        <fail unless="profiler.info.jvm">Must set JVM to use for profiling in profiler.info.jvm</fail>
+        <fail unless="profiler.info.jvmargs.agent">Must set profiler agent JVM arguments in profiler.info.jvmargs.agent</fail>
+    </target>
+    <!--
+                end of pre NB7.2 profiling section
+            -->
+    <target name="init" depends="-pre-init,-init-private,-init-userdir,-init-user,-init-project,-do-init,-post-init,-init-check,-init-macrodef-property,-init-macrodef-javac,-init-macrodef-test,-init-macrodef-test-debug,-init-macrodef-java,-init-macrodef-nbjpda,-init-macrodef-debug,-init-taskdefs,-init-ap-cmdline"/>
+    <!--
+                COMPILATION SECTION
+            -->
+    <target name="-deps-module-jar" depends="init" if="no.dist.ear.dir" unless="no.deps"/>
+    <target name="-deps-ear-jar" depends="init" if="dist.ear.dir" unless="no.deps"/>
+    <target name="deps-jar" depends="init, -deps-module-jar, -deps-ear-jar"/>
+    <target name="-pre-pre-compile" depends="init,deps-jar">
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.ear.classes.dir}"/>
+    </target>
+    <target name="-pre-compile">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="library-inclusion-in-archive" depends="compile,-library-inclusion-in-archive-weblogic,-library-inclusion-in-archive-by-user"/>
+    <target name="-library-inclusion-in-archive-by-user" if="is.jars.in.ejbjar"/>
+    <target name="-library-inclusion-in-archive-weblogic" if="is.server.weblogic">
+        <manifest file="${build.ear.classes.dir}/META-INF/MANIFEST.MF" mode="update"/>
+    </target>
+    <target name="library-inclusion-in-manifest" depends="compile">
+        <manifest file="${build.ear.classes.dir}/META-INF/MANIFEST.MF" mode="update"/>
+    </target>
+    <target name="-copy-meta-inf">
+        <copy todir="${classes.dir}">
+            <fileset dir="${meta.inf}" includes="**/*.dbschema"/>
+        </copy>
+        <copy todir="${classes.dir}/META-INF">
+            <fileset dir="${meta.inf}" excludes="**/*.dbschema **/xml-resources/** ${meta.inf.excludes}"/>
+        </copy>
+    </target>
+    <target name="-do-compile" depends="init,deps-jar,-pre-pre-compile,-pre-compile,-copy-meta-inf" if="have.sources">
+        <ejbjarproject2:javac destdir="${classes.dir}" gensrcdir="${build.generated.sources.dir}"/>
+        <copy todir="${classes.dir}">
+            <fileset dir="${src.dir}" includes="${includes}" excludes="${build.classes.excludes},${excludes}"/>
+        </copy>
+    </target>
+    <target name="-post-compile">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="compile" depends="init,deps-jar,-pre-pre-compile,-pre-compile,-do-compile,-post-compile" description="Compile project."/>
+    <target name="-pre-compile-single">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-do-compile-single" depends="init,deps-jar,-pre-pre-compile">
+        <fail unless="javac.includes">Must select some files in the IDE or set javac.includes</fail>
+        <ejbjarproject2:javac includes="${javac.includes}" excludes="" gensrcdir="${build.generated.sources.dir}"/>
+    </target>
+    <target name="-post-compile-single">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="compile-single" depends="init,deps-jar,-pre-pre-compile,-pre-compile-single,-do-compile-single,-post-compile-single"/>
+    <!--
+                DIST BUILDING SECTION
+            -->
+    <target name="-pre-dist">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-do-dist-with-manifest" depends="init,compile,-pre-dist,library-inclusion-in-archive" if="has.custom.manifest">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}" manifest="${build.classes.dir}/META-INF/MANIFEST.MF">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    <target name="-do-dist-without-manifest" depends="init,compile,-pre-dist,library-inclusion-in-archive" unless="has.custom.manifest">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    <!--
+                TARGETS NEEDED TO SUPPORT DIRECTORY DEPLOYMENT
+            -->
+    <target name="-do-tmp-dist-with-manifest" depends="init,compile,-pre-dist,library-inclusion-in-archive" if="do.package.with.custom.manifest.not.directory.deploy">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}" manifest="${build.classes.dir}/META-INF/MANIFEST.MF">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    <target name="-do-tmp-dist-without-manifest" depends="init,compile,-pre-dist,library-inclusion-in-archive" if="do.package.without.custom.manifest.not.directory.deploy">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    <target name="-do-dist-directory-deploy" depends="init,compile,-pre-dist,library-inclusion-in-archive, -do-tmp-dist-without-manifest, -do-tmp-dist-with-manifest"/>
+    <target name="dist-directory-deploy" depends="init,compile,-pre-dist,-do-dist-directory-deploy,-post-dist" description="Build distribution (JAR) - if directory deployment is not supported."/>
+    <!--
+                END TARGETS NEEDED TO SUPPORT DIRECTORY DEPLOYMENT
+            -->
+    <target name="-do-dist" depends="init,compile,-pre-dist,library-inclusion-in-archive, -do-dist-without-manifest, -do-dist-with-manifest"/>
+    <target name="-do-ear-dist" depends="init,compile,-pre-dist,library-inclusion-in-manifest">
+        <dirname property="dist.jar.dir" file="${dist.ear.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.ear.jar}" compress="${jar.compress}" manifest="${build.ear.classes.dir}/META-INF/MANIFEST.MF">
+            <fileset dir="${build.ear.classes.dir}"/>
+        </jar>
+    </target>
+    <target name="-post-dist">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="dist" depends="init,compile,-pre-dist,-do-dist,-post-dist" description="Build distribution (JAR)."/>
+    <target name="dist-ear" depends="init,-init-cos,compile,-pre-dist,-do-ear-dist,-post-dist" description="Build distribution (JAR) to be packaged into an EAR."/>
+    <!--
+                EXECUTION SECTION
+            -->
+    <target name="run" depends="run-deploy" description="Deploy to server."/>
+    <target name="-init-deploy">
+        <property name="include.jar.manifest" value=""/>
+    </target>
+    <target name="pre-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="post-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-pre-nbmodule-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- This target can be overriden by NetBeans modules. Don't override it directly, use -pre-run-deploy task instead. -->
+    </target>
+    <target name="-post-nbmodule-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- This target can be overriden by NetBeans modules. Don't override it directly, use -post-run-deploy task instead. -->
+    </target>
+    <target name="-run-deploy-am">
+        <!-- Task to deploy to the Access Manager runtime. -->
+    </target>
+    <target name="run-deploy" depends="init,-init-cos,-init-deploy,compile,library-inclusion-in-archive,dist-directory-deploy,pre-run-deploy,-pre-nbmodule-run-deploy,-run-deploy-nb,-init-deploy-ant,-deploy-ant,-run-deploy-am,-post-nbmodule-run-deploy,post-run-deploy,-do-update-breakpoints"/>
+    <target name="-run-deploy-nb" if="netbeans.home">
+        <nbdeploy debugmode="false" forceRedeploy="${forceRedeploy}"/>
+    </target>
+    <target name="-init-deploy-ant" unless="netbeans.home">
+        <property name="deploy.ant.archive" value="${dist.jar}"/>
+        <property name="deploy.ant.resource.dir" value="${resource.dir}"/>
+        <property name="deploy.ant.enabled" value="true"/>
+    </target>
+    <target name="run-undeploy" depends="dist,-run-undeploy-nb,-init-deploy-ant,-undeploy-ant"/>
+    <target name="-run-undeploy-nb" if="netbeans.home">
+        <fail message="Undeploy is not supported from within the IDE"/>
+    </target>
+    <target name="verify" depends="dist">
+        <nbverify file="${dist.jar}"/>
+    </target>
+    <target name="run-main" depends="init,compile-single">
+        <fail unless="run.class">Must select one file in the IDE or set run.class</fail>
+        <ejbjarproject3:java classname="${run.class}"/>
+    </target>
+    <target name="-do-update-breakpoints" if="netbeans.home" depends="init">
+        <ejbjarproject1:nbjpdaappreloaded/>
+    </target>
+    <!--
+                DEBUGGING SECTION
+            -->
+    <target name="debug" description="Debug project in IDE." depends="init,compile,dist-directory-deploy" if="netbeans.home">
+        <nbdeploy debugmode="true"/>
+        <antcall target="connect-debugger"/>
+    </target>
+    <target name="connect-debugger" unless="is.debugged">
+        <condition property="listeningcp" value="sourcepath">
+            <istrue value="${j2ee.compile.on.save}"/>
+        </condition>
+        <nbjpdaconnect name="${name}" host="${jpda.host}" address="${jpda.address}" transport="${jpda.transport}" listeningcp="${listeningcp}">
+            <classpath>
+                <path path="${debug.classpath}"/>
+            </classpath>
+            <sourcepath>
+                <path path="${web.docbase.dir}"/>
+            </sourcepath>
+        </nbjpdaconnect>
+    </target>
+    <target name="-debug-start-debugger" if="netbeans.home" depends="init">
+        <ejbjarproject1:nbjpdastart/>
+    </target>
+    <target name="-debug-start-debuggee-single" if="netbeans.home" depends="init,compile-single">
+        <fail unless="main.class">Must select one file in the IDE or set main.class</fail>
+        <ejbjarproject1:debug/>
+    </target>
+    <target name="debug-single-main" if="netbeans.home" depends="init,compile-single,-debug-start-debugger,-debug-start-debuggee-single"/>
+    <target name="-pre-debug-fix" depends="init">
+        <fail unless="fix.includes">Must set fix.includes</fail>
+        <property name="javac.includes" value="${fix.includes}.java"/>
+    </target>
+    <target name="-do-debug-fix" if="netbeans.home" depends="init,-pre-debug-fix,compile-single">
+        <ejbjarproject1:nbjpdareload/>
+    </target>
+    <target name="debug-fix" if="netbeans.home" depends="init,-pre-debug-fix,-do-debug-fix"/>
+    <!--
+            =================
+            PROFILING SECTION
+            =================
+            -->
+    <!--
+                pre NB7.2 profiling section; consider it deprecated
+            -->
+    <target name="-profile-pre72" if="profiler.info.jvmargs.agent" description="Profile a J2EE project in the IDE.">
+        <fail unless="netbeans.home">This target only works when run from inside the NetBeans IDE.</fail>
+        <condition property="profiler.startserver.target" value="start-profiled-server-extraargs" else="start-profiled-server">
+            <isset property="profiler.info.jvmargs.extra"/>
+        </condition>
+        <antcall target="${profiler.startserver.target}"/>
+        <antcall target="run"/>
+        <antcall target="-profile-start-loadgen"/>
+    </target>
+    <target name="-profile-test-single-pre72" if="profiler.info.jvmargs.agent" depends="profile-init,compile-test-single">
+        <fail unless="netbeans.home">This target only works when run from inside the NetBeans IDE.</fail>
+        <nbprofiledirect>
+            <classpath>
+                <path path="${run.test.classpath}"/>
+                <path path="${j2ee.platform.classpath}"/>
+            </classpath>
+        </nbprofiledirect>
+        <junit showoutput="true" fork="true" dir="${profiler.info.dir}" jvm="${profiler.info.jvm}" failureproperty="tests.failed" errorproperty="tests.failed">
+            <env key="${profiler.info.pathvar}" path="${profiler.info.agentpath}:${profiler.current.path}"/>
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg line="${profiler.info.jvmargs}"/>
+            <test name="${profile.class}"/>
+            <classpath>
+                <path path="${run.test.classpath}"/>
+                <path path="${j2ee.platform.classpath}"/>
+            </classpath>
+            <syspropertyset>
+                <propertyref prefix="test-sys-prop."/>
+                <mapper type="glob" from="test-sys-prop.*" to="*"/>
+            </syspropertyset>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+        </junit>
+    </target>
+    <target name="start-profiled-server">
+        <nbstartprofiledserver forceRestart="${profiler.j2ee.serverForceRestart}" startupTimeout="${profiler.j2ee.serverStartupTimeout}" javaPlatform="${profiler.info.javaPlatform}">
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg value="${profiler.j2ee.agentID}"/>
+        </nbstartprofiledserver>
+    </target>
+    <target name="start-profiled-server-extraargs">
+        <nbstartprofiledserver forceRestart="${profiler.j2ee.serverForceRestart}" startupTimeout="${profiler.j2ee.serverStartupTimeout}" javaPlatform="${profiler.info.javaPlatform}">
+            <jvmarg value="${profiler.info.jvmargs.extra}"/>
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg value="${profiler.j2ee.agentID}"/>
+        </nbstartprofiledserver>
+    </target>
+    <!--
+                end of pre NB7.2 profiling section
+            -->
+    <target name="-profile-check" if="netbeans.home">
+        <condition property="profiler.configured">
+            <or>
+                <contains string="${run.jvmargs.ide}" substring="-agentpath:" casesensitive="true"/>
+                <contains string="${run.jvmargs.ide}" substring="-javaagent:" casesensitive="true"/>
+            </or>
+        </condition>
+    </target>
+    <target name="-do-profile" depends="init,compile,dist-directory-deploy">
+        <startprofiler/>
+        <nbstartserver profilemode="true"/>
+        <nbdeploy profilemode="true" clientUrlPart="$" forceRedeploy="true"/>
+        <antcall target="-profile-start-loadgen"/>
+    </target>
+    <target name="profile" depends="-profile-check,-profile-pre72" if="profiler.configured" unless="profiler.info.jvmargs.agent" description="Profile a J2EE project in the IDE.">
+        <antcall target="-do-profile"/>
+    </target>
+    <target name="profile-test-single" depends="-profile-test-single-pre72"/>
+    <target name="profile-test" depends="-profile-check" if="profiler.configured" unless="profiler.info.jvmargs.agent">
+        <startprofiler/>
+        <antcall target="test-single"/>
+    </target>
+    <target name="-profile-start-loadgen" if="profiler.loadgen.path">
+        <loadgenstart path="${profiler.loadgen.path}"/>
+    </target>
+    <!--
+                JAVADOC SECTION
+            -->
+    <target name="javadoc-build" depends="init" if="have.sources">
+        <mkdir dir="${dist.javadoc.dir}"/>
+        <javadoc destdir="${dist.javadoc.dir}" source="${javac.source}" notree="${javadoc.notree}" use="${javadoc.use}" nonavbar="${javadoc.nonavbar}" noindex="${javadoc.noindex}" splitindex="${javadoc.splitindex}" author="${javadoc.author}" version="${javadoc.version}" windowtitle="${javadoc.windowtitle}" private="${javadoc.private}" additionalparam="${javadoc.additionalparam}" failonerror="true" useexternalfile="true" encoding="${javadoc.encoding.used}" docencoding="UTF-8" charset="UTF-8">
+            <classpath>
+                <path path="${javac.classpath}:${j2ee.platform.classpath}"/>
+            </classpath>
+            <fileset dir="${src.dir}" includes="${includes}" excludes="${excludes}">
+                <filename name="**/*.java"/>
+            </fileset>
+            <fileset dir="${build.generated.sources.dir}" erroronmissingdir="false">
+                <include name="**/*.java"/>
+            </fileset>
+        </javadoc>
+        <copy todir="${dist.javadoc.dir}">
+            <fileset dir="${src.dir}" includes="${includes}" excludes="${excludes}">
+                <filename name="**/doc-files/**"/>
+            </fileset>
+            <fileset dir="${build.generated.sources.dir}" erroronmissingdir="false">
+                <include name="**/doc-files/**"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="javadoc-browse" if="netbeans.home" unless="no.javadoc.preview" depends="init,javadoc-build">
+        <nbbrowse file="${dist.javadoc.dir}/index.html"/>
+    </target>
+    <target name="javadoc" depends="init,javadoc-build,javadoc-browse" description="Build Javadoc."/>
+    <!--
+                TEST COMPILATION SECTION
+            -->
+    <target name="-pre-pre-compile-test" if="have.tests" depends="init,compile">
+        <mkdir dir="${build.test.classes.dir}"/>
+        <property name="j2ee.platform.embeddableejb.classpath" value=""/>
+    </target>
+    <target name="-pre-compile-test">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-do-compile-test" if="have.tests" depends="init,compile,-pre-pre-compile-test,-pre-compile-test">
+        <ejbjarproject2:javac srcdir="${test.src.dir}" destdir="${build.test.classes.dir}" debug="true" classpath="${javac.test.classpath}:${j2ee.platform.classpath}:${j2ee.platform.embeddableejb.classpath}"/>
+        <copy todir="${build.test.classes.dir}">
+            <fileset dir="${test.src.dir}" includes="${includes}" excludes="${build.classes.excludes},${excludes}"/>
+        </copy>
+    </target>
+    <target name="-post-compile-test">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="compile-test" depends="init,compile,-pre-pre-compile-test,-pre-compile-test,-do-compile-test,-post-compile-test"/>
+    <target name="-pre-compile-test-single">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-do-compile-test-single" if="have.tests" depends="init,compile,-pre-pre-compile-test,-pre-compile-test-single">
+        <fail unless="javac.includes">Must select some files in the IDE or set javac.includes</fail>
+        <ejbjarproject2:javac srcdir="${test.src.dir}" destdir="${build.test.classes.dir}" debug="true" classpath="${javac.test.classpath}:${j2ee.platform.classpath}:${j2ee.platform.embeddableejb.classpath}" includes="${javac.includes}" excludes=""/>
+    </target>
+    <target name="-post-compile-test-single">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="compile-test-single" depends="init,compile,-pre-pre-compile-test,-pre-compile-test-single,-do-compile-test-single,-post-compile-test-single"/>
+    <!--
+                TEST EXECUTION SECTION
+            -->
+    <target name="-pre-test-run" if="have.tests" depends="init">
+        <mkdir dir="${build.test.results.dir}"/>
+    </target>
+    <target name="-do-test-run" if="have.tests" depends="init,compile-test,-pre-test-run">
+        <ejbjarproject2:test testincludes="**/*Test.java" includes="${includes}"/>
+    </target>
+    <target name="-post-test-run" if="have.tests" depends="init,compile-test,-pre-test-run,-do-test-run">
+        <fail if="tests.failed" unless="ignore.failing.tests">Some tests failed; see details above.</fail>
+    </target>
+    <target name="test-report" if="have.tests" depends="init"/>
+    <target name="-test-browse" if="netbeans.home+have.tests" depends="init"/>
+    <target name="test" depends="init,compile-test,-pre-test-run,-do-test-run,test-report,-post-test-run,-test-browse" description="Run unit tests."/>
+    <target name="-pre-test-run-single" if="have.tests" depends="init">
+        <mkdir dir="${build.test.results.dir}"/>
+    </target>
+    <target name="-do-test-run-single" if="have.tests" depends="init,compile-test-single,-pre-test-run-single">
+        <fail unless="test.includes">Must select some files in the IDE or set test.includes</fail>
+        <ejbjarproject2:test includes="${test.includes}" excludes="" testincludes="${test.includes}"/>
+    </target>
+    <target name="-post-test-run-single" if="have.tests" depends="init,compile-test-single,-pre-test-run-single,-do-test-run-single">
+        <fail if="tests.failed" unless="ignore.failing.tests">Some tests failed; see details above.</fail>
+    </target>
+    <target name="test-single" depends="init,compile-test-single,-pre-test-run-single,-do-test-run-single,-post-test-run-single" description="Run single unit test."/>
+    <target name="-do-test-run-single-method" if="have.tests" depends="init,compile-test-single,-pre-test-run-single">
+        <fail unless="test.class">Must select some files in the IDE or set test.class</fail>
+        <fail unless="test.method">Must select some method in the IDE or set test.method</fail>
+        <ejbjarproject2:test includes="${javac.includes}" excludes="" testincludes="${test.class}" testmethods="${test.method}"/>
+    </target>
+    <target name="-post-test-run-single-method" if="have.tests" depends="init,compile-test-single,-pre-test-run-single,-do-test-run-single-method">
+        <fail if="tests.failed" unless="ignore.failing.tests">Some tests failed; see details above.</fail>
+    </target>
+    <target name="test-single-method" depends="init,compile-test-single,-pre-test-run-single,-do-test-run-single-method,-post-test-run-single-method" description="Run single unit test."/>
+    <!--
+                TEST DEBUGGING SECTION
+            -->
+    <target name="-debug-start-debuggee-test" if="have.tests" depends="init,compile-test-single,-pre-test-run-single">
+        <fail unless="test.class">Must select one file in the IDE or set test.class</fail>
+        <ejbjarproject2:test-debug includes="${javac.includes}" excludes="" testincludes="${javac.includes}" testClass="${test.class}"/>
+    </target>
+    <target name="-debug-start-debuggee-test-method" if="have.tests" depends="init,compile-test-single,-pre-test-run-single">
+        <fail unless="test.class">Must select one file in the IDE or set test.class</fail>
+        <fail unless="test.method">Must select some method in the IDE or set test.method</fail>
+        <ejbjarproject2:test-debug includes="${javac.includes}" excludes="" testincludes="${test.class}" testmethods="${test.method}" testClass="${test.class}" testMethod="${test.method}"/>
+    </target>
+    <target name="-debug-start-debugger-test" if="netbeans.home+have.tests" depends="init,compile-test">
+        <ejbjarproject1:nbjpdastart name="${test.class}" classpath="${debug.test.classpath}"/>
+    </target>
+    <target name="debug-test" depends="init,compile-test,-debug-start-debugger-test,-debug-start-debuggee-test"/>
+    <target name="debug-test-method" depends="init,compile-test-single,-debug-start-debugger-test,-debug-start-debuggee-test-method"/>
+    <target name="debug-single-method" depends="debug-test-method"/>
+    <target name="-do-debug-fix-test" if="netbeans.home" depends="init,-pre-debug-fix,compile-test-single">
+        <ejbjarproject1:nbjpdareload dir="${build.test.classes.dir}"/>
+    </target>
+    <target name="debug-fix-test" if="netbeans.home" depends="init,-pre-debug-fix,-do-debug-fix-test"/>
+    <!--
+                CLEANUP SECTION
+            -->
+    <target name="deps-clean" depends="init" unless="no.deps"/>
+    <target name="-do-clean" depends="init">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+    <target name="-post-clean">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="undeploy-clean" depends="init" if="netbeans.home">
+        <nbundeploy failOnError="false" startServer="false"/>
+    </target>
+    <target name="clean" depends="init,undeploy-clean,deps-clean,-do-clean,-post-clean" description="Clean build products."/>
+    <target name="clean-ear" depends="clean"/>
+</project>

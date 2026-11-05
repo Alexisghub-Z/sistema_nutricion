@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+*** GENERATED FROM project.xml - DO NOT EDIT  ***
+***         EDIT ../build.xml INSTEAD         ***
+
+For the purpose of easier reading the script
+is divided into following sections:
+
+  - initialization
+  - compilation
+  - dist
+  - execution
+  - debugging
+  - cleanup
+
+--><project name="sistema_nutricion-impl" default="default" basedir=".." xmlns:ear2="http://www.netbeans.org/ns/j2ee-earproject/2">
+    <import file="ant-deploy.xml"/>
+    <fail message="Please build using Ant 1.7.1 or higher.">
+        <condition>
+            <not>
+                <antversion atleast="1.7.1"/>
+            </not>
+        </condition>
+    </fail>
+    <target name="default" depends="dist" description="Build whole project."/>
+    <!-- 
+    INITIALIZATION SECTION 
+    -->
+    <target name="pre-init">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="init-private" depends="pre-init">
+        <property file="nbproject/private/private.properties"/>
+    </target>
+    <target name="init-userdir" depends="pre-init,init-private">
+        <property name="user.properties.file" location="${netbeans.user}/build.properties"/>
+    </target>
+    <target name="init-user" depends="pre-init,init-private,init-userdir">
+        <property file="${user.properties.file}"/>
+    </target>
+    <target name="init-project" depends="pre-init,init-private,init-userdir,init-user">
+        <property file="nbproject/project.properties"/>
+    </target>
+    <target name="do-init" depends="pre-init,init-private,init-userdir,init-user,init-project">
+        <!-- The two properties below are usually overridden -->
+        <!-- by the active platform. Just a fallback. -->
+        <property name="default.javac.source" value="1.4"/>
+        <property name="default.javac.target" value="1.4"/>
+        <condition property="do.compile.jsps">
+            <istrue value="${compile.jsps}"/>
+        </condition>
+        <condition property="do.display.browser.old">
+            <and>
+                <istrue value="${display.browser}"/>
+                <isset property="client.module.uri"/>
+                <not>
+                    <isset property="app.client"/>
+                </not>
+                <not>
+                    <isset property="browser.context"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="do.display.browser">
+            <and>
+                <istrue value="${display.browser}"/>
+                <isset property="client.module.uri"/>
+                <not>
+                    <isset property="app.client"/>
+                </not>
+                <isset property="browser.context"/>
+            </and>
+        </condition>
+        <available property="has.custom.manifest" file="${meta.inf}/MANIFEST.MF"/>
+        <!--
+                    Variables needed to support directory deployment.
+                -->
+        <condition property="do.package.with.custom.manifest.not.directory.deploy">
+            <and>
+                <isset property="has.custom.manifest"/>
+                <isfalse value="${directory.deployment.supported}"/>
+            </and>
+        </condition>
+        <condition property="do.package.without.custom.manifest.not.directory.deploy">
+            <and>
+                <not>
+                    <isset property="has.custom.manifest"/>
+                </not>
+                <isfalse value="${directory.deployment.supported}"/>
+            </and>
+        </condition>
+        <condition property="do.package.not.directory.deploy">
+            <isfalse value="${directory.deployment.supported}"/>
+        </condition>
+        <!--End Variables needed to support directory deployment.-->
+        <condition property="j2ee.appclient.mainclass.tool.param" value="-mainclass ${main.class}" else="">
+            <and>
+                <isset property="main.class"/>
+                <not>
+                    <equals arg1="${main.class}" arg2="" trim="true"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="j2ee.appclient.jvmoptions.param" value="${j2ee.appclient.jvmoptions}" else="">
+            <and>
+                <isset property="j2ee.appclient.jvmoptions"/>
+                <not>
+                    <equals arg1="${j2ee.appclient.jvmoptions}" arg2="" trim="true"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="application.args.param" value="${application.args}" else="">
+            <and>
+                <isset property="application.args"/>
+                <not>
+                    <equals arg1="${application.args}" arg2="" trim="true"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="can.debug.appclient">
+            <and>
+                <isset property="netbeans.home"/>
+                <isset property="app.client"/>
+            </and>
+        </condition>
+        <path id="endorsed.classpath.path" path="${endorsed.classpath}"/>
+        <condition property="endorsed.classpath.cmd.line.arg" value="-Xbootclasspath/p:'${toString:endorsed.classpath.path}'" else="">
+            <and>
+                <isset property="endorsed.classpath"/>
+                <length length="0" string="${endorsed.classpath}" when="greater"/>
+            </and>
+        </condition>
+    </target>
+    <target name="-init-cos" depends="init">
+        <condition property="build.deploy.on.save" else="false">
+            <or>
+                <istrue value="${j2ee.deploy.on.save}"/>
+                <istrue value="${j2ee.compile.on.save}"/>
+            </or>
+        </condition>
+    </target>
+    <target name="post-init">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="init-check" depends="pre-init,init-private,init-userdir,init-user,init-project,do-init">
+        <fail unless="build.dir">Must set build.dir</fail>
+        <fail unless="build.generated.dir">Must set build.generated.dir</fail>
+        <fail unless="dist.dir">Must set dist.dir</fail>
+        <fail unless="build.classes.excludes">Must set build.classes.excludes</fail>
+        <fail unless="dist.jar">Must set dist.jar</fail>
+    </target>
+    <target name="-init-taskdefs">
+        <fail unless="libs.CopyLibs.classpath">
+The libs.CopyLibs.classpath property is not set up.
+This property must point to 
+org-netbeans-modules-java-j2seproject-copylibstask.jar file which is part
+of NetBeans IDE installation and is usually located at 
+&lt;netbeans_installation&gt;/java&lt;version&gt;/ant/extra folder.
+Either open the project in the IDE and make sure CopyLibs library
+exists or setup the property manually. For example like this:
+ ant -Dlibs.CopyLibs.classpath=a/path/to/org-netbeans-modules-java-j2seproject-copylibstask.jar
+                </fail>
+        <taskdef resource="org/netbeans/modules/java/j2seproject/copylibstask/antlib.xml" classpath="${libs.CopyLibs.classpath}"/>
+    </target>
+    <!--
+                pre NB7.2 profiling section; consider it deprecated
+            -->
+    <target name="profile-init" depends="-profile-pre-init, init, -profile-post-init, -profile-init-check" if="profiler.info.jvmargs.agent"/>
+    <target name="-profile-pre-init" if="profiler.info.jvmargs.agent">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-profile-post-init" if="profiler.info.jvmargs.agent">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-profile-init-check" depends="-profile-pre-init, init, -profile-post-init" if="profiler.info.jvmargs.agent">
+        <fail unless="profiler.info.jvm">Must set JVM to use for profiling in profiler.info.jvm</fail>
+        <fail unless="profiler.info.jvmargs.agent">Must set profiler agent JVM arguments in profiler.info.jvmargs.agent</fail>
+    </target>
+    <!--
+                end of pre NB7.2 profiling section
+            -->
+    <target name="init" depends="pre-init,init-private,init-userdir,init-user,init-project,do-init,post-init,init-check,-init-taskdefs"/>
+    <!--
+    COMPILATION SECTION
+    -->
+    <target name="deps-jar" depends="init" unless="no.deps">
+        <condition property="build.deploy.on.save" value="false">
+            <not>
+                <isset property="build.deploy.on.save"/>
+            </not>
+        </condition>
+    </target>
+    <target name="deps-j2ee-archive" depends="init" unless="no.deps">
+        <condition property="build.deploy.on.save" value="false">
+            <not>
+                <isset property="build.deploy.on.save"/>
+            </not>
+        </condition>
+        <ant target="dist-ear" inheritall="false" antfile="${project.sistema_nutricion-ejb}/build.xml">
+            <property name="dist.ear.dir" location="${build.dir}"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+        <ant target="dist-ear" inheritall="false" antfile="${project.sistema_nutricion-war}/build.xml">
+            <property name="dist.ear.dir" location="${build.dir}"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+    </target>
+    <target name="pre-pre-compile" depends="init,deps-jar,deps-j2ee-archive"/>
+    <target name="pre-compile">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="do-compile" depends="init,deps-jar,pre-pre-compile,pre-compile,-do-compile-deps">
+        <copy todir="${build.dir}/META-INF">
+            <fileset dir="${meta.inf}"/>
+        </copy>
+    </target>
+    <target name="-do-compile-deps" depends="init,deps-jar,pre-pre-compile,pre-compile">
+        <copyfiles todir="${build.dir}//" files="${reference.sistema_nutricion-ejb.dist-ear}"/>
+        <copyfiles todir="${build.dir}//" files="${reference.sistema_nutricion-war.dist-ear}"/>
+    </target>
+    <target name="post-compile">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="compile" depends="init,deps-jar,pre-pre-compile,pre-compile,do-compile,post-compile" description="Compile project."/>
+    <!--
+                DIST BUILDING SECTION
+            -->
+    <target name="pre-dist">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="do-dist-without-manifest" depends="init,compile,pre-dist" unless="has.custom.manifest">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}">
+            <fileset dir="${build.dir}"/>
+        </jar>
+    </target>
+    <target name="do-dist-with-manifest" depends="init,compile,pre-dist" if="has.custom.manifest">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}" manifest="${meta.inf}/MANIFEST.MF">
+            <fileset dir="${build.dir}"/>
+        </jar>
+    </target>
+    <!--
+                TARGETS NEEDED TO SUPPORT DIRECTORY DEPLOYMENT
+            -->
+    <target name="-do-tmp-dist-without-manifest" depends="init,compile,pre-dist" if="do.package.without.custom.manifest.not.directory.deploy">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}">
+            <fileset dir="${build.dir}"/>
+        </jar>
+    </target>
+    <target name="-do-tmp-dist-with-manifest" depends="init,compile,pre-dist" if="do.package.with.custom.manifest.not.directory.deploy">
+        <dirname property="dist.jar.dir" file="${dist.jar}"/>
+        <mkdir dir="${dist.jar.dir}"/>
+        <jar jarfile="${dist.jar}" compress="${jar.compress}" manifest="${meta.inf}/MANIFEST.MF">
+            <fileset dir="${build.dir}"/>
+        </jar>
+    </target>
+    <target name="-do-dist-directory-deploy" depends="init,compile,pre-dist,-do-tmp-dist-without-manifest,-do-tmp-dist-with-manifest"/>
+    <target name="dist-directory-deploy" depends="init,compile,pre-dist,-do-dist-directory-deploy,post-dist" description="Build distribution (JAR) - if directory deployment is not supported."/>
+    <!--
+                END TARGETS NEEDED TO SUPPORT DIRECTORY DEPLOYMENT
+            -->
+    <target name="post-dist">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="dist" depends="init,compile,pre-dist,do-dist-without-manifest,do-dist-with-manifest,post-dist" description="Build distribution (JAR)."/>
+    <!--
+    EXECUTION SECTION
+    -->
+    <target name="run" depends="run-deploy,run-display-browser,run-ac" description="Deploy to server."/>
+    <target name="pre-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="post-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="-pre-nbmodule-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- This target can be overriden by NetBeans modules. Don't override it directly, use -pre-run-deploy task instead. -->
+    </target>
+    <target name="-post-nbmodule-run-deploy">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- This target can be overriden by NetBeans modules. Don't override it directly, use -post-run-deploy task instead. -->
+    </target>
+    <target name="-run-deploy-am" unless="no.deps">
+        <!-- Task to deploy to the Access Manager runtime. -->
+        <ant target="-run-deploy-am" inheritall="false" antfile="${project.sistema_nutricion-ejb}/build.xml"/>
+        <ant target="-run-deploy-am" inheritall="false" antfile="${project.sistema_nutricion-war}/build.xml"/>
+    </target>
+    <target name="run-deploy" depends="-init-cos,dist-directory-deploy,pre-run-deploy,-pre-nbmodule-run-deploy,-run-deploy-nb,-init-deploy-ant,-deploy-ant,-run-deploy-am,-post-nbmodule-run-deploy,post-run-deploy"/>
+    <target name="-run-deploy-nb" if="netbeans.home">
+        <nbdeploy debugmode="false" forceRedeploy="${forceRedeploy}" clientUrlPart="${client.urlPart}" clientModuleUri="${client.module.uri}"/>
+    </target>
+    <target name="-init-deploy-ant" unless="netbeans.home">
+        <property name="deploy.ant.archive" value="${dist.jar}"/>
+        <property name="deploy.ant.resource.dir" value="${resource.dir}"/>
+        <property name="deploy.ant.enabled" value="true"/>
+    </target>
+    <target name="run-undeploy" depends="dist,-run-undeploy-nb,-init-deploy-ant,-undeploy-ant"/>
+    <target name="-run-undeploy-nb" if="netbeans.home">
+        <fail message="Undeploy is not supported from within the IDE"/>
+    </target>
+    <target name="verify" depends="dist">
+        <nbverify file="${dist.jar}"/>
+    </target>
+    <target name="run-display-browser" depends="run-deploy,-init-display-browser,-display-browser-nb-old,-display-browser-nb,-display-browser-cl"/>
+    <target name="-init-display-browser" if="do.display.browser">
+        <condition property="do.display.browser.nb.old">
+            <and>
+                <isset property="netbeans.home"/>
+                <not>
+                    <isset property="browser.context"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="do.display.browser.nb">
+            <and>
+                <isset property="netbeans.home"/>
+                <isset property="browser.context"/>
+            </and>
+        </condition>
+        <condition property="do.display.browser.cl">
+            <and>
+                <isset property="deploy.ant.enabled"/>
+                <isset property="deploy.ant.client.url"/>
+            </and>
+        </condition>
+    </target>
+    <target name="-display-browser-nb-old" if="do.display.browser.nb.old">
+        <nbbrowse url="${client.url}"/>
+    </target>
+    <target name="-display-browser-nb" if="do.display.browser.nb">
+        <nbbrowse url="${client.url}" context="${browser.context}" urlPath="${client.urlPart}"/>
+    </target>
+    <target name="-get-browser" if="do.display.browser.cl" unless="browser">
+        <condition property="browser" value="rundll32">
+            <os family="windows"/>
+        </condition>
+        <condition property="browser.args" value="url.dll,FileProtocolHandler" else="">
+            <os family="windows"/>
+        </condition>
+        <condition property="browser" value="/usr/bin/open">
+            <os family="mac"/>
+        </condition>
+        <property environment="env"/>
+        <condition property="browser" value="${env.BROWSER}">
+            <isset property="env.BROWSER"/>
+        </condition>
+        <condition property="browser" value="/usr/bin/firefox">
+            <available file="/usr/bin/firefox"/>
+        </condition>
+        <condition property="browser" value="/usr/local/firefox/firefox">
+            <available file="/usr/local/firefox/firefox"/>
+        </condition>
+        <condition property="browser" value="/usr/bin/mozilla">
+            <available file="/usr/bin/mozilla"/>
+        </condition>
+        <condition property="browser" value="/usr/local/mozilla/mozilla">
+            <available file="/usr/local/mozilla/mozilla"/>
+        </condition>
+        <condition property="browser" value="/usr/sfw/lib/firefox/firefox">
+            <available file="/usr/sfw/lib/firefox/firefox"/>
+        </condition>
+        <condition property="browser" value="/opt/csw/bin/firefox">
+            <available file="/opt/csw/bin/firefox"/>
+        </condition>
+        <condition property="browser" value="/usr/sfw/lib/mozilla/mozilla">
+            <available file="/usr/sfw/lib/mozilla/mozilla"/>
+        </condition>
+        <condition property="browser" value="/opt/csw/bin/mozilla">
+            <available file="/opt/csw/bin/mozilla"/>
+        </condition>
+    </target>
+    <target name="-display-browser-cl" depends="-get-browser" if="do.display.browser.cl">
+        <fail unless="browser">
+            Browser not found, cannot launch the deployed application. Try to set the BROWSER environment variable.
+        </fail>
+        <property name="browse.url" value="${deploy.ant.client.url}${client.urlPart}"/>
+        <echo>Launching ${browse.url}</echo>
+        <exec executable="${browser}" spawn="true">
+            <arg line="${browser.args} ${browse.url}"/>
+        </exec>
+    </target>
+    <target name="run-ac" if="app.client">
+        <antcall target="-run-ac"/>
+    </target>
+    <target name="-run-ac" depends="init,-as-retrieve-option-workaround,-init-run-macros,-run-appclient-pregfv3,-run-appclient"/>
+    <target name="-run-appclient-pregfv3" if="j2ee.appclient.tool.args">
+        <ear2:run-appclient-pregfv3/>
+    </target>
+    <target name="-run-appclient" unless="j2ee.appclient.tool.args">
+        <ear2:run-appclient subprojectname="${app.client}"/>
+    </target>
+    <target name="-as-retrieve-option-workaround" if="j2ee.appclient.mainclass.args" unless="j2ee.clientName">
+        <property name="client.jar" value="${dist.dir}/sistema_nutricionClient.jar"/>
+        <sleep seconds="3"/>
+        <copy file="${wa.copy.client.jar.from}/sistema_nutricion/sistema_nutricionClient.jar" todir="${dist.dir}" failonerror="false"/>
+        <copy todir="${dist.dir}/" flatten="true" failonerror="false">
+            <fileset dir="${wa.copy.client.jar.from}/sistema_nutricion" includes="**/sistema_nutricionClient.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/sistema_nutricionClient" flatten="true">
+            <fileset dir="${wa.copy.client.jar.from}/sistema_nutricion" includes="**/*.*ar"/>
+        </copy>
+        <copy todir="${dist.dir}/sistema_nutricionClient" flatten="false" failonerror="false">
+            <fileset dir="${dist.dir}/gfdeploy/sistema_nutricion" includes="**/*.jar"/>
+        </copy>
+    </target>
+    <target name="-init-run-macros" depends="init">
+        <macrodef name="run-appclient" uri="http://www.netbeans.org/ns/j2ee-earproject/2">
+            <attribute name="subprojectname"/>
+            <attribute name="args" default="${application.args.param}"/>
+            <element name="customize" optional="true"/>
+            <sequential>
+                <java fork="true" jar="${client.jar}" dir="${basedir}">
+                    <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
+                    <jvmarg line="${j2ee.appclient.tool.jvmoptions}${client.jar},arg=-name,arg=@{subprojectname}"/>
+                    <jvmarg line="${j2ee.appclient.jvmoptions.param}"/>
+                    <arg line="@{args}"/>
+                    <syspropertyset>
+                        <propertyref prefix="run-sys-prop."/>
+                        <mapper type="glob" from="run-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <customize/>
+                </java>
+            </sequential>
+        </macrodef>
+        <macrodef name="run-appclient-pregfv3" uri="http://www.netbeans.org/ns/j2ee-earproject/2">
+            <element name="customize" optional="true"/>
+            <sequential>
+                <java fork="true" classname="${j2ee.appclient.tool.mainclass}">
+                    <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
+                    <jvmarg line="${j2ee.appclient.tool.jvmoptions}"/>
+                    <jvmarg line="${j2ee.appclient.jvmoptions.param}"/>
+                    <arg line="${j2ee.appclient.tool.args}"/>
+                    <arg line="-client ${client.jar}"/>
+                    <arg line="${j2ee.appclient.mainclass.tool.param}"/>
+                    <arg line="${application.args.param}"/>
+                    <classpath>
+                        <path path="${j2ee.platform.classpath}:${j2ee.appclient.tool.runtime}"/>
+                    </classpath>
+                    <syspropertyset>
+                        <propertyref prefix="run-sys-prop."/>
+                        <mapper type="glob" from="run-sys-prop.*" to="*"/>
+                    </syspropertyset>
+                    <customize/>
+                </java>
+            </sequential>
+        </macrodef>
+    </target>
+    <!--
+    DEBUGGING SECTION
+    -->
+    <target name="debug" depends="run-debug,run-debug-appclient" description="Deploy to server."/>
+    <target name="run-debug" description="Debug project in IDE." depends="dist" if="netbeans.home" unless="app.client">
+        <nbdeploy debugmode="true" clientUrlPart="${client.urlPart}" clientModuleUri="${client.module.uri}"/>
+        <antcall target="connect-debugger"/>
+        <antcall target="debug-display-browser-old"/>
+        <antcall target="debug-display-browser"/>
+    </target>
+    <target name="connect-debugger" unless="is.debugged">
+        <condition property="listeningcp" value="sourcepath">
+            <istrue value="${j2ee.compile.on.save}"/>
+        </condition>
+        <nbjpdaconnect name="${jpda.host}:${jpda.address}" host="${jpda.host}" address="${jpda.address}" transport="${jpda.transport}" listeningcp="${listeningcp}">
+            <classpath>
+                <path path="${debug.classpath}"/>
+                <fileset dir="${build.dir}" includes="lib/*.jar"/>
+            </classpath>
+            <sourcepath>
+                <path path="${ear.docbase.dirs}"/>
+            </sourcepath>
+        </nbjpdaconnect>
+    </target>
+    <target name="debug-display-browser-old" if="do.display.browser.old">
+        <nbbrowse url="${client.url}"/>
+    </target>
+    <target name="debug-display-browser" if="do.display.browser">
+        <nbbrowse url="${client.url}" context="${browser.context}" urlPath="${client.urlPart}"/>
+    </target>
+    <target name="run-debug-appclient" if="can.debug.appclient">
+        <antcall target="-run-debug-appclient"/>
+    </target>
+    <target name="-run-debug-appclient" depends="init,-init-debug-args,-debug-appclient-deploy,-as-retrieve-option-workaround,-init-debug-macros,-debug-appclient-start-nbjpda,-debug-appclient-pregfv3,-debug-appclient,connect-debugger"/>
+    <target name="-init-debug-args"/>
+    <target name="-init-debug-macros" depends="init,-init-debug-args,-as-retrieve-option-workaround,-init-run-macros">
+        <condition else="dt_socket" property="debug-transport-by-os" value="dt_shmem">
+            <os family="windows"/>
+        </condition>
+        <condition else="${debug-transport-by-os}" property="debug-transport-appclient" value="${debug.transport}">
+            <isset property="debug.transport"/>
+        </condition>
+        <macrodef name="nbjpdastart" uri="http://www.netbeans.org/ns/j2ee-earproject/2">
+            <attribute name="name" default="${main.class}"/>
+            <attribute name="classpath" default="${debug.classpath}"/>
+            <attribute name="stopclassname" default=""/>
+            <sequential>
+                <nbjpdastart transport="${debug-transport-appclient}" addressproperty="jpda.address.appclient" name="@{name}" stopclassname="@{stopclassname}">
+                    <classpath>
+                        <path path="@{classpath}"/>
+                    </classpath>
+                </nbjpdastart>
+            </sequential>
+        </macrodef>
+        <macrodef name="debug-appclient" uri="http://www.netbeans.org/ns/j2ee-earproject/2">
+            <attribute name="subprojectname"/>
+            <sequential>
+                <ear2:run-appclient subprojectname="@{subprojectname}">
+                    <customize>
+                        <jvmarg value="-agentlib:jdwp=transport=${debug-transport-appclient},address=${jpda.address.appclient}"/>
+                    </customize>
+                </ear2:run-appclient>
+            </sequential>
+        </macrodef>
+        <macrodef name="debug-appclient-pregfv3" uri="http://www.netbeans.org/ns/j2ee-earproject/2">
+            <sequential>
+                <ear2:run-appclient-pregfv3>
+                    <customize>
+                        <jvmarg value="-agentlib:jdwp=transport=${debug-transport-appclient},address=${jpda.address.appclient}"/>
+                    </customize>
+                </ear2:run-appclient-pregfv3>
+            </sequential>
+        </macrodef>
+    </target>
+    <target name="-debug-appclient-deploy">
+        <nbstartserver debugmode="true"/>
+        <nbdeploy clientModuleUri="${client.module.uri}" clientUrlPart="${client.urlPart}" debugmode="true"/>
+    </target>
+    <target name="-debug-appclient-start-nbjpda">
+        <ear2:nbjpdastart name="${app.client}" classpath=""/>
+    </target>
+    <target name="-debug-appclient-pregfv3" if="j2ee.appclient.tool.args">
+        <ear2:debug-appclient-pregfv3/>
+    </target>
+    <target name="-debug-appclient" unless="j2ee.appclient.tool.args">
+        <ear2:debug-appclient subprojectname="${app.client}"/>
+    </target>
+    <!--
+    =================
+    PROFILING SECTION
+    =================
+    -->
+    <!--
+        pre NB7.2 profiling section; consider it deprecated
+    -->
+    <target name="-profile-pre72" if="profiler.info.jvmargs.agent" description="Profile a J2EE project in the IDE.">
+        <condition property="profiler.startserver.target" value="start-profiled-server-extraargs" else="start-profiled-server">
+            <isset property="profiler.info.jvmargs.extra"/>
+        </condition>
+        <antcall target="${profiler.startserver.target}"/>
+        <antcall target="run"/>
+        <antcall target="-profile-start-loadgen"/>
+    </target>
+    <target name="start-profiled-server">
+        <nbstartprofiledserver forceRestart="${profiler.j2ee.serverForceRestart}" startupTimeout="${profiler.j2ee.serverStartupTimeout}" javaPlatform="${profiler.info.javaPlatform}">
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg value="${profiler.j2ee.agentID}"/>
+        </nbstartprofiledserver>
+    </target>
+    <target name="start-profiled-server-extraargs">
+        <nbstartprofiledserver forceRestart="${profiler.j2ee.serverForceRestart}" startupTimeout="${profiler.j2ee.serverStartupTimeout}" javaPlatform="${profiler.info.javaPlatform}">
+            <jvmarg value="${profiler.info.jvmargs.extra}"/>
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg value="${profiler.j2ee.agentID}"/>
+        </nbstartprofiledserver>
+    </target>
+    <!--
+        end of pre NB7.2 profiling section
+    -->
+    <target name="-profile-check" if="netbeans.home">
+        <condition property="profiler.configured">
+            <or>
+                <contains string="${run.jvmargs.ide}" substring="-agentpath:" casesensitive="true"/>
+                <contains string="${run.jvmargs.ide}" substring="-javaagent:" casesensitive="true"/>
+            </or>
+        </condition>
+    </target>
+    <target name="-do-profile" depends="dist">
+        <startprofiler/>
+        <nbstartserver profilemode="true"/>
+        <nbdeploy profilemode="true" clientUrlPart="${client.urlPart}" forceRedeploy="true"/>
+        <antcall target="-profile-start-loadgen"/>
+    </target>
+    <target name="profile" depends="-profile-check,-profile-pre72" if="profiler.configured" description="Profile a J2EE project in the IDE.">
+        <antcall target="-do-profile"/>
+    </target>
+    <target name="-profile-start-loadgen" if="profiler.loadgen.path">
+        <loadgenstart path="${profiler.loadgen.path}"/>
+    </target>
+    <!--
+    CLEANUP SECTION
+    -->
+    <target name="deps-clean" depends="init" unless="no.deps">
+        <condition property="build.deploy.on.save" value="false">
+            <not>
+                <isset property="build.deploy.on.save"/>
+            </not>
+        </condition>
+        <ant target="clean-ear" inheritall="false" antfile="${project.sistema_nutricion-ejb}/build.xml">
+            <property name="dist.ear.dir" location="${build.dir}"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+        <ant target="clean-ear" inheritall="false" antfile="${project.sistema_nutricion-war}/build.xml">
+            <property name="dist.ear.dir" location="${build.dir}"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+    </target>
+    <target name="do-clean" depends="init">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+        <delete dir="${build.dir}"/>
+    </target>
+    <target name="undeploy-clean" depends="init" if="netbeans.home">
+        <nbundeploy failOnError="false" startServer="false"/>
+    </target>
+    <target name="post-clean">
+        <!-- Empty placeholder for easier customization. -->
+        <!-- You can override this target in the ../build.xml file. -->
+    </target>
+    <target name="clean" depends="init,undeploy-clean,deps-clean,do-clean,post-clean" description="Clean build products."/>
+</project>

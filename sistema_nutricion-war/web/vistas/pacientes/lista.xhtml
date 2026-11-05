@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Pacientes</ui:define>
+
+    <ui:define name="content">
+        <h:form id="frmPacientes">
+            <div class="encabezado-pagina">
+                <h1>Pacientes</h1>
+                <p:commandButton value="Nuevo paciente" action="#{pacienteBean.nuevo}" process="@this"
+                                 update=":frmDialogo" oncomplete="PF('dlgPaciente').show()"
+                                 icon="ui-icon-plus" styleClass="btn-primario" />
+            </div>
+
+            <div class="tarjeta">
+                <div class="buscador">
+                    <p:inputText value="#{pacienteBean.filtro}" placeholder="Buscar por nombre, correo o teléfono">
+                        <p:ajax event="keyup" delay="300" listener="#{pacienteBean.buscar}" update="tabla" />
+                    </p:inputText>
+                </div>
+                <p:dataTable id="tabla" value="#{pacienteBean.pacientes}" var="p" rows="10" paginator="true"
+                             paginatorAlwaysVisible="false" emptyMessage="No hay pacientes.">
+                    <p:column headerText="Nombre" sortBy="#{p.nombre}">#{p.nombre}</p:column>
+                    <p:column headerText="Edad" style="width:70px">#{p.edad}</p:column>
+                    <p:column headerText="Correo">#{p.email}</p:column>
+                    <p:column headerText="Teléfono">#{p.telefono}</p:column>
+                    <p:column headerText="Alergias">#{empty p.alergias ? '—' : p.alergias}</p:column>
+                    <p:column headerText="" style="width:96px">
+                        <p:commandButton icon="ui-icon-pencil" title="Editar" action="#{pacienteBean.editar(p)}"
+                                         process="@this" update=":frmDialogo" oncomplete="PF('dlgPaciente').show()"
+                                         styleClass="btn-secundario" />
+                        <p:commandButton icon="ui-icon-trash" title="Eliminar" action="#{pacienteBean.eliminar(p)}"
+                                         process="@this" update="tabla :growl" styleClass="btn-peligro">
+                            <p:confirm header="Eliminar paciente"
+                                       message="Se borrará a #{p.nombre} con todo su historial. ¿Continuar?"
+                                       icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+
+        <p:dialog header="Paciente" widgetVar="dlgPaciente" modal="true" resizable="false" width="560">
+            <h:form id="frmDialogo">
+                <p:messages id="msgs" closable="true" />
+                <div class="rejilla">
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="nombre" value="Nombre completo" />
+                        <p:inputText id="nombre" value="#{pacienteBean.seleccionado.nombre}" required="true"
+                                     requiredMessage="Escribe el nombre." maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="email" value="Correo" />
+                        <p:inputText id="email" value="#{pacienteBean.seleccionado.email}" required="true"
+                                     requiredMessage="Escribe el correo." />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="tel" value="Teléfono" />
+                        <p:inputText id="tel" value="#{pacienteBean.seleccionado.telefono}" required="true"
+                                     requiredMessage="Escribe el teléfono." maxlength="15" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="nac" value="Fecha de nacimiento" />
+                        <p:calendar id="nac" value="#{pacienteBean.seleccionado.fechaNacimiento}" pattern="dd/MM/yyyy"
+                                    navigator="true" yearRange="c-90:c+0" required="true"
+                                    requiredMessage="Indica la fecha de nacimiento." locale="es" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="sexo" value="Sexo" />
+                        <p:selectOneMenu id="sexo" value="#{pacienteBean.seleccionado.sexo}">
+                            <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{catalogosBean.sexos}" var="s" itemLabel="#{s.etiqueta}" itemValue="#{s}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="alergias" value="Alergias" />
+                        <p:inputText id="alergias" value="#{pacienteBean.seleccionado.alergias}" />
+                    </div>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="intol" value="Intolerancias" />
+                        <p:inputText id="intol" value="#{pacienteBean.seleccionado.intolerancias}" />
+                    </div>
+                </div>
+                <div class="acciones-form">
+                    <p:commandButton value="Guardar" action="#{pacienteBean.guardar}"
+                                     update="@form :frmPacientes:tabla :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgPaciente').hide()" styleClass="btn-secundario" />
+                </div>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+
+</ui:composition>

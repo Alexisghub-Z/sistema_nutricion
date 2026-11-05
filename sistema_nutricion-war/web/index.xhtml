@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantilla.xhtml">
+
+    <ui:define name="titulo">NutriVida · Consultorio de nutrición</ui:define>
+
+    <ui:define name="content">
+        <section class="hero">
+            <div class="hero-texto">
+                <p class="etiqueta">Consultorio de nutrición</p>
+                <h1>Come mejor, sin dietas imposibles.</h1>
+                <p class="hero-sub">Valoración antropométrica, plan de alimentación a tu medida y seguimiento
+                    de tu progreso consulta a consulta.</p>
+                <div class="acciones">
+                    <h:link outcome="/acceso" value="Acceso del nutriólogo" styleClass="boton boton-primario" />
+                </div>
+            </div>
+            <div class="hero-tarjeta">
+                <h2>En consulta</h2>
+                <ul class="pasos">
+                    <li>Valoración: peso, talla, IMC y % de grasa.</li>
+                    <li>Plan de alimentación a tu medida.</li>
+                    <li>Seguimiento de tu progreso en cada cita.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="servicios">
+            <article class="servicio">
+                <h3>Control de peso</h3>
+                <p>Planes para bajar o subir de peso de forma sostenible, sin eliminar grupos de alimentos.</p>
+            </article>
+            <article class="servicio">
+                <h3>Nutrición deportiva</h3>
+                <p>Alimentación para ganar masa muscular y rendir mejor en tu entrenamiento.</p>
+            </article>
+            <article class="servicio">
+                <h3>Alergias e intolerancias</h3>
+                <p>Menús que respetan alergias, intolerancias y preferencias como la dieta vegetariana.</p>
+            </article>
+        </section>
+    </ui:define>
+
+</ui:composition>

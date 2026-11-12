@@ -60,11 +60,18 @@ las zonas con `ui:define`.
 ## Abrir y ejecutar en NetBeans
 
 1. **File → Open Project** y elige la carpeta del repositorio (`sistema_nutricion`, la del triángulo).
-   NetBeans abre también `sistema_nutricion-ejb` y `sistema_nutricion-war`.
+   Comprueba que también aparezcan `sistema_nutricion-ejb` y `sistema_nutricion-war` como proyectos
+   abiertos. Si solo aparece el EAR, expande **Java EE Modules**, haz clic derecho en cada módulo
+   y selecciona **Open Project**.
 2. Si pregunta por el servidor: **Resolve Missing Server Problem** → elige *Payara Server*
-   (5.2022.3) configurado con **JDK 17** (*Servers → Payara Server → Java → Java Platform*).
+   (5.2022.3) en los tres proyectos, configurado con **JDK 17** (*Servers → Payara Server → Java →
+   Java Platform*). Configura primero MySQL según la sección **Base de datos**.
 3. Clic derecho sobre `sistema_nutricion` → **Clean and Build**, y luego **Run** (o **Deploy**).
 4. Abre `http://localhost:8080/sistema_nutricion-war/`.
+
+Si Run muestra **The Java EE server classpath is not correctly set up**, comprueba los pasos 1 y 2:
+los módulos EJB y WAR también necesitan la asociación local a Payara. Ejecuta el EAR principal;
+abrir únicamente el EAR no siempre inicializa la configuración de sus módulos en NetBeans.
 
 **Usuario de prueba:** `admin@nutricion.com` / `admin123`. Se crea solo la primera vez que se despliega,
 junto con algunos pacientes y citas de ejemplo.

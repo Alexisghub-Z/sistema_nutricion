@@ -3,10 +3,8 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
     <persistence-unit name="NutricionPU" transaction-type="JTA">
-        <!-- java:comp/DefaultDataSource = jdbc/__default de Payara 5 (base H2 embebida, sin configurar nada).
-             Para usar otra base (MySQL, PostgreSQL, Java DB) crea un JDBC Resource en Payara
-             y cambia este valor por su nombre JNDI, por ejemplo jdbc/nutricion. -->
-        <jta-data-source>java:comp/DefaultDataSource</jta-data-source>
+        <!-- El recurso JDBC se configura en Payara; las credenciales no van en el proyecto. -->
+        <jta-data-source>jdbc/nutricion</jta-data-source>
         <class>com.nutricion.entidades.Usuario</class>
         <class>com.nutricion.entidades.Paciente</class>
         <class>com.nutricion.entidades.Cita</class>

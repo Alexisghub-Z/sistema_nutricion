@@ -88,10 +88,68 @@ export AS_JAVA=/usr/lib/jvm/java-17-openjdk-amd64
 
 ### Base de datos
 
-No hay que configurar nada: `persistence.xml` usa `java:comp/DefaultDataSource` (la base embebida
-`jdbc/__default` que trae Payara 5) y las tablas se crean al desplegar.
-Para usar MySQL, PostgreSQL o Java DB, crea un *JDBC Connection Pool* y un *JDBC Resource* en Payara,
-y cambia `<jta-data-source>` por su nombre JNDI (por ejemplo `jdbc/nutricion`).
+La aplicación utiliza MySQL por medio del recurso JNDI `jdbc/nutricion` configurado en Payara 5.
+Las credenciales se configuran en el servidor, no en el código ni en Git. La base H2 anterior
+no se migra automáticamente y sus datos permanecen separados.
+
+**Configuración inicial en desarrollo:**
+
+1. En MySQL, crea una base vacía exclusiva para el proyecto, por ejemplo con
+   `CREATE DATABASE sistema_nutricion CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`.
+   Si ya existe una base con ese nombre, verifica su contenido antes de utilizarla: al desplegar,
+   EclipseLink puede crear o extender tablas.
+2. Descarga [MySQL Connector/J](https://dev.mysql.com/downloads/connector/j/) y coloca su archivo
+   JAR en `glassfish/domains/domain1/lib/` del dominio de **Payara 5** que uses. Reinicia ese
+   dominio para que el servidor cargue el controlador.
+3. En la consola de administración de Payara (`http://localhost:4848`), abre **Resources →
+   JDBC → JDBC Connection Pools → New**. Crea `NutricionMySQLPool`, tipo `javax.sql.DataSource`,
+   con la clase `com.mysql.cj.jdbc.MysqlDataSource`. En las propiedades del pool configura
+   `serverName=127.0.0.1`, `portNumber=3306`, `databaseName=sistema_nutricion`, `user` y
+   `password` con los datos de tu servidor. Usa una cuenta de aplicación con permisos sobre esa
+   base. Agrega también `sslMode=REQUIRED` y `fallbackToSystemKeyStore=false`: se exige cifrado
+   y se evita que Connector/J presente los certificados propios de Payara como certificados
+   de cliente de MySQL. Entra al pool y pulsa **Ping** para comprobar la conexión.
+4. En **Resources → JDBC → JDBC Resources → New**, crea el recurso `jdbc/nutricion` y asígnale
+   el pool `NutricionMySQLPool`.
+5. Ejecuta **Clean and Build** y **Run** del proyecto empresarial. Las cuatro tablas declaradas
+   en `persistence.xml` se crean al desplegar; si no hay usuarios, se insertan datos de ejemplo.
+
+No agregues contraseñas al README, archivos del proyecto ni comandos compartidos. El recurso y
+su contraseña quedan en la configuración local del servidor, que debe mantenerse privada.
+
+Si el Ping muestra **Communications link failure** pero MySQL responde desde Workbench, revisa
+el registro de Payara. En este equipo el fallo de negociación TLS se resolvió con las propiedades
+anteriores, sin desactivar SSL. Consulta la [documentación de seguridad de Connector/J](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-security.html).
+
+Para revisar las tablas en MySQL Workbench después del despliegue, actualiza **Schemas →
+sistema_nutricion → Tables** o ejecuta:
+
+```sql
+USE sistema_nutricion;
+SHOW TABLES;
+```
+
+#### Avance de conexión con tablas
+
+La unidad `NutricionPU` registra cuatro entidades: `Usuario`, `Paciente`, `Cita` y `Consulta`.
+EclipseLink solicita la creación de sus tablas al desplegar. Las citas pertenecen a un paciente;
+las consultas pertenecen a un paciente y pueden vincularse con una cita. El acceso pasa por las
+fachadas EJB, como indica la arquitectura de este README.
+
+Para demostrarlo con datos de ejemplo en un dominio de desarrollo:
+
+1. Ejecuta **Clean and Build** y **Run** sobre la aplicación empresarial. Revisa que Payara
+   termine el despliegue sin errores de conexión o creación de tablas.
+2. Inicia sesión con el usuario de prueba indicado arriba. El inicio de sesión consulta la tabla
+   `usuarios`; el panel lee pacientes, citas y consultas.
+3. En **Pacientes**, registra un paciente de prueba con correo y teléfono únicos. Comprueba que
+   aparezca en la lista; vuelve a iniciar sesión y verifica que siga apareciendo. Puedes eliminar
+   el registro de prueba desde la misma pantalla.
+
+La carga inicial se ejecuta solo cuando no hay usuarios en la base de ese dominio. Los datos de
+ejemplo y la contraseña publicada son exclusivamente para desarrollo. Las pantallas de gestión
+de citas y consultas y el aislamiento por consultorio siguen pendientes; la existencia de sus
+entidades no significa que esas historias estén terminadas.
 
 ## Compilar sin el IDE (opcional)
 

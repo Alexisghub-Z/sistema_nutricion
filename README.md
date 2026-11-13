@@ -73,6 +73,18 @@ Si Run muestra **The Java EE server classpath is not correctly set up**, comprue
 los módulos EJB y WAR también necesitan la asociación local a Payara. Ejecuta el EAR principal;
 abrir únicamente el EAR no siempre inicializa la configuración de sus módulos en NetBeans.
 
+Si aparece **Starting of server Payara Server is not supported. Please, start the server manually**,
+revisa el registro del servidor en **Tools → Servers**. Payara debe estar registrado como servidor
+**local**, con la carpeta `glassfish/domains` y el dominio `domain1`; un registro sin carpeta de
+dominios se interpreta como remoto y no permite arrancarlo desde Run. Corrige el registro usando
+la misma instalación y dominio existentes, sin borrar el dominio ni su configuración JDBC.
+Después reinicia NetBeans y vuelve a ejecutar el EAR.
+
+Si al iniciar Payara aparece **no se ha encontrado o cargado la clase principal LAP**, revisa
+si la instalación está bajo una ruta con espacios (por ejemplo `MI LAP 2`). El lanzador del IDE
+puede separar esa ruta al construir el comando Java. Configura el servidor con una ruta sin
+espacios hacia la misma instalación y carpeta de dominios; conserva sus recursos JDBC.
+
 **Usuario de prueba:** `admin@nutricion.com` / `admin123`. Se crea solo la primera vez que se despliega,
 junto con algunos pacientes y citas de ejemplo.
 

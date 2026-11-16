@@ -15,7 +15,9 @@
                 <h1>Pacientes</h1>
                 <p:commandButton value="Nuevo paciente" action="#{pacienteBean.nuevo}" process="@this"
                                  update=":frmDialogo" oncomplete="PF('dlgPaciente').show()"
-                                 icon="ui-icon-plus" styleClass="btn-primario" />
+                                 icon="ui-icon-plus" styleClass="btn-primario">
+                    <p:resetInput target=":frmDialogo" />
+                </p:commandButton>
             </div>
 
             <div class="tarjeta">
@@ -34,7 +36,9 @@
                     <p:column headerText="" style="width:96px">
                         <p:commandButton icon="ui-icon-pencil" title="Editar" action="#{pacienteBean.editar(p)}"
                                          process="@this" update=":frmDialogo" oncomplete="PF('dlgPaciente').show()"
-                                         styleClass="btn-secundario" />
+                                         styleClass="btn-secundario">
+                            <p:resetInput target=":frmDialogo" />
+                        </p:commandButton>
                         <p:commandButton icon="ui-icon-trash" title="Eliminar" action="#{pacienteBean.eliminar(p)}"
                                          process="@this" update="tabla :growl" styleClass="btn-peligro">
                             <p:confirm header="Eliminar paciente"
@@ -53,17 +57,26 @@
                     <div class="campo campo-ancho">
                         <p:outputLabel for="nombre" value="Nombre completo" />
                         <p:inputText id="nombre" value="#{pacienteBean.seleccionado.nombre}" required="true"
-                                     requiredMessage="Escribe el nombre." maxlength="120" />
+                                     requiredMessage="Escribe el nombre." maxlength="120"
+                                     validatorMessage="Escribe un nombre de entre 1 y 120 caracteres.">
+                            <f:validateLength minimum="1" maximum="120" />
+                        </p:inputText>
                     </div>
                     <div class="campo">
                         <p:outputLabel for="email" value="Correo" />
                         <p:inputText id="email" value="#{pacienteBean.seleccionado.email}" required="true"
-                                     requiredMessage="Escribe el correo." />
+                                     requiredMessage="Escribe el correo." maxlength="120"
+                                     validatorMessage="Escribe un correo válido, por ejemplo nombre@correo.com.">
+                            <f:validateRegex pattern="[^\s@]+@[^\s@]+\.[^\s@]+" />
+                        </p:inputText>
                     </div>
                     <div class="campo">
                         <p:outputLabel for="tel" value="Teléfono" />
                         <p:inputText id="tel" value="#{pacienteBean.seleccionado.telefono}" required="true"
-                                     requiredMessage="Escribe el teléfono." maxlength="15" />
+                                     requiredMessage="Escribe el teléfono." maxlength="30"
+                                     validatorMessage="El teléfono solo admite dígitos, un + inicial y separadores.">
+                            <f:validateRegex pattern="\+?[0-9() .-]+" />
+                        </p:inputText>
                     </div>
                     <div class="campo">
                         <p:outputLabel for="nac" value="Fecha de nacimiento" />
@@ -80,11 +93,15 @@
                     </div>
                     <div class="campo campo-ancho">
                         <p:outputLabel for="alergias" value="Alergias" />
-                        <p:inputText id="alergias" value="#{pacienteBean.seleccionado.alergias}" />
+                        <p:inputText id="alergias" value="#{pacienteBean.seleccionado.alergias}" maxlength="1000">
+                            <f:validateLength maximum="1000" />
+                        </p:inputText>
                     </div>
                     <div class="campo campo-ancho">
                         <p:outputLabel for="intol" value="Intolerancias" />
-                        <p:inputText id="intol" value="#{pacienteBean.seleccionado.intolerancias}" />
+                        <p:inputText id="intol" value="#{pacienteBean.seleccionado.intolerancias}" maxlength="1000">
+                            <f:validateLength maximum="1000" />
+                        </p:inputText>
                     </div>
                 </div>
                 <div class="acciones-form">

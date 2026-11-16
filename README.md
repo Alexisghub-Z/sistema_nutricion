@@ -1,5 +1,19 @@
 # Sistema de Nutrición — Proyecto empresarial Java EE (Ant)
 
+## Revisión y entrega de Unidad 4 (15-11-2026)
+
+- [Continuidad para otro chat](CONTINUIDAD_UNIDAD_4.md): rutas, estado comprobado y cómo retomar.
+- [Trabajo técnico y demostración](docs/UNIDAD_4_REVISION_Y_ENTREGA.md): modelo de datos, comportamiento,
+  secuencias, trazabilidad de las 44 historias, validadores y guion de exposición.
+- [Material del profesor e instalaciones](docs/MATERIALES_PROFESOR.md): los seis archivos de `../ARCHIVOS`,
+  páginas de consulta y dependencias opcionales.
+- [Guía de cuestionario](docs/GUIA_CUESTIONARIO.md): 35 preguntas con respuestas y un ejercicio.
+
+El avance demostrado es sitio público, login, panel y CRUD básico de pacientes en MySQL.
+No equivale a terminar todas las historias de la especificación. Para este equipo también se dispone de
+`scripts/desplegar-local.ps1` (compilación y despliegue expandido), `scripts/probar-validaciones.ps1`
+y `tests/recorrido-pacientes.js`; sus alcances y evidencias se explican en el trabajo técnico.
+
 Proyecto empresarial hecho con **Java - Ant** en NetBeans, del lado de **Java EE** (no Jakarta EE):
 
 | Elemento     | Versión                          |
@@ -253,8 +267,9 @@ fachadas CRUD; `InicioDatos` (datos de ejemplo); `CalculosNutricion` (IMC, ICC, 
 login, filtro de acceso, dashboard básico y lista de pacientes.
 
 **Falta:** entidad `Consultorio` y aislamiento por tenant; roles `NUTRIOLOGO` y `RECEPCION`; bloqueo por
-intentos fallidos, expiración de sesión y recuperación de contraseña; antecedentes, catálogo de alergias,
-mediciones extendidas (masa muscular, grasa visceral) y notas en 7 apartados; gráficas y comparativo;
+intentos fallidos y recuperación de contraseña (la sesión ya está configurada a 30 minutos, sin prueba
+de espera real); antecedentes, catálogo de alergias, captura y validación completa de mediciones
+(incluida grasa visceral; ya existe el campo masa muscular) y notas en 7 apartados; gráficas y comparativo;
 adjuntos; configuración de horarios y Google Calendar; reservación pública; cálculo dietético completo
 (5 fórmulas + macros); planes con IA sobre SMAE; asistente de WhatsApp; panel completo; portal del paciente.
 

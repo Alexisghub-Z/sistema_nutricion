@@ -54,10 +54,12 @@
 
             <div id="content" class="center_content">
                 <p:growl id="growl" showDetail="false" life="5000" globalOnly="true" />
-                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                    <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes btn-peligro" icon="ui-icon-check" />
-                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no btn-secundario" icon="ui-icon-close" />
-                </p:confirmDialog>
+                <h:form id="frmConfirmacion">
+                    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                        <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes btn-peligro" icon="ui-icon-check" />
+                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no btn-secundario" icon="ui-icon-close" />
+                    </p:confirmDialog>
+                </h:form>
                 <ui:insert name="content">Content</ui:insert>
             </div>
         </div>

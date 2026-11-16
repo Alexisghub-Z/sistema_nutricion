@@ -4,6 +4,7 @@ import com.nutricion.entidades.Paciente;
 import com.nutricion.util.ReglaNegocioException;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -50,6 +51,13 @@ public class PacienteFacade extends AbstractFacade<Paciente> {
 
     /** Crea o actualiza validando que el correo y el teléfono no estén repetidos. */
     public Paciente guardar(Paciente p) {
+        if (p == null) {
+            throw new ReglaNegocioException("Indica los datos del paciente.");
+        }
+        p.setNombre(p.getNombre() == null ? null : p.getNombre().trim());
+        if (p.getTelefono() != null && !p.getTelefono().trim().matches("\\+?[0-9() .-]+")) {
+            throw new ReglaNegocioException("El teléfono solo admite dígitos, un + inicial y separadores.");
+        }
         p.setEmail(normalizarEmail(p.getEmail()));
         p.setTelefono(normalizarTelefono(p.getTelefono()));
         validar(p);
@@ -82,11 +90,26 @@ public class PacienteFacade extends AbstractFacade<Paciente> {
     }
 
     private void validar(Paciente p) {
-        if (p.getFechaNacimiento() != null && p.getFechaNacimiento().after(new Date())) {
+        if (p.getNombre() == null || p.getNombre().isEmpty() || p.getNombre().length() > 120) {
+            throw new ReglaNegocioException("Escribe un nombre de entre 1 y 120 caracteres.");
+        }
+        if (p.getEmail() == null || p.getEmail().length() > 120
+                || !p.getEmail().matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) {
+            throw new ReglaNegocioException("Escribe un correo válido de hasta 120 caracteres.");
+        }
+        if (p.getFechaNacimiento() == null) {
+            throw new ReglaNegocioException("Indica la fecha de nacimiento.");
+        }
+        if (p.getFechaNacimiento().after(new Date())) {
             throw new ReglaNegocioException("La fecha de nacimiento no puede ser futura.");
         }
-        if (p.getTelefono().length() < 10) {
-            throw new ReglaNegocioException("El teléfono debe tener al menos 10 dígitos.");
+        if (p.getTelefono() == null || !p.getTelefono().matches("\\+?[0-9]{10,15}")) {
+            throw new ReglaNegocioException("El teléfono debe tener entre 10 y 15 dígitos, con + inicial opcional.");
+        }
+        for (String texto : new String[]{p.getAlergias(), p.getIntolerancias(), p.getPreferencias(), p.getDisgustos()}) {
+            if (texto != null && texto.length() > 1000) {
+                throw new ReglaNegocioException("Alergias, intolerancias, preferencias y disgustos admiten hasta 1000 caracteres cada uno.");
+            }
         }
         Paciente mismoEmail = porEmail(p.getEmail());
         if (mismoEmail != null && !mismoEmail.getId().equals(p.getId())) {
@@ -99,7 +122,7 @@ public class PacienteFacade extends AbstractFacade<Paciente> {
     }
 
     static String normalizarEmail(String email) {
-        return email == null ? null : email.trim().toLowerCase();
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     /** Deja solo dígitos (y el + inicial si lo hay). */

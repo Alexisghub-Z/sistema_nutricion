@@ -8,3 +8,7 @@ nbproject/private/
 # Salida de compilación de NetBeans con propiedades sin resolver
 $*/
 */$*/
+
+# Índices y OCR locales del material docente (los PDF originales no se versionan).
+.cache/
+.playwright-cli/

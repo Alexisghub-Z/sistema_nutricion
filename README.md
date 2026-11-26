@@ -208,6 +208,14 @@ del WAR. La carga y la descarga están disponibles a administración y nutrició
 
 El botón **Actualizar datos** del expediente vuelve a leer la ficha y recalcula los resultados dietéticos que dependen de ella. Los campos de los formularios clínicos conservan lo que estás capturando.
 
+#### Comprobar la edición de macros
+
+1. En un expediente ficticio, abre **Cálculo dietético** con una consulta cerrada que tenga peso, talla y porcentaje de grasa.
+2. Cambia el objetivo y el ajuste calórico. La meta y los gramos se recalculan con la distribución que se muestra en el formulario.
+3. Escribe o pega los porcentajes de proteínas, lípidos y carbohidratos. Cada campo requiere un entero de 0 a 100 y los tres deben sumar 100. Al salir del campo se actualizan los resultados. Guarda un plan válido y recarga el expediente para recuperar la meta y los gramos.
+
+`scripts/probar-validaciones.ps1` comprueba el rechazo de porcentajes negativos, mayores de 100 u omitidos, y de una suma distinta de 100. También verifica que la fachada guarde los valores válidos de los extremos del rango.
+
 #### Ver consultorios con reservación pública
 
 Abre **Administración → Consultorio**. La sección **Consultorios con reservación pública** muestra las sedes activas y sus enlaces de reserva, incluidas las que se dieron de alta antes. Tras crear una sede activa, aparece en la lista. **Actualizar lista** consulta las sedes sin recargar la página. La tabla de edición y las cuentas de usuario quedan ligadas al consultorio de la sesión.

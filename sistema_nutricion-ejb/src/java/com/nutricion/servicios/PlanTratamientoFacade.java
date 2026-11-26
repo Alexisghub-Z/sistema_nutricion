@@ -36,9 +36,13 @@ public class PlanTratamientoFacade extends AbstractFacade<PlanTratamiento> {
         if (plan.getMetaKcal() == null || plan.getMetaKcal() < 500 || plan.getMetaKcal() > 8000) {
             throw new ReglaNegocioException("La meta calórica debe estar entre 500 y 8000 kcal.");
         }
-        int suma = (plan.getPctProteinas() == null ? 0 : plan.getPctProteinas())
-                + (plan.getPctLipidos() == null ? 0 : plan.getPctLipidos())
-                + (plan.getPctCarbohidratos() == null ? 0 : plan.getPctCarbohidratos());
+        Integer proteinas = plan.getPctProteinas();
+        Integer lipidos = plan.getPctLipidos();
+        Integer carbohidratos = plan.getPctCarbohidratos();
+        if (!porcentajeValido(proteinas) || !porcentajeValido(lipidos) || !porcentajeValido(carbohidratos)) {
+            throw new ReglaNegocioException("Cada macronutriente debe tener un porcentaje entre 0 y 100.");
+        }
+        int suma = proteinas + lipidos + carbohidratos;
         if (suma != 100) {
             throw new ReglaNegocioException("La suma de macronutrientes debe ser exactamente 100% (actual: " + suma + "%).");
         }
@@ -48,6 +52,10 @@ public class PlanTratamientoFacade extends AbstractFacade<PlanTratamiento> {
             return plan;
         }
         return em.merge(plan);
+    }
+
+    private boolean porcentajeValido(Integer valor) {
+        return valor != null && valor >= 0 && valor <= 100;
     }
 
     public void eliminar(Long id) {

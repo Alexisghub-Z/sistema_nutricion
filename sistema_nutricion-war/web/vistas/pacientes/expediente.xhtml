@@ -534,20 +534,32 @@
                         <div class="rejilla-cuatro">
                             <div class="campo">
                                 <p:outputLabel for="calcProt" value="% Proteínas (4 kcal/g)" />
-                                <p:inputText id="calcProt" value="#{expedienteBean.planActual.pctProteinas}">
+                                <p:inputText id="calcProt" value="#{expedienteBean.planActual.pctProteinas}" required="true"
+                                             requiredMessage="Indica un porcentaje de 0 a 100."
+                                             validatorMessage="Escribe un porcentaje de 0 a 100.">
+                                    <f:validateLongRange minimum="0" maximum="100" />
                                     <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
                                 </p:inputText>
                             </div>
                             <div class="campo">
                                 <p:outputLabel for="calcLip" value="% Lípidos (9 kcal/g)" />
-                                <p:inputText id="calcLip" value="#{expedienteBean.planActual.pctLipidos}">
+                                <p:inputText id="calcLip" value="#{expedienteBean.planActual.pctLipidos}" required="true"
+                                             requiredMessage="Indica un porcentaje de 0 a 100."
+                                             validatorMessage="Escribe un porcentaje de 0 a 100.">
+                                    <f:validateLongRange minimum="0" maximum="100" />
                                     <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
                                 </p:inputText>
                             </div>
                             <div class="campo">
                                 <p:outputLabel for="calcHc" value="% Carbohidratos (4 kcal/g)" />
-                                <p:inputText id="calcHc" value="#{expedienteBean.planActual.pctCarbohidratos}">
+                                <p:inputText id="calcHc" value="#{expedienteBean.planActual.pctCarbohidratos}" required="true"
+                                             requiredMessage="Indica un porcentaje de 0 a 100."
+                                             validatorMessage="Escribe un porcentaje de 0 a 100.">
+                                    <f:validateLongRange minimum="0" maximum="100" />
                                     <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
                                 </p:inputText>
                             </div>
                             <div class="campo">

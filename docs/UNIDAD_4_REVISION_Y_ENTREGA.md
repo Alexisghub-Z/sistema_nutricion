@@ -135,7 +135,7 @@ Con HU-18 se verificaron 14 tablas. `configuracion_agenda.minutos_recordatorio_n
 | CU-05 Eliminar paciente | Usuario con sesión | Registro ficticio seleccionado | Pulsar Eliminar; confirmar Sí; borrar paciente y su historial por JPA. | No: conservar. No usar registros ajenos para una demostración. |
 | CU-06 Salir | Usuario con sesión | Sesión autenticada | Invalidar sesión y redirigir a acceso. | Un acceso posterior a `/vistas/*` se redirige al login. |
 
-La interfaz se denomina «del nutriólogo», pero el enum actual solo contiene `ADMIN`. **No existe todavía la separación de permisos entre ADMIN, NUTRIOLOGO y RECEPCION.**
+La tabla describe el primer corte con una cuenta de administración. El avance actual incluye `ADMIN`, `NUTRIOLOGO` y `RECEPCION`. Recepción abre la agenda al entrar. El expediente y el cálculo dietético se habilitan a administración y nutrición dentro de su consultorio.
 
 ### Actividad: registrar paciente
 
@@ -303,33 +303,34 @@ En servicios también hay reglas de citas (9:00-19:00, no domingo, duración 15-
 
 ## 7. Trazabilidad de historias y pendientes
 
-Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. Los criterios completos y las pruebas con los roles afectados siguen en el README.
+Matriz actualizada el 26-11-2026. De las 44 historias, **18 están probadas en local, 10 parciales y 16 pendientes**. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. El README conserva los criterios de aceptación.
 
 | Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
 | HU-01 | Probada en local | Dos consultorios ficticios creados con credenciales independientes. Se verificó que la lista de sedes con reservación pública muestra ambas al guardar y tras recargar Administración. |
-| HU-02 | Parcial | Acceso, cierre de sesión, bloqueo y desbloqueo probados en Edge. El filtro de sesión pasó cuatro pruebas con tiempo simulado para el sondeo de avisos. Queda comprobar la expiración mediante una espera real de 30 minutos. |
-| HU-03 | Parcial | Recepción entra a la agenda y puede reprogramar. Se verificaron restricciones a expediente, archivos, horarios y Administración, y revocación de su sesión al desactivar la cuenta. |
+| HU-02 | Probada en local | Edge comprobó acceso, cierre de sesión, bloqueo y desbloqueo. En la espera real se aceptaron 59 sondeos automáticos y Edge volvió a `/acceso.xhtml` a los 1800,20 segundos. La vista privada respondió HTTP 302 y la misma cuenta pudo iniciar sesión de nuevo. |
+| HU-03 | Probada en local | Administración creó, editó y desactivó una cuenta ficticia de recepción. El correo editado funcionó con la contraseña anterior. Recepción pudo operar la agenda y recibió una redirección al intentar abrir el expediente y el cálculo dietético. La desactivación revocó la sesión abierta y bloqueó el nuevo acceso. |
 | HU-04 | Pendiente | Recuperación de contraseña por correo. |
 | HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas, ocupaciones y avisos de consulta mantienen el ámbito por consultorio. Correo y teléfono son únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
-| HU-06 | Parcial | CRUD probado en MySQL. Se verificó que editar el nombre y el teléfono conserva un antecedente guardado mientras estaba abierta la ficha. |
+| HU-06 | Probada en local | Nutrición creó un expediente. Se rechazó el alta sin nombre, nacimiento, correo y teléfono. Los antecedentes heredofamiliares y los personales patológicos y no patológicos persistieron al iniciar una nueva sesión. La edición de nombre y teléfono conserva los antecedentes guardados. |
 | HU-07 | Parcial | La selección del catálogo y el texto libre persisten al recargar el expediente. Queda usar el catálogo en la validación de planes. |
-| HU-08 | Parcial | Captura de mediciones, recálculo de IMC y validación de rangos en JSF y Java. Pendiente recorrer todas las mediciones y sus límites. |
+| HU-08 | Probada en local | El IMC se recalculó en pantalla al cambiar el peso. Se rechazaron entradas por debajo y por encima del rango configurado para peso, talla, grasa, masa muscular, grasa visceral y agua. Una nueva sesión confirmó que los intentos inválidos dejaron el historial vacío. Las seis mediciones válidas y el IMC se recuperaron en la consulta fechada. |
 | HU-09 | Probada en local | Cuatro gráficas visibles, dos consultas del mismo día representadas y filtro por fechas aplicado y limpiado en Edge. |
-| HU-10 | Parcial | Siete apartados con borrador, cierre y reapertura en solo lectura. |
+| HU-10 | Parcial | Se guardó un texto distinto en cada uno de los siete apartados. Los siete reaparecieron al abrir el borrador y quedaron en solo lectura al reabrir la consulta cerrada. Queda confirmar con el consultorio el contenido de los apartados. |
 | HU-11 | Parcial | Diferencia numérica y porcentual entre las últimas dos consultas. Pendiente relacionar la valoración de cambios con el objetivo del tratamiento. |
 | HU-12 | Probada en local | Carga y descarga de PDF, JPG y PNG hasta 10 MB, con fecha de carga. Se comprobó rechazo por tamaño y firma incorrecta, y acceso limitado por rol y consultorio. |
 | HU-13 | Probada en local | Laboratorio, Estudio y Fotografía de progreso se asignan al subir. La tabla filtra cada categoría. |
 | HU-14 | Probada en local | Línea de tiempo por fecha de la foto y comparación lado a lado de dos fechas distintas. |
 | HU-15 | Probada en local | Duración, anticipación y un intervalo por día y consultorio. El guardado de parámetros y horario revierte juntos ante un error de validación. |
 | HU-16 | Parcial | Ejecución automática observada en Payara. Con un proveedor ficticio se verificó importar ocupaciones, publicar, reprogramar y cancelar citas. Los intervalos ocupados se verificaron en Edge contra MySQL. Queda conectar una cuenta de Google y verificar el ciclo externo de punta a punta. |
-| HU-17 | Parcial | Agenda con calendario y filtros, reprogramación por recepción y actualización de citas completadas. Tras editar un paciente, el selector vuelve a leer nombre y teléfono. |
+| HU-17 | Probada en local | Recepción vio los estados Pendiente, Confirmada y Cancelada. La reprogramación a un turno ocupado se rechazó y conservó las dos citas. La hora libre se guardó y persistió al recargar. La cancelación desde recepción liberó el turno en la reserva pública. |
 | HU-18 | Probada en local | Margen de 5 a 1440 minutos por consultorio. Un temporizador publica avisos con día, hora, paciente y motivo en las vistas de administración y nutrición. Se verificaron en Edge la actualización automática, la separación por rol y consultorio, la cancelación y la reprogramación. |
 | HU-19 | Parcial | El enlace público excluye citas activas y bloques importados de su consultorio. Se verificó rechazo al confirmar un turno abierto antes del bloqueo. Queda validar con la cuenta real. |
 | HU-20 | Probada en local | Dos reservas simultáneas del mismo turno y consultorio dejaron una cita. Un segundo consultorio pudo reservar esa misma hora. |
 | HU-21 | Parcial | Aviso con fecha, hora, ubicación y código de cita. En Edge se comprobó aceptación y rechazo con SMTP ficticio y la reserva conservó su código en ambos casos. El cliente de WhatsApp pasó las pruebas con HTTP ficticio. Falta verificar la entrega con cuentas reales autorizadas. |
-| HU-22 | Parcial | Se comprobó precarga de la última medición y persistencia de GEB y GET con la fórmula predeterminada. Queda contrastar todas las fórmulas y rangos con el nutriólogo. |
-| HU-23, HU-24 | Parciales | Meta y macros reaparecen en el plan guardado tras recargar. Queda recorrer los ajustes y límites de las distribuciones editables. |
+| HU-22 | Parcial | Se comprobaron la precarga de peso, talla y grasa, el GEB y GET de las cinco fórmulas con un paciente ficticio y el recálculo al cambiar el factor de actividad. Katch-McArdle y Cunningham muestran un aviso cuando falta la grasa e impiden guardar. Queda validar los coeficientes, factores y rangos con el nutriólogo. |
+| HU-23 | Probada en local | Se verificó el ajuste sugerido para pérdida, mantenimiento y ganancia. Al editarlo se actualizó la meta y, tras guardar, el objetivo y la meta se recuperaron al recargar. |
+| HU-24 | Probada en local | Edge verificó los porcentajes y gramos para los tres objetivos, el recálculo al pegar valores y salir del campo, y la persistencia tras recargar. El formulario y la fachada rechazan campos omitidos, porcentajes fuera de 0 a 100 y distribuciones que no suman 100. En Edge los intentos inválidos dejaron intacto el plan válido. |
 | HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
 | HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Canal de WhatsApp, apartados, recordatorios de pacientes y derivación de conversaciones. |
 | HU-37 | Parcial | Panel con pacientes, próximas citas y contadores de citas por atender y completadas. Se refresca al volver a la vista o pulsar Actualizar panel. Queda implementar pacientes activos según el periodo configurable. |
@@ -343,9 +344,9 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 
 ### Orden recomendado de continuación
 
-1. Cubrir los casos restantes de permisos, edición de usuarios y expiración de sesión.
-2. Validar el vínculo de Calendar (HU-16) y la entrega de confirmaciones (HU-21) con cuentas autorizadas.
-3. Revisar las fórmulas antes de generar planes y actualizar el guion académico conforme se comprueben los flujos.
+1. Confirmar con el consultorio los siete apartados de la nota (HU-10) y revisar con el nutriólogo los coeficientes, factores y rangos del cálculo (HU-22).
+2. Validar el vínculo de Calendar (HU-16 y HU-19) y la entrega de confirmaciones (HU-21) con cuentas autorizadas.
+3. Actualizar el guion académico conforme se comprueben los flujos restantes.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)
 
@@ -358,7 +359,7 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 7. Buscar el correo ficticio, recargar y comprobar persistencia. Editar su texto ficticio de alergias. Salir/entrar y volver a buscarlo.
 8. Mostrar el duplicado rechazado y Cancelar/Nuevo sin valores antiguos. Relacionarlo con las alternativas del modelo de comportamiento.
 9. Pulsar Eliminar del registro ficticio: No conserva, Sí elimina. Verificar que desaparece. No borrar muestras ajenas ni registros reales.
-10. Cerrar con la matriz de historias: qué avance corresponde a cada una y qué aún falta. No demostrar IA, WhatsApp, portal, gráficas o agenda como terminados.
+10. Cerrar con la matriz de historias. Mostrar los recorridos verificados de agenda, gráficas y portal. La generación de planes con IA y el asistente conversacional de WhatsApp siguen pendientes.
 
 ## 9. Ejecución y evidencia
 
@@ -391,7 +392,7 @@ playwright-cli -s=nutricion-u4 close
 
 Esta prueba **sí crea, edita y elimina un paciente ficticio** en la BD de desarrollo; no es una consulta de solo lectura. Usa un correo único `u4.qa.*@example.invalid` y limpia exclusivamente su registro. No ejecutarla contra una base de producción.
 
-### Resultado de esta revisión
+### Resultado del recorrido inicial
 
 - Compilación Ant con JDK 17: **BUILD SUCCESSFUL**; quedan avisos de compilación `source 8` sin bootstrap classpath, sin migrar el stack.
 - Pruebas de reglas de paciente: **22 correctas, 0 fallidas**, con EntityManager simulado; prueban reglas y bloqueo de escritura ante errores, no conectividad real.

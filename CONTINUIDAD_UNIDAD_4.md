@@ -6,6 +6,39 @@ El informe detallado y su resumen de exposición están en `C:\Users\yaxti_cm5rg
 
 ## Continuación del 26 de noviembre de 2026
 
+### Caducidad real de sesión y validación de macronutrientes
+
+- **HU-02.** En el EAR de `70496e8`, Edge recibió 59 sondeos automáticos durante la espera sin acciones manuales. Volvió a `/acceso.xhtml` a los 1800,20 segundos. La solicitud posterior a la vista privada devolvió HTTP 302 y la misma cuenta ficticia pudo iniciar sesión de nuevo. El ensayo terminó antes del redespliegue y se eliminó su consultorio ficticio.
+- **HU-24.** En el EAR corregido, Edge verificó la distribución de porcentajes y gramos para los tres objetivos, el ajuste manual de la meta y el recálculo de gramos al pegar valores y salir del campo. Rechazó porcentajes negativos, mayores de 100, omitidos y distribuciones con suma distinta de 100. Al recargar reaparecieron la meta y los gramos del único plan válido.
+- **Regresión.** Pasaron 28 comprobaciones del cálculo y 40 de agenda, expediente y portal en Edge. Cada recorrido usó su propia marca. Se retiraron un consultorio ficticio del cálculo y dos de la regresión del portal.
+
+**Entorno del cierre.** Ant compiló el EAR raíz con JDK 17. Payara 5.2022.3 quedó sirviendo `.cache/despliegues/20261126-144514-239` y la portada devolvió HTTP 200. El pool `NutricionMySQLPool` pasó el ping. MySQL 8.0.41 mostró las 14 tablas esperadas. [NutriVida local](http://localhost:8080/sistema_nutricion-war/).
+
+En Java pasaron 22 pruebas de pacientes, cinco de macros y cuatro de sesión con tiempo simulado. También pasaron 15 de Calendar y nueve de confirmaciones con proveedores ficticios.
+
+La matriz queda con **18 historias probadas en local, 10 parciales y 16 pendientes**. HU-10 sigue parcial hasta confirmar los siete apartados con el consultorio. HU-22 sigue parcial hasta validar los coeficientes, factores y rangos con el nutriólogo. Calendar y la entrega real de avisos requieren cuentas autorizadas. [Matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
+
+Evidencia local en `.cache/revision-continuacion/criterios-20261126/`.
+
+| Verificación | Archivos |
+|---|---|
+| Caducidad real y limpieza | `sesion-5717680423.jsonl`, `limpieza-sesion-5717680423.txt` |
+| Cálculo y regresión en Edge | `calculo-criterios-final-edge.txt`, `calculo-criterios-limite-superior-edge.txt`, `regresion-portal-edge.txt` |
+| Compilación, HTTP y MySQL | `despliegue-macros-final.txt`, `servicios-macros-final.txt`, `mysql-metadatos-macros.txt` |
+| Pruebas Java | `probar-validaciones-publicacion.txt`, `probar-calendario-google-verificado.txt`, `probar-confirmaciones-verificado.txt` |
+| Publicación y comparación de SHA | `git-publicacion-macros.txt` |
+
+### Recepción, expediente y cálculo dietético
+
+El lote de confirmaciones, impresión y administración se publicó en `main` como `70496e80bdeee13277498303cd90f2d3be2a62d8`. Antes de las pruebas se verificó el mismo SHA en GitHub. Ant recompiló esa revisión y se compararon 53 clases del EJB y 34 clases y vistas del WAR con el EAR activo en `.cache/despliegues/20261126-103113-060`.
+
+- **HU-03 y HU-17.** Pasaron 17 comprobaciones de recepción con Edge, Payara y MySQL. Administración editó y desactivó una cuenta ficticia. Recepción recibió HTTP 302 al abrir el expediente con el cálculo dietético. En la agenda vio los tres estados, rechazó un empalme, reprogramó a una hora libre y liberó el turno al cancelar.
+- **HU-06, HU-08 y HU-10.** Pasaron 38 comprobaciones del expediente. Nutrición registró una ficha ficticia y recuperó los tres antecedentes en una nueva sesión. Se rechazaron los valores fuera de ambos extremos del rango para los seis campos de medición. El IMC se actualizó al cambiar el peso. La consulta fechada conservó las mediciones y sus siete apartados quedaron en solo lectura tras el cierre. Queda confirmar el contenido de los apartados con el consultorio.
+- **HU-22 y HU-23.** El cálculo recuperó peso, talla y grasa de la última consulta. En Edge coincidieron los resultados esperados de las cinco fórmulas para el paciente ficticio y se verificaron el factor de actividad, los tres objetivos y el ajuste editable. Katch-McArdle y Cunningham mostraron su aviso al faltar grasa. Queda validar los coeficientes y factores con el nutriólogo.
+- **HU-24.** El ensayo reprodujo que un valor negativo podía guardarse si los tres porcentajes sumaban 100. La fachada y el formulario requieren ahora un entero entre 0 y 100 en cada campo y se conserva la comprobación de la suma. En Java pasaron cinco comprobaciones de los rangos y la persistencia.
+
+Evidencia en `.cache/revision-continuacion/criterios-20261126/`. Los recorridos iniciales y su limpieza están en `recepcion-agenda-5717302873.txt`, `limpieza-recepcion-5717302873.txt`, `expediente-criterios-v3.txt` y `calculo-criterios-v3.txt`. Los resultados Java están en `macros-despues.txt`, `probar-calendario-google-final.txt` y `probar-confirmaciones-final.txt`.
+
 ### Confirmaciones de reserva, impresión y administración
 
 - **HU-21.** Después de guardar una reserva, NutriVida intenta confirmar por correo con JavaMail. WhatsApp está disponible si se configura una plantilla y el paciente elige recibirla en su teléfono internacional. Los avisos contienen fecha, hora, ubicación y código de cita. En Edge se comprobó que ante un rechazo SMTP la cita conserva el código y se puede consultar. Dos solicitudes simultáneas produjeron una cita y un correo capturado por el servidor ficticio.
@@ -14,11 +47,11 @@ El informe detallado y su resumen de exposición están en `C:\Users\yaxti_cm5rg
 
 La prueba de Administración reprodujo la omisión en la versión anterior. La versión corregida pasó 10 comprobaciones en Edge con dos sedes ficticias, incluida la recarga de la página con HTTP 200. En el redespliegue controlado apareció HTTP 404 entre las 10:31:14 y las 10:31:19. Una vez cargado el EAR, el recorrido de alta y recarga quedó sin 404 ni 500. La captura del usuario corresponde a un 404 de Payara y su causa exacta no se pudo confirmar a partir de la imagen.
 
-El EAR activo está en `.cache/despliegues/20261126-103113-060`. Ant compiló y Payara sirvió HTTP 200. El ping JDBC y el esquema de 14 tablas de MySQL 8.0.41 fueron verificados en este avance. Las modificaciones siguen locales sobre `main` en `e5a4b45475837660afad9f28ab9e150f5ea08370`, que también es el SHA de GitHub.
+En ese corte, el EAR estaba en `.cache/despliegues/20261126-103113-060`. Ant compiló y Payara sirvió HTTP 200. El ping JDBC y el esquema de 14 tablas de MySQL 8.0.41 fueron verificados. Los cambios partieron de `e5a4b45475837660afad9f28ab9e150f5ea08370` y se publicaron en `70496e8`.
 
 Pasaron 9 comprobaciones de confirmaciones en Java, 11 del flujo SMTP en Edge y 40 del recorrido de agenda, expediente y portal. También pasaron 22 de pacientes, 4 de sesión con tiempo simulado y 15 de Calendar con proveedor ficticio. La evidencia está en `.cache/revision-continuacion/hu21-5709482589`, incluidos `edge-confirmaciones.txt`, `verificacion-smtp.txt`, `portal-regresion-final.txt`, `portal-impresion-visual.png`, `admin-5710610342.txt`, `admin-5710704599.txt` y `http-durante-despliegue.txt`. Se retiró el SMTP temporal y se limpiaron los consultorios ficticios de cada prueba.
 
-El estado de las 44 HU es **11 probadas en local, 17 parciales y 16 pendientes**. Quedan las pruebas con cuentas autorizadas de Calendar y confirmaciones de reserva, la expiración de sesión después de 30 minutos reales y los demás criterios parciales de la matriz.
+En el corte de confirmaciones, la matriz registraba **11 historias probadas en local, 17 parciales y 16 pendientes**.
 
 Se reprodujeron cuatro problemas de actualización en el despliegue del 25 de noviembre. Si se guardaba una ficha de paciente abierta antes de escribir un antecedente, el antecedente podía desaparecer. La agenda retenía el nombre y teléfono anteriores en el selector. El panel y el portal abiertos podían seguir mostrando una cita después de completarla. Al cerrar una consulta, la cabecera del expediente conservaba el peso anterior. Evidencia en `.cache/revision-continuacion/agenda-5670239286.txt`.
 
@@ -32,9 +65,9 @@ Se añadió la vinculación por consultorio, el cliente de Calendar y una tarea 
 
 Se comprobó con un proveedor HTTP ficticio la autorización, importación paginada, creación, reprogramación y cancelación de citas, conservación de bloqueos ante una caída y recuperación de un evento borrado. En Edge, un bloqueo de 09:00 a 10:00 dejó libre el turno siguiente, rechazó una reserva que ya se había seleccionado y afectó solo al consultorio indicado. A las 08:45 Payara registró una ejecución automática correcta del temporizador local. Evidencia en `.cache/revision-continuacion/calendario-timer.txt`. La validación de OAuth y de la sincronización con una cuenta real queda pendiente. La [sección de Calendar](README.md#vincular-google-calendar) indica las propiedades del dominio y cómo probar el flujo.
 
-### Estado entregado
+### Corte de Calendar antes de la publicación
 
-El EAR activo está en `.cache/despliegues/20261126-083353-223`. Ant reportó `BUILD SUCCESSFUL`, la portada respondió HTTP 200 y `NutricionMySQLPool` pasó el ping. La inspección de MySQL 8.0.41 confirmó 13 tablas y `historia_dietetica` como `LONGTEXT`. El trabajo sigue local sobre `main` en `53ad585342762ca74131e5ee723d30e6a5e94c17`.
+En ese corte, el EAR estaba en `.cache/despliegues/20261126-083353-223`. Ant reportó `BUILD SUCCESSFUL`, la portada respondió HTTP 200 y `NutricionMySQLPool` pasó el ping. La inspección de MySQL 8.0.41 confirmó 13 tablas y `historia_dietetica` como `LONGTEXT`. El trabajo seguía local sobre `main` en `53ad585342762ca74131e5ee723d30e6a5e94c17`.
 
 | Verificación | Comprobaciones | Evidencia en `.cache/revision-continuacion/` |
 |---|---:|---|
@@ -47,7 +80,7 @@ El EAR activo está en `.cache/despliegues/20261126-083353-223`. Ant reportó `B
 | Contactos entre consultorios | 10 | `agenda-5703813123.txt` |
 | CRUD de pacientes | 17 | `crud-26-noviembre.txt` |
 
-Se limpiaron los registros ficticios de cada ejecución. La aplicación queda disponible en [NutriVida local](http://localhost:8080/sistema_nutricion-war/). Quedan por verificar la cuenta real de Calendar, la expiración por inactividad y la impresión del portal. El siguiente módulo de agenda pendiente es recordatorios (HU-18).
+Se limpiaron los registros ficticios de cada ejecución. En ese corte quedaban por verificar la cuenta real de Calendar, la expiración por inactividad y la impresión del portal. El siguiente módulo de agenda era recordatorios (HU-18).
 
 ### Revisión para publicación
 
@@ -72,9 +105,9 @@ El EAR activo quedó en `.cache/despliegues/20261126-090802-016` con compilació
 
 También pasaron las 15 pruebas de Calendar con el proveedor ficticio. Se limpiaron los consultorios, usuarios, citas y pacientes de las pruebas. Quedan la autorización y sincronización real de Calendar (HU-16), la espera real de expiración de sesión y la impresión del portal. La siguiente historia de reserva pendiente es el envío de confirmaciones (HU-21). [Guion de recordatorios](README.md#probar-los-recordatorios-de-consulta-hu-18) y [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
 
-### Estado comprobado para la exposición
+### Corte de publicación de los recordatorios
 
-`main`, `origin/main` y `main` en GitHub coinciden en `e5a4b45475837660afad9f28ab9e150f5ea08370`, que incluye HU-18. Payara 5.2022.3 sigue sirviendo `.cache/despliegues/20261126-090802-016` con JDK 17. La portada, el acceso, la reserva y `portal.xhtml` respondieron HTTP 200. Sin sesión, las vistas privadas redirigieron al acceso. `NutricionMySQLPool` pasó el ping y una consulta de metadatos confirmó las 14 tablas esperadas de MySQL 8.0.41.
+`main`, `origin/main` y `main` en GitHub coincidieron en `e5a4b45475837660afad9f28ab9e150f5ea08370`, que incluye HU-18. Payara 5.2022.3 sirvió `.cache/despliegues/20261126-090802-016` con JDK 17. La portada, el acceso, la reserva y `portal.xhtml` respondieron HTTP 200. Sin sesión, las vistas privadas redirigieron al acceso. `NutricionMySQLPool` pasó el ping y una consulta de metadatos confirmó las 14 tablas esperadas de MySQL 8.0.41.
 
 Se repitieron 22 pruebas de pacientes, cuatro de sesión con tiempo simulado y 15 de Calendar con proveedor ficticio. Las 131 comprobaciones en Edge corresponden a los recorridos registrados en la sección de HU-18. La matriz cuenta 10 historias probadas en local, 17 parciales y 17 pendientes. El diagrama de cuatro tablas y el guion de CRUD del documento de entrega corresponden al primer avance de noviembre.
 
@@ -250,8 +283,8 @@ Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el pr
 
 ## Prompt listo para otro chat
 
-> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Comprueba main, GitHub, los cambios locales y el despliegue. El código publicado está en e5a4b45. Sobre esa base quedaron locales HU-21, el formato de impresión del portal y el listado de sedes activas en Administración.
+> Continúa NutriVida en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y docs/UNIDAD_4_REVISION_Y_ENTREGA.md. Comprueba HEAD de main, SHA en GitHub, cambios locales, Payara y MySQL. El cierre del 26 de noviembre registra la validación de macros sobre la base `70496e8` y la expiración real de sesión.
 >
-> Mantén el EAR raíz con Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El EAR activo quedó en .cache/despliegues/20261126-103113-060 y respondió en http://localhost:8080/sistema_nutricion-war/. Se verificaron las 14 tablas, el ping JDBC, 10 comprobaciones de administración, 11 de reservas con SMTP ficticio y 40 de agenda, expediente y portal. Usa únicamente datos ficticios y limpia los de cada prueba.
+> Mantén el EAR raíz con Java EE 8 `javax.*`, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3 y PrimeFaces 5.0. El EAR activo quedó en `.cache/despliegues/20261126-144514-239`. La portada respondió HTTP 200, pasó el ping de `NutricionMySQLPool` y MySQL 8.0.41 mostró las 14 tablas esperadas. Edge volvió a `/acceso.xhtml` a los 1800,20 segundos y pasó 28 comprobaciones de cálculo y 40 de regresión del portal. Usa datos ficticios y limpia solo los registros de cada prueba.
 >
-> Queda verificar las confirmaciones con proveedores reales autorizados, vincular Calendar con una cuenta autorizada y observar los 30 minutos reales de inactividad. Retoma también los criterios parciales de la matriz. Actualiza el mismo Word de Descargas con los nuevos cambios y pruebas antes de «Resumen para exponer» y actualiza el resumen final.
+> La matriz registra 18 historias probadas en local, 10 parciales y 16 pendientes. Queda confirmar los siete apartados de HU-10 con el consultorio y validar HU-22 con el nutriólogo. Calendar y la entrega de confirmaciones requieren cuentas autorizadas. Actualiza `NutriVida - Avance y resumen.docx` en Descargas después de cada avance e inserta la entrada fechada antes de «Resumen para exponer».

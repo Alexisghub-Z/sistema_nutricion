@@ -2,6 +2,8 @@ package com.nutricion.entidades;
 
 public enum EstadoCita {
     PENDIENTE("Pendiente"),
+    APARTADA("Apartada"),
+    CONFIRMADA("Confirmada"),
     COMPLETADA("Completada"),
     CANCELADA("Cancelada"),
     NO_ASISTIO("No asistió");

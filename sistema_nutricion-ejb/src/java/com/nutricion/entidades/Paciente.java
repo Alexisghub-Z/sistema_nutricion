@@ -7,13 +7,20 @@ import java.util.List;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "pacientes")
+@Table(name = "pacientes", uniqueConstraints = {
+    @UniqueConstraint(name = "uq_pacientes_consultorio_email", columnNames = {"consultorio_id", "email"}),
+    @UniqueConstraint(name = "uq_pacientes_consultorio_tel", columnNames = {"consultorio_id", "telefono"})
+})
 @NamedQueries({
     @NamedQuery(name = "Paciente.todos", query = "SELECT p FROM Paciente p ORDER BY p.nombre"),
+    @NamedQuery(name = "Paciente.porConsultorio", query = "SELECT p FROM Paciente p WHERE p.consultorio = :consultorio ORDER BY p.nombre"),
     @NamedQuery(name = "Paciente.buscar", query = "SELECT p FROM Paciente p WHERE LOWER(p.nombre) LIKE :texto OR LOWER(p.email) LIKE :texto OR p.telefono LIKE :texto ORDER BY p.nombre"),
-    @NamedQuery(name = "Paciente.porEmail", query = "SELECT p FROM Paciente p WHERE p.email = :email"),
-    @NamedQuery(name = "Paciente.porTelefono", query = "SELECT p FROM Paciente p WHERE p.telefono = :telefono"),
-    @NamedQuery(name = "Paciente.contar", query = "SELECT COUNT(p) FROM Paciente p")
+    @NamedQuery(name = "Paciente.buscarPorConsultorio", query = "SELECT p FROM Paciente p WHERE p.consultorio = :consultorio AND (LOWER(p.nombre) LIKE :texto OR LOWER(p.email) LIKE :texto OR p.telefono LIKE :texto) ORDER BY p.nombre"),
+    @NamedQuery(name = "Paciente.porEmail", query = "SELECT p FROM Paciente p WHERE p.consultorio = :consultorio AND p.email = :email"),
+    @NamedQuery(name = "Paciente.porTelefono", query = "SELECT p FROM Paciente p WHERE p.consultorio = :consultorio AND p.telefono = :telefono"),
+    @NamedQuery(name = "Paciente.porCodigoAcceso", query = "SELECT p FROM Paciente p WHERE p.codigoAcceso = :codigo"),
+    @NamedQuery(name = "Paciente.contar", query = "SELECT COUNT(p) FROM Paciente p"),
+    @NamedQuery(name = "Paciente.contarPorConsultorio", query = "SELECT COUNT(p) FROM Paciente p WHERE p.consultorio = :consultorio")
 })
 public class Paciente implements Serializable {
 
@@ -26,10 +33,10 @@ public class Paciente implements Serializable {
     @Column(nullable = false, length = 120)
     private String nombre;
 
-    @Column(nullable = false, unique = true, length = 120)
+    @Column(nullable = false, length = 120)
     private String email;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String telefono;
 
     @Temporal(TemporalType.DATE)
@@ -56,16 +63,55 @@ public class Paciente implements Serializable {
     @Column(length = 1000)
     private String disgustos;
 
+    // ---- Antecedentes clínicos (HU-06) ----
+    @Column(name = "motivo_principal", length = 500)
+    private String motivoPrincipal;
+
+    @Lob
+    @Column(name = "antecedentes_familiares")
+    private String antecedentesFamiliares;
+
+    @Lob
+    @Column(name = "antecedentes_patologicos")
+    private String antecedentesPatologicos;
+
+    @Lob
+    @Column(name = "antecedentes_no_patologicos")
+    private String antecedentesNoPatologicos;
+
+    @Lob
+    @Column(name = "medicamentos_actuales")
+    private String medicamentosActuales;
+
+    // ---- Alergias estructuradas (HU-07) ----
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "paciente_alergias",
+            joinColumns = @JoinColumn(name = "paciente_id"),
+            inverseJoinColumns = @JoinColumn(name = "alergia_id"))
+    @OrderBy("nombre ASC")
+    private List<Alergia> alergiasCatalogo = new ArrayList<>();
+
+    @Lob
+    @Column(name = "alergias_otras")
+    private String alergiasOtras;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "fecha_registro", nullable = false)
     private Date fechaRegistro;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "consultorio_id")
+    private Consultorio consultorio;
+
+    @Column(name = "codigo_acceso", unique = true, length = 12)
+    private String codigoAcceso;
 
     @OneToMany(mappedBy = "paciente", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @OrderBy("fechaHora DESC")
     private List<Cita> citas = new ArrayList<>();
 
     @OneToMany(mappedBy = "paciente", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @OrderBy("fecha DESC")
+    @OrderBy("fecha DESC, id DESC")
     private List<Consulta> consultas = new ArrayList<>();
 
     @PrePersist
@@ -104,8 +150,27 @@ public class Paciente implements Serializable {
     public void setPreferencias(String preferencias) { this.preferencias = preferencias; }
     public String getDisgustos() { return disgustos; }
     public void setDisgustos(String disgustos) { this.disgustos = disgustos; }
+    public String getMotivoPrincipal() { return motivoPrincipal; }
+    public void setMotivoPrincipal(String motivoPrincipal) { this.motivoPrincipal = motivoPrincipal; }
+    public String getAntecedentesFamiliares() { return antecedentesFamiliares; }
+    public void setAntecedentesFamiliares(String antecedentesFamiliares) { this.antecedentesFamiliares = antecedentesFamiliares; }
+    public String getAntecedentesPatologicos() { return antecedentesPatologicos; }
+    public void setAntecedentesPatologicos(String antecedentesPatologicos) { this.antecedentesPatologicos = antecedentesPatologicos; }
+    public String getAntecedentesNoPatologicos() { return antecedentesNoPatologicos; }
+    public void setAntecedentesNoPatologicos(String antecedentesNoPatologicos) { this.antecedentesNoPatologicos = antecedentesNoPatologicos; }
+    public String getMedicamentosActuales() { return medicamentosActuales; }
+    public void setMedicamentosActuales(String medicamentosActuales) { this.medicamentosActuales = medicamentosActuales; }
+    public List<Alergia> getAlergiasCatalogo() { return alergiasCatalogo; }
+    public void setAlergiasCatalogo(List<Alergia> alergiasCatalogo) { this.alergiasCatalogo = alergiasCatalogo; }
+    public String getAlergiasOtras() { return alergiasOtras; }
+    public void setAlergiasOtras(String alergiasOtras) { this.alergiasOtras = alergiasOtras; }
+    public Consulta getUltimaConsulta() { return consultas == null || consultas.isEmpty() ? null : consultas.get(0); }
     public Date getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(Date fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+    public Consultorio getConsultorio() { return consultorio; }
+    public void setConsultorio(Consultorio consultorio) { this.consultorio = consultorio; }
+    public String getCodigoAcceso() { return codigoAcceso; }
+    public void setCodigoAcceso(String codigoAcceso) { this.codigoAcceso = codigoAcceso; }
     public List<Cita> getCitas() { return citas; }
     public void setCitas(List<Cita> citas) { this.citas = citas; }
     public List<Consulta> getConsultas() { return consultas; }

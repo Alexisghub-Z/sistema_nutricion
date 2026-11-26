@@ -1,5 +1,6 @@
 package com.nutricion.servicios;
 
+import com.nutricion.entidades.Consultorio;
 import com.nutricion.entidades.Paciente;
 import com.nutricion.util.ReglaNegocioException;
 import java.lang.reflect.Field;
@@ -16,15 +17,19 @@ public class PacienteFacadeTest {
     private static class Fachada extends PacienteFacade {
         Paciente duplicadoEmail;
         Paciente duplicadoTelefono;
+        Paciente persistido;
         int escrituras;
 
         Fachada() throws Exception {
             EntityManager em = (EntityManager) Proxy.newProxyInstance(
                     EntityManager.class.getClassLoader(), new Class<?>[]{EntityManager.class},
                     (proxy, method, args) -> {
-                        if (method.getName().equals("persist") || method.getName().equals("merge")) {
+                        if (method.getName().equals("persist")) {
                             escrituras++;
-                            return method.getName().equals("merge") ? args[0] : null;
+                            return null;
+                        }
+                        if (method.getName().equals("refresh") && args[0] == persistido) {
+                            return null;
                         }
                         throw new AssertionError("Operación inesperada: " + method.getName());
                     });
@@ -33,8 +38,10 @@ public class PacienteFacadeTest {
             field.set(this, em);
         }
 
-        @Override public Paciente porEmail(String email) { return duplicadoEmail; }
-        @Override public Paciente porTelefono(String telefono) { return duplicadoTelefono; }
+        @Override public Paciente porEmail(String email, Consultorio consultorio) { return duplicadoEmail; }
+        @Override public Paciente porTelefono(String telefono, Consultorio consultorio) { return duplicadoTelefono; }
+        @Override public Paciente porCodigoAcceso(String codigo) { return null; }
+        @Override public Paciente delConsultorio(Long id, Consultorio consultorio) { return persistido; }
     }
 
     private static Paciente valido() {
@@ -43,6 +50,7 @@ public class PacienteFacadeTest {
         p.setEmail("qa@example.invalid");
         p.setTelefono("9511234567");
         p.setFechaNacimiento(Date.valueOf("2000-01-01"));
+        p.setConsultorio(new Consultorio());
         return p;
     }
 
@@ -98,7 +106,8 @@ public class PacienteFacadeTest {
             Fachada f = new Fachada(); Paciente p = valido();
             p.setNombre("  Paciente de prueba  "); p.setEmail("  QA@EXAMPLE.INVALID  "); p.setTelefono("+52 (951) 123-4567");
             if (f.guardar(p) != p || f.escrituras != 1 || !p.getNombre().equals("Paciente de prueba")
-                    || !p.getEmail().equals("qa@example.invalid") || !p.getTelefono().equals("+529511234567"))
+                    || !p.getEmail().equals("qa@example.invalid") || !p.getTelefono().equals("+529511234567")
+                    || p.getCodigoAcceso().length() != 12)
                 throw new AssertionError("No normalizó o persistió");
         });
         prueba("rechaza correo duplicado", () -> {
@@ -113,8 +122,16 @@ public class PacienteFacadeTest {
         });
         prueba("edita sin duplicarse a sí mismo", () -> {
             Fachada f = new Fachada(); Paciente p = valido(); p.setId(1L);
-            f.duplicadoEmail = p; f.duplicadoTelefono = p;
-            if (f.guardar(p) != p || f.escrituras != 1) throw new AssertionError("No actualizó");
+            Paciente actual = valido(); actual.setId(1L);
+            actual.setAntecedentesFamiliares("Antecedente ficticio registrado en otra vista");
+            f.duplicadoEmail = actual;
+            f.duplicadoTelefono = actual;
+            f.persistido = actual;
+            p.setNombre("Paciente actualizado");
+            if (f.guardar(p) != actual || !p.getNombre().equals(actual.getNombre())
+                    || actual.getAntecedentesFamiliares() == null) {
+                throw new AssertionError("La edición debe conservar los antecedentes ya guardados.");
+            }
         });
         System.out.println("RESULTADO " + correctas + " correctas, " + fallidas + " fallidas");
         if (fallidas > 0) System.exit(1);

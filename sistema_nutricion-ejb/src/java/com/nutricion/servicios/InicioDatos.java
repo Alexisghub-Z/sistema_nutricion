@@ -24,21 +24,34 @@ public class InicioDatos {
     private EntityManager em;
 
     @EJB
+    private ConsultorioFacade consultorioFacade;
+
+    @EJB
     private UsuarioFacade usuarioFacade;
+
+    @EJB
+    private PacienteFacade pacienteFacade;
+
+    @EJB
+    private AlergiaFacade alergiaFacade;
 
     @PostConstruct
     public void iniciar() {
+        Consultorio principal = consultorioFacade.asegurarPrincipal();
+        asegurarCatalogoAlergias();
+        migrarAgenda(principal);
         if (usuarioFacade.contar() > 0) {
+            migrarDatosExistentes(principal);
             return;
         }
-        usuarioFacade.registrar("Nutriólogo Administrador", "admin@nutricion.com", "admin123");
+        usuarioFacade.registrar("Nutriólogo Administrador", "admin@nutricion.com", "admin123", Rol.ADMIN, principal);
 
         Paciente ana = paciente("Ana López Martínez", "ana.lopez@correo.com", "9511234567", 1995, 4, 12, Sexo.FEMENINO,
-                "Cacahuate", "Lactosa", "Sin carne roja", "Brócoli");
+                "Cacahuate", "Lactosa", "Sin carne roja", "Brócoli", principal);
         Paciente luis = paciente("Luis Hernández Ruiz", "luis.hdz@correo.com", "9517654321", 1988, 9, 3, Sexo.MASCULINO,
-                null, null, null, "Pescado");
+                null, null, null, "Pescado", principal);
         Paciente sofia = paciente("Sofía Ramírez Cruz", "sofia.ramirez@correo.com", "9515550101", 2001, 1, 27, Sexo.FEMENINO,
-                null, "Gluten", "Vegetariana", null);
+                null, "Gluten", "Vegetariana", null, principal);
 
         // Historial de Ana: tres consultas pasadas para la gráfica de evolución.
         consulta(ana, cita(ana, -60, 10, EstadoCita.COMPLETADA, "Primera valoración"), 72.5, 1.62, 31.0, 84, 100, "350.00");
@@ -50,11 +63,35 @@ public class InicioDatos {
         cita(luis, 1, 12, EstadoCita.PENDIENTE, "Revisión de plan");
         cita(sofia, 2, 16, EstadoCita.PENDIENTE, "Primera consulta: plan vegetariano");
         cita(sofia, -5, 9, EstadoCita.NO_ASISTIO, "Primera consulta");
-        LOG.info("Datos iniciales creados. Usuario: admin@nutricion.com / admin123");
+        LOG.info("Datos iniciales del entorno de demostración creados.");
+    }
+
+    private void migrarAgenda(Consultorio principal) {
+        em.createQuery("UPDATE ConfiguracionAgenda c SET c.consultorio = :principal WHERE c.consultorio IS NULL")
+                .setParameter("principal", principal).executeUpdate();
+        em.createQuery("UPDATE HorarioLaboral h SET h.consultorio = :principal WHERE h.consultorio IS NULL")
+                .setParameter("principal", principal).executeUpdate();
+        // Las citas creadas antes de incorporar @Version conservan una versión nula.
+        em.createNativeQuery("UPDATE citas SET VERSION = 1 WHERE VERSION IS NULL").executeUpdate();
+    }
+
+    private void migrarDatosExistentes(Consultorio principal) {
+        for (Usuario u : em.createQuery("SELECT u FROM Usuario u WHERE u.consultorio IS NULL", Usuario.class).getResultList()) {
+            u.setConsultorio(principal);
+            u.setActivo(true);
+        }
+        for (Paciente p : em.createQuery("SELECT p FROM Paciente p WHERE p.consultorio IS NULL OR p.codigoAcceso IS NULL", Paciente.class).getResultList()) {
+            if (p.getConsultorio() == null) {
+                p.setConsultorio(principal);
+            }
+            if (p.getCodigoAcceso() == null || p.getCodigoAcceso().trim().isEmpty()) {
+                pacienteFacade.asegurarCodigoAcceso(p.getId());
+            }
+        }
     }
 
     private Paciente paciente(String nombre, String email, String tel, int anio, int mes, int dia, Sexo sexo,
-            String alergias, String intolerancias, String preferencias, String disgustos) {
+            String alergias, String intolerancias, String preferencias, String disgustos, Consultorio consultorio) {
         Paciente p = new Paciente();
         p.setNombre(nombre);
         p.setEmail(email);
@@ -68,6 +105,8 @@ public class InicioDatos {
         p.setIntolerancias(intolerancias);
         p.setPreferencias(preferencias);
         p.setDisgustos(disgustos);
+        p.setConsultorio(consultorio);
+        p.setCodigoAcceso(com.nutricion.util.Seguridad.codigoPortal());
         em.persist(p);
         return p;
     }
@@ -108,5 +147,23 @@ public class InicioDatos {
         c.setEstadoPago(EstadoPago.PAGADO);
         em.persist(c);
         cita.setConsulta(c);
+    }
+
+    private void asegurarCatalogoAlergias() {
+        if (alergiaFacade.contar() > 0) {
+            return;
+        }
+        em.persist(new Alergia("Cacahuate", TipoAlergia.ALERGIA, "Leguminosas"));
+        em.persist(new Alergia("Frutos secos (nuez, almendra)", TipoAlergia.ALERGIA, "Oleaginosas"));
+        em.persist(new Alergia("Mariscos y crustáceos", TipoAlergia.ALERGIA, "AOA"));
+        em.persist(new Alergia("Pescado", TipoAlergia.ALERGIA, "AOA"));
+        em.persist(new Alergia("Huevo", TipoAlergia.ALERGIA, "AOA"));
+        em.persist(new Alergia("Soya", TipoAlergia.ALERGIA, "Leguminosas"));
+        em.persist(new Alergia("Proteína de leche de vaca", TipoAlergia.ALERGIA, "Lácteos"));
+        em.persist(new Alergia("Lactosa", TipoAlergia.INTOLERANCIA, "Lácteos"));
+        em.persist(new Alergia("Gluten / Trigo", TipoAlergia.INTOLERANCIA, "Cereales"));
+        em.persist(new Alergia("Fructosa", TipoAlergia.INTOLERANCIA, "Frutas y azúcares"));
+        em.persist(new Alergia("Sulfitos", TipoAlergia.INTOLERANCIA, "Aditivos"));
+        LOG.info("Catálogo inicial de alergias e intolerancias creado.");
     }
 }

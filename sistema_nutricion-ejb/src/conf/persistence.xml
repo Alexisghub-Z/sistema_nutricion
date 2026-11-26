@@ -5,10 +5,18 @@
     <persistence-unit name="NutricionPU" transaction-type="JTA">
         <!-- El recurso JDBC se configura en Payara; las credenciales no van en el proyecto. -->
         <jta-data-source>jdbc/nutricion</jta-data-source>
+        <class>com.nutricion.entidades.Consultorio</class>
         <class>com.nutricion.entidades.Usuario</class>
         <class>com.nutricion.entidades.Paciente</class>
+        <class>com.nutricion.entidades.ArchivoAdjunto</class>
+        <class>com.nutricion.entidades.Alergia</class>
         <class>com.nutricion.entidades.Cita</class>
         <class>com.nutricion.entidades.Consulta</class>
+        <class>com.nutricion.entidades.PlanTratamiento</class>
+        <class>com.nutricion.entidades.HorarioLaboral</class>
+        <class>com.nutricion.entidades.ConfiguracionAgenda</class>
+        <class>com.nutricion.entidades.VinculoGoogleCalendar</class>
+        <class>com.nutricion.entidades.BloqueoCalendario</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>

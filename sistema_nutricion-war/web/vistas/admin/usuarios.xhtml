@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Administración · Consultorios y Usuarios</ui:define>
+
+    <ui:define name="content">
+        <div class="encabezado-pagina">
+            <h1>Administración del sistema</h1>
+        </div>
+
+        <p:tabView id="tabsAdmin" styleClass="tabs-clinicas">
+            <!-- Tab 1: Usuarios y Roles (HU-02, HU-03) -->
+            <p:tab title="Usuarios y roles">
+                <h:form id="frmUsuarios">
+                    <div class="encabezado-pagina" style="margin-bottom:14px;">
+                        <p class="texto-ayuda" style="margin:0;">
+                            Gestiona las cuentas de tu consultorio.
+                        </p>
+                        <p:commandButton value="Nuevo usuario" action="#{adminBean.nuevoUsuario}"
+                                         process="@this" update=":frmDialogoUsuario"
+                                         oncomplete="PF('dlgUsuario').show()"
+                                         icon="ui-icon-plus" styleClass="btn-primario">
+                            <p:resetInput target=":frmDialogoUsuario" />
+                        </p:commandButton>
+                    </div>
+
+                    <p:dataTable id="tablaUsuarios" value="#{adminBean.usuarios}" var="u"
+                                 emptyMessage="No hay usuarios registrados.">
+                        <p:column headerText="Nombre" sortBy="#{u.nombre}">#{u.nombre}</p:column>
+                        <p:column headerText="Correo">#{u.email}</p:column>
+                        <p:column headerText="Rol" style="width:130px">
+                            <span class="badge badge-neutro">#{u.rol.etiqueta}</span>
+                        </p:column>
+                        <p:column headerText="Estado" style="width:140px">
+                            <h:panelGroup rendered="#{u.bloqueadoAhora}">
+                                <span class="badge badge-peligro">Bloqueado</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not u.bloqueadoAhora and u.activo}">
+                                <span class="badge badge-exito">Activo</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not u.bloqueadoAhora and not u.activo}">
+                                <span class="badge badge-alerta">Inactivo</span>
+                            </h:panelGroup>
+                        </p:column>
+                        <p:column headerText="Acciones" style="width:150px">
+                            <p:commandButton icon="ui-icon-unlocked" title="Desbloquear cuenta"
+                                             action="#{adminBean.desbloquearUsuario(u)}"
+                                             rendered="#{u.bloqueadoAhora or u.intentosFallidos gt 0}"
+                                             process="@this" update="tablaUsuarios :growl"
+                                             styleClass="btn-secundario" />
+                            <p:commandButton icon="ui-icon-pencil" title="Editar usuario"
+                                             action="#{adminBean.editarUsuario(u)}"
+                                             process="@this" update=":frmDialogoUsuario"
+                                             oncomplete="PF('dlgUsuario').show()"
+                                             styleClass="btn-secundario">
+                                <p:resetInput target=":frmDialogoUsuario" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:form>
+            </p:tab>
+
+            <!-- Tab 2: Consultorios (HU-01, HU-05) -->
+            <p:tab title="Consultorio">
+                <h:form id="frmConsultorios">
+                    <div class="encabezado-pagina" style="margin-bottom:14px;">
+                        <p class="texto-ayuda" style="margin:0;">
+                            Edita los datos de tu consultorio o crea uno con su propia cuenta de administración.
+                        </p>
+                        <p:commandButton value="Nuevo consultorio" action="#{adminBean.nuevoConsultorio}"
+                                         process="@this" update=":frmDialogoConsultorio"
+                                         oncomplete="PF('dlgConsultorio').show()"
+                                         icon="ui-icon-plus" styleClass="btn-primario">
+                            <p:resetInput target=":frmDialogoConsultorio" />
+                        </p:commandButton>
+                    </div>
+
+                    <p:dataTable id="tablaConsultorios" value="#{adminBean.consultorios}" var="con"
+                                 emptyMessage="No hay consultorios registrados.">
+                        <p:column headerText="Nombre">#{con.nombre}</p:column>
+                        <p:column headerText="Slug" style="width:140px"><code>#{con.slug}</code></p:column>
+                        <p:column headerText="Teléfono" style="width:130px">#{empty con.telefono ? '—' : con.telefono}</p:column>
+                        <p:column headerText="Correo">#{empty con.email ? '—' : con.email}</p:column>
+                        <p:column headerText="Estado" style="width:100px">
+                            <span class="badge #{con.activo ? 'badge-exito' : 'badge-alerta'}">
+                                #{con.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </p:column>
+                        <p:column headerText="Acciones" style="width:180px">
+                            <h:link outcome="/reservar" value="Ver reservación" rendered="#{con.activo}" target="_blank">
+                                <f:param name="c" value="#{con.slug}" />
+                            </h:link>
+                            <p:commandButton icon="ui-icon-pencil" title="Editar consultorio"
+                                             action="#{adminBean.editarConsultorio(con)}"
+                                             process="@this" update=":frmDialogoConsultorio"
+                                             oncomplete="PF('dlgConsultorio').show()"
+                                             styleClass="btn-secundario">
+                                <p:resetInput target=":frmDialogoConsultorio" />
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </h:form>
+            </p:tab>
+        </p:tabView>
+
+        <!-- Diálogo Usuario -->
+        <p:dialog header="Usuario del sistema" widgetVar="dlgUsuario" modal="true" resizable="false" width="540">
+            <h:form id="frmDialogoUsuario">
+                <p:messages id="msgsUsuario" closable="true" />
+                <div class="rejilla">
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="uNombre" value="Nombre completo" />
+                        <p:inputText id="uNombre" value="#{adminBean.usuarioForm.nombre}" required="true"
+                                     requiredMessage="Escribe el nombre." maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="uEmail" value="Correo" />
+                        <p:inputText id="uEmail" value="#{adminBean.usuarioForm.email}" required="true"
+                                     requiredMessage="Escribe el correo." maxlength="120">
+                            <f:validateRegex pattern="[^\s@]+@[^\s@]+\.[^\s@]+" />
+                        </p:inputText>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="uRol" value="Rol" />
+                        <p:selectOneMenu id="uRol" value="#{adminBean.usuarioForm.rol}" required="true">
+                            <f:selectItems value="#{catalogosBean.roles}" var="r" itemLabel="#{r.etiqueta}" itemValue="#{r}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="uActivo" value="Cuenta activa" />
+                        <p:selectBooleanCheckbox id="uActivo" value="#{adminBean.usuarioForm.activo}" itemLabel="Habilitada" />
+                    </div>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="uPass" value="#{adminBean.usuarioForm.id == null ? 'Contraseña inicial (mín. 6 caracteres)' : 'Nueva contraseña (opcional)'}" />
+                        <p:password id="uPass" value="#{adminBean.passwordNueva}" autocomplete="new-password" />
+                    </div>
+                </div>
+                <div class="acciones-form">
+                    <p:commandButton value="Guardar" action="#{adminBean.guardarUsuario}"
+                                     update="@form :tabsAdmin:frmUsuarios:tablaUsuarios :growl"
+                                     icon="ui-icon-check" styleClass="btn-primario" />
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgUsuario').hide()" styleClass="btn-secundario" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Diálogo Consultorio -->
+        <p:dialog header="Consultorio" widgetVar="dlgConsultorio" modal="true" resizable="false" width="540">
+            <h:form id="frmDialogoConsultorio">
+                <p:messages id="msgsConsultorio" closable="true" />
+                <div class="rejilla">
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="cNombre" value="Nombre del consultorio" />
+                        <p:inputText id="cNombre" value="#{adminBean.consultorioForm.nombre}" required="true"
+                                     requiredMessage="Escribe el nombre del consultorio." maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cSlug" value="Identificador (slug)" />
+                        <p:inputText id="cSlug" value="#{adminBean.consultorioForm.slug}" maxlength="60"
+                                     placeholder="se genera si se deja vacío" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cTel" value="Teléfono" />
+                        <p:inputText id="cTel" value="#{adminBean.consultorioForm.telefono}" maxlength="20" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cEmail" value="Correo" />
+                        <p:inputText id="cEmail" value="#{adminBean.consultorioForm.email}" maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cActivo" value="Estado" />
+                        <p:selectBooleanCheckbox id="cActivo" value="#{adminBean.consultorioForm.activo}" itemLabel="Activo" />
+                    </div>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="cDir" value="Dirección" />
+                        <p:inputTextarea id="cDir" value="#{adminBean.consultorioForm.direccion}" rows="2" maxlength="300" />
+                    </div>
+                </div>
+                <h:panelGroup rendered="#{adminBean.consultorioForm.id == null}" layout="block" styleClass="rejilla">
+                    <h2 class="campo-ancho subtitulo-seccion">Cuenta del nuevo administrador</h2>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="cAdminNombre" value="Nombre del administrador" />
+                        <p:inputText id="cAdminNombre" value="#{adminBean.administradorNuevo.nombre}" required="true" maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cAdminEmail" value="Correo de acceso" />
+                        <p:inputText id="cAdminEmail" value="#{adminBean.administradorNuevo.email}" required="true" maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cAdminPass" value="Contraseña inicial" />
+                        <p:password id="cAdminPass" value="#{adminBean.passwordAdministrador}" required="true" autocomplete="new-password" />
+                    </div>
+                </h:panelGroup>
+                <div class="acciones-form">
+                    <p:commandButton value="Guardar" action="#{adminBean.guardarConsultorio}"
+                                     update="@form :tabsAdmin:frmConsultorios:tablaConsultorios :tabsAdmin:frmUsuarios :growl"
+                                     icon="ui-icon-check" styleClass="btn-primario" />
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgConsultorio').hide()" styleClass="btn-secundario" />
+                </div>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+
+</ui:composition>

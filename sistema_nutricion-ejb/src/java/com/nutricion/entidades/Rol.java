@@ -1,7 +1,9 @@
 package com.nutricion.entidades;
 
 public enum Rol {
-    ADMIN("Administrador");
+    ADMIN("Administrador"),
+    NUTRIOLOGO("Nutriólogo"),
+    RECEPCION("Recepción");
 
     private final String etiqueta;
 

@@ -2,7 +2,9 @@ package com.nutricion.servicios;
 
 import com.nutricion.entidades.Cita;
 import com.nutricion.entidades.Consulta;
+import com.nutricion.entidades.Consultorio;
 import com.nutricion.entidades.EstadoCita;
+import com.nutricion.entidades.EstadoPago;
 import com.nutricion.entidades.Paciente;
 import com.nutricion.util.ReglaNegocioException;
 import java.math.BigDecimal;
@@ -10,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 
 @Stateless
@@ -37,13 +40,58 @@ public class ConsultaFacade extends AbstractFacade<Consulta> {
         return em.createNamedQuery("Consulta.porPacienteAsc", Consulta.class).setParameter("paciente", p).getResultList();
     }
 
-    public List<Consulta> recientes(int max) {
-        return em.createNamedQuery("Consulta.recientes", Consulta.class).setMaxResults(max).getResultList();
+    public List<Consulta> medicionesParaPortal(Paciente paciente) {
+        return em.createQuery("SELECT c FROM Consulta c LEFT JOIN c.cita cita "
+                + "WHERE c.paciente = :paciente AND (c.cerrada = true OR cita.estado = :completada) "
+                + "AND c.peso IS NOT NULL ORDER BY c.fecha, c.id", Consulta.class)
+                .setParameter("paciente", paciente).setParameter("completada", EstadoCita.COMPLETADA)
+                .getResultList();
     }
 
-    /** Registra o edita la consulta; si viene de una cita la marca como completada. */
-    public Consulta guardar(Consulta c) {
-        validar(c);
+    public Consulta detalle(Long id, Paciente paciente) {
+        return em.createQuery("SELECT c FROM Consulta c WHERE c.id = :id AND c.paciente = :paciente", Consulta.class)
+                .setParameter("id", id).setParameter("paciente", paciente)
+                .getResultStream().findFirst().orElse(null);
+    }
+
+    /** Historial en orden cronológico filtrado por rango de fechas (HU-09). */
+    public List<Consulta> evolucion(Paciente p, Date desde, Date hasta) {
+        StringBuilder jpql = new StringBuilder("SELECT c FROM Consulta c WHERE c.paciente = :paciente");
+        if (desde != null) {
+            jpql.append(" AND c.fecha >= :desde");
+        }
+        if (hasta != null) {
+            jpql.append(" AND c.fecha < :hasta");
+        }
+        jpql.append(" ORDER BY c.fecha, c.id");
+        javax.persistence.TypedQuery<Consulta> q = em.createQuery(jpql.toString(), Consulta.class)
+                .setParameter("paciente", p);
+        if (desde != null) {
+            q.setParameter("desde", Fechas.inicioDelDia(desde));
+        }
+        if (hasta != null) {
+            q.setParameter("hasta", Fechas.sumarDias(Fechas.inicioDelDia(hasta), 1));
+        }
+        return q.getResultList();
+    }
+
+    public List<Consulta> recientes(int max, Consultorio c) {
+        return em.createQuery("SELECT c FROM Consulta c WHERE c.paciente.consultorio = :consultorio ORDER BY c.fecha DESC",
+                Consulta.class)
+                .setParameter("consultorio", c)
+                .setMaxResults(max)
+                .getResultList();
+    }
+
+    /** Registra o edita la consulta, con opción de cerrarla en solo lectura. */
+    public Consulta guardar(Consulta c, boolean cerrar, Consultorio consultorio) {
+        validar(c, consultorio);
+        if (cerrar) {
+            c.setCerrada(true);
+            if (c.getFechaCierre() == null) {
+                c.setFechaCierre(new Date());
+            }
+        }
         Consulta guardada;
         if (c.getId() == null) {
             em.persist(c);
@@ -59,51 +107,84 @@ public class ConsultaFacade extends AbstractFacade<Consulta> {
         return guardada;
     }
 
-    public void eliminar(Long id) {
-        Consulta c = em.find(Consulta.class, id);
-        if (c != null) {
-            if (c.getCita() != null) {
-                c.getCita().setConsulta(null);
-            }
-            em.remove(c);
-        }
-    }
-
-    public long consultasDelMes() {
+    public long consultasDelMes(Consultorio c) {
         Date hoy = new Date();
-        return em.createNamedQuery("Consulta.contarEntre", Long.class)
+        return em.createQuery(
+                "SELECT COUNT(c) FROM Consulta c WHERE c.paciente.consultorio = :consultorio AND c.fecha >= :desde AND c.fecha < :hasta",
+                Long.class)
+                .setParameter("consultorio", c)
                 .setParameter("desde", Fechas.inicioDelMes(hoy))
                 .setParameter("hasta", Fechas.inicioMesSiguiente(hoy))
                 .getSingleResult();
     }
 
-    public BigDecimal ingresosDelMes() {
+    public BigDecimal ingresosDelMes(Consultorio c) {
         Date hoy = new Date();
-        BigDecimal r = em.createNamedQuery("Consulta.ingresosEntre", BigDecimal.class)
+        BigDecimal r = em.createQuery(
+                "SELECT SUM(c.montoConsulta) FROM Consulta c WHERE c.paciente.consultorio = :consultorio AND c.fecha >= :desde AND c.fecha < :hasta AND c.estadoPago = :estado",
+                BigDecimal.class)
+                .setParameter("consultorio", c)
                 .setParameter("desde", Fechas.inicioDelMes(hoy))
                 .setParameter("hasta", Fechas.inicioMesSiguiente(hoy))
+                .setParameter("estado", EstadoPago.PAGADO)
                 .getSingleResult();
         return r == null ? BigDecimal.ZERO : r;
     }
 
-    private void validar(Consulta c) {
-        if (c.getPaciente() == null) {
-            throw new ReglaNegocioException("La consulta debe pertenecer a un paciente.");
+    private void validar(Consulta c, Consultorio consultorio) {
+        Paciente paciente = c == null || c.getPaciente() == null || c.getPaciente().getId() == null
+                ? null : em.find(Paciente.class, c.getPaciente().getId());
+        if (paciente == null || consultorio == null || !consultorio.equals(paciente.getConsultorio())) {
+            throw new ReglaNegocioException("La consulta debe pertenecer a un paciente de este consultorio.");
         }
-        if (c.getFecha() != null && c.getFecha().after(Fechas.sumarDias(new Date(), 1))) {
+        if (c.getId() != null) {
+            Consulta existente = em.find(Consulta.class, c.getId(), LockModeType.PESSIMISTIC_WRITE);
+            if (existente == null || !paciente.equals(existente.getPaciente())) {
+                throw new ReglaNegocioException("La consulta no pertenece a este paciente.");
+            }
+            if (existente.isCerrada()) {
+                throw new ReglaNegocioException("La consulta ya está cerrada y es de solo lectura.");
+            }
+        }
+        if (c.getCita() != null) {
+            Cita cita = em.find(Cita.class, c.getCita().getId());
+            if (cita == null || !paciente.equals(cita.getPaciente())) {
+                throw new ReglaNegocioException("La cita no pertenece a este paciente.");
+            }
+        }
+        if (c.getFecha() != null && c.getFecha().after(new Date())) {
             throw new ReglaNegocioException("La fecha de la consulta no puede ser futura.");
         }
-        if (c.getPeso() != null && (c.getPeso() < 2 || c.getPeso() > 400)) {
+        if (fueraDeRango(c.getPeso(), 2, 400)) {
             throw new ReglaNegocioException("El peso debe estar entre 2 y 400 kg.");
         }
-        if (c.getTalla() != null && (c.getTalla() < 0.4 || c.getTalla() > 2.5)) {
-            throw new ReglaNegocioException("La talla va en metros (ej. 1.65).");
+        if (fueraDeRango(c.getTalla(), 0.4, 2.5)) {
+            throw new ReglaNegocioException("La talla debe estar entre 0.40 y 2.50 metros (ej. 1.65).");
         }
-        if (c.getGrasaCorporal() != null && (c.getGrasaCorporal() < 1 || c.getGrasaCorporal() > 75)) {
-            throw new ReglaNegocioException("El porcentaje de grasa debe estar entre 1 y 75.");
+        if (fueraDeRango(c.getGrasaCorporal(), 1, 75)) {
+            throw new ReglaNegocioException("El porcentaje de grasa debe estar entre 1% y 75%.");
+        }
+        if (fueraDeRango(c.getMasaMuscular(), 1, 200)) {
+            throw new ReglaNegocioException("La masa muscular debe estar entre 1 y 200 kg.");
+        }
+        if (fueraDeRango(c.getGrasaVisceral(), 1, 30)) {
+            throw new ReglaNegocioException("La grasa visceral debe estar entre nivel 1 y 30.");
+        }
+        if (fueraDeRango(c.getPorcentajeAgua(), 10, 85)) {
+            throw new ReglaNegocioException("El porcentaje de agua debe estar entre 10% y 85%.");
+        }
+        if (fueraDeRango(c.getCintura(), 30, 250)) {
+            throw new ReglaNegocioException("La cintura debe estar entre 30 y 250 cm.");
+        }
+        if (fueraDeRango(c.getCadera(), 30, 250)) {
+            throw new ReglaNegocioException("La cadera debe estar entre 30 y 250 cm.");
         }
         if (c.getMontoConsulta() != null && c.getMontoConsulta().signum() < 0) {
             throw new ReglaNegocioException("El monto no puede ser negativo.");
         }
+    }
+
+    private boolean fueraDeRango(Double valor, double minimo, double maximo) {
+        return valor != null && (!Double.isFinite(valor) || valor < minimo || valor > maximo);
     }
 }

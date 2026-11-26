@@ -10,10 +10,10 @@ import javax.persistence.*;
     @NamedQuery(name = "Cita.todas", query = "SELECT c FROM Cita c ORDER BY c.fechaHora DESC"),
     @NamedQuery(name = "Cita.porEstado", query = "SELECT c FROM Cita c WHERE c.estado = :estado ORDER BY c.fechaHora DESC"),
     @NamedQuery(name = "Cita.entreFechas", query = "SELECT c FROM Cita c WHERE c.fechaHora >= :desde AND c.fechaHora < :hasta ORDER BY c.fechaHora"),
-    @NamedQuery(name = "Cita.proximas", query = "SELECT c FROM Cita c WHERE c.fechaHora >= :desde AND c.estado = com.nutricion.entidades.EstadoCita.PENDIENTE ORDER BY c.fechaHora"),
+    @NamedQuery(name = "Cita.proximas", query = "SELECT c FROM Cita c WHERE c.fechaHora >= :desde AND c.estado IN (com.nutricion.entidades.EstadoCita.PENDIENTE, com.nutricion.entidades.EstadoCita.CONFIRMADA, com.nutricion.entidades.EstadoCita.APARTADA) ORDER BY c.fechaHora"),
     @NamedQuery(name = "Cita.porPaciente", query = "SELECT c FROM Cita c WHERE c.paciente = :paciente ORDER BY c.fechaHora DESC"),
     @NamedQuery(name = "Cita.porCodigo", query = "SELECT c FROM Cita c WHERE c.codigo = :codigo"),
-    @NamedQuery(name = "Cita.choques", query = "SELECT c FROM Cita c WHERE c.estado = com.nutricion.entidades.EstadoCita.PENDIENTE AND c.fechaHora > :desde AND c.fechaHora < :hasta")
+    @NamedQuery(name = "Cita.choques", query = "SELECT c FROM Cita c WHERE c.paciente.consultorio = :consultorio AND c.estado IN (com.nutricion.entidades.EstadoCita.PENDIENTE, com.nutricion.entidades.EstadoCita.CONFIRMADA, com.nutricion.entidades.EstadoCita.APARTADA) AND c.fechaHora >= :desde AND c.fechaHora < :hasta")
 })
 public class Cita implements Serializable {
 
@@ -44,6 +44,17 @@ public class Cita implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoCita estado = EstadoCita.PENDIENTE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private OrigenCita origen = OrigenCita.PANEL;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "expira_apartado")
+    private Date expiraApartado;
+
+    @Version
+    private Long version;
 
     /** Código único que recibe el paciente para consultar su cita. */
     @Column(name = "codigo_cita", unique = true, length = 12)
@@ -77,6 +88,12 @@ public class Cita implements Serializable {
     public void setTipo(TipoCita tipo) { this.tipo = tipo; }
     public EstadoCita getEstado() { return estado; }
     public void setEstado(EstadoCita estado) { this.estado = estado; }
+    public OrigenCita getOrigen() { return origen; }
+    public void setOrigen(OrigenCita origen) { this.origen = origen; }
+    public Date getExpiraApartado() { return expiraApartado; }
+    public void setExpiraApartado(Date expiraApartado) { this.expiraApartado = expiraApartado; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
     public Consulta getConsulta() { return consulta; }

@@ -9,8 +9,9 @@
   páginas de consulta y dependencias opcionales.
 - [Guía de cuestionario](docs/GUIA_CUESTIONARIO.md): 35 preguntas con respuestas y un ejercicio.
 
-El avance demostrado es sitio público, login, panel y CRUD básico de pacientes en MySQL.
-No equivale a terminar todas las historias de la especificación. Para este equipo también se dispone de
+El punto de partida de esa revisión fue el sitio público, el login, el panel y el CRUD de pacientes en MySQL.
+El [estado local del 25 de noviembre](CONTINUIDAD_UNIDAD_4.md#continuación-del-25-de-noviembre-de-2026)
+registra el avance de expediente, agenda, reservación, consultorios y portal. Para este equipo se dispone de
 `scripts/desplegar-local.ps1` (compilación y despliegue expandido), `scripts/probar-validaciones.ps1`
 y `tests/recorrido-pacientes.js`; sus alcances y evidencias se explican en el trabajo técnico.
 
@@ -144,8 +145,8 @@ no se migra automáticamente y sus datos permanecen separados.
    de cliente de MySQL. Entra al pool y pulsa **Ping** para comprobar la conexión.
 4. En **Resources → JDBC → JDBC Resources → New**, crea el recurso `jdbc/nutricion` y asígnale
    el pool `NutricionMySQLPool`.
-5. Ejecuta **Clean and Build** y **Run** del proyecto empresarial. Las cuatro tablas declaradas
-   en `persistence.xml` se crean al desplegar; si no hay usuarios, se insertan datos de ejemplo.
+5. Ejecuta **Clean and Build** y **Run** del proyecto empresarial. EclipseLink crea o amplía las tablas de
+   `NutricionPU` al desplegar. Si la base está vacía de usuarios, se insertan datos de ejemplo.
 
 No agregues contraseñas al README, archivos del proyecto ni comandos compartidos. El recurso y
 su contraseña quedan en la configuración local del servidor, que debe mantenerse privada.
@@ -164,10 +165,10 @@ SHOW TABLES;
 
 #### Avance de conexión con tablas
 
-La unidad `NutricionPU` registra cuatro entidades: `Usuario`, `Paciente`, `Cita` y `Consulta`.
-EclipseLink solicita la creación de sus tablas al desplegar. Las citas pertenecen a un paciente;
-las consultas pertenecen a un paciente y pueden vincularse con una cita. El acceso pasa por las
-fachadas EJB, como indica la arquitectura de este README.
+La unidad `NutricionPU` registra los consultorios, usuarios y pacientes, el catálogo de alergias,
+las citas, consultas, planes de tratamiento, horarios, configuración de agenda y adjuntos.
+Las citas pertenecen a un paciente. Las consultas pertenecen a un paciente y pueden vincularse con una cita.
+Las pantallas acceden a los datos mediante las fachadas EJB.
 
 Para demostrarlo con datos de ejemplo en un dominio de desarrollo:
 
@@ -179,10 +180,40 @@ Para demostrarlo con datos de ejemplo en un dominio de desarrollo:
    aparezca en la lista; vuelve a iniciar sesión y verifica que siga apareciendo. Puedes eliminar
    el registro de prueba desde la misma pantalla.
 
-La carga inicial se ejecuta solo cuando no hay usuarios en la base de ese dominio. Los datos de
-ejemplo y la contraseña publicada son exclusivamente para desarrollo. Las pantallas de gestión
-de citas y consultas y el aislamiento por consultorio siguen pendientes; la existencia de sus
-entidades no significa que esas historias estén terminadas.
+La carga de muestras se ejecuta solo cuando no hay usuarios en la base de ese dominio. Los datos de
+ejemplo y la contraseña publicada son exclusivamente para desarrollo. Al desplegar, la migración de
+contactos crea índices únicos por consultorio para el correo y el teléfono y retira los índices globales
+de esos dos campos. El código del portal tiene su propio índice único global.
+
+#### Probar adjuntos en el expediente
+
+1. Abre [NutriVida local](http://localhost:8080/sistema_nutricion-war/) e inicia sesión con la cuenta de prueba.
+2. En **Pacientes**, registra una persona ficticia y abre su expediente desde el nombre.
+3. En **Archivos**, elige **Laboratorio**, carga un PDF de prueba y pulsa **Subir archivo**. El nombre del PDF en la tabla abre su descarga. El filtro **Laboratorio** muestra los archivos de esa categoría.
+4. Carga un JPG y un PNG como **Fotografía de progreso** y asigna fechas distintas, ambas de hoy o anteriores. Selecciona las dos fotos y pulsa **Comparar fotos**.
+
+El máximo por archivo es 10 MB (10 485 760 bytes). La fecha de una foto toma el día de carga cuando el campo queda vacío.
+MySQL guarda los metadatos y Payara guarda los archivos en `data/nutricion-adjuntos` dentro del dominio.
+La propiedad JVM `nutricion.adjuntos.dir` permite indicar otra ruta absoluta de almacenamiento privado fuera
+del WAR. La carga y la descarga están disponibles a administración y nutrición dentro de su consultorio.
+
+#### Comprobar las actualizaciones del expediente y la agenda
+
+1. Abre la agenda y en otra pestaña cambia el nombre o teléfono de un paciente ficticio desde **Pacientes**. Al regresar, **Nueva cita** muestra sus datos actuales. **Actualizar agenda** vuelve a consultar la tabla y el calendario.
+2. En **Agenda**, edita una cita de hoy y cambia su estado a **Completada**. Al volver al panel, o al pulsar **Actualizar panel**, baja el contador por atender y sube el de completadas. Las citas completadas salen de **Próximas citas**.
+3. Abre el expediente y cierra una consulta ficticia con peso y talla. La cabecera actualiza sus mediciones. Con el portal del mismo paciente abierto, pulsa **Actualizar portal** para consultar sus mediciones y cita vigente.
+
+El botón **Actualizar datos** del expediente vuelve a leer la ficha y recalcula los resultados dietéticos que dependen de ella. Los campos de los formularios clínicos conservan lo que estás capturando.
+
+#### Vincular Google Calendar
+
+La agenda puede usar el calendario principal de una cuenta de Google por consultorio. El ciclo cada cinco minutos toma los próximos 90 días. Los eventos ocupados aparecen como bloques en la agenda y restan disponibilidad en la reservación. Las citas próximas se publican con el título **Consulta NutriVida** y sin los datos del paciente. NutriVida conserva el último conjunto de bloqueos cuando falla la lectura.
+
+1. En el proyecto de Google Cloud habilita Calendar API. Configura la pantalla de consentimiento y un cliente OAuth de tipo **Aplicación web**. Registra la URL de retorno exacta `http://localhost:8080/sistema_nutricion-war/api/google/callback` para este despliegue. Si el proyecto está en modo de prueba, incluye la cuenta que autorizará Calendar. [OAuth de servidor de Google](https://developers.google.com/identity/protocols/oauth2/web-server).
+2. Configura en el dominio de Payara las propiedades JVM `nutricion.google.clientId`, `nutricion.google.clientSecret`, `nutricion.google.redirectUri` y `nutricion.google.clave`. Usa una clave aleatoria de 32 bytes codificada en Base64 y guárdala junto a la configuración privada del dominio. Los tokens de renovación en MySQL se cifran con esa clave y se vinculan al consultorio.
+3. Con una cuenta clínica, abre **Agenda → Horarios laborales → Vincular Google Calendar** y concede acceso al calendario principal. Después de un ciclo, consulta la hora de sincronización en la misma pantalla. **Desvincular** retira la autorización almacenada por NutriVida y los bloqueos importados.
+
+Se usa el alcance `calendar.events.owned`. El protocolo se puede probar en local sin cuenta con `scripts/probar-calendario-google.ps1`. La validación con una cuenta real está pendiente. [Alcances de Calendar](https://developers.google.com/workspace/calendar/api/auth) y [referencia de eventos](https://developers.google.com/workspace/calendar/api/v3/reference/events/list).
 
 ## Compilar sin el IDE (opcional)
 
@@ -261,17 +292,12 @@ Periodo: **31-ago-2026 al 4-dic-2026** (14 semanas, 640 h por residente).
 
 ## 3. Estado actual del código vs. objetivo
 
-**Ya existe:** entidades `Usuario`, `Paciente`, `Cita`, `Consulta` y enums (`Rol{ADMIN}`,
-`EstadoCita{PENDIENTE, COMPLETADA, CANCELADA, NO_ASISTIO}`, `EstadoPago`, `MetodoPago`, `TipoCita`, `Sexo`);
-fachadas CRUD; `InicioDatos` (datos de ejemplo); `CalculosNutricion` (IMC, ICC, GEB Mifflin-St Jeor);
-login, filtro de acceso, dashboard básico y lista de pacientes.
-
-**Falta:** entidad `Consultorio` y aislamiento por tenant; roles `NUTRIOLOGO` y `RECEPCION`; bloqueo por
-intentos fallidos y recuperación de contraseña (la sesión ya está configurada a 30 minutos, sin prueba
-de espera real); antecedentes, catálogo de alergias, captura y validación completa de mediciones
-(incluida grasa visceral; ya existe el campo masa muscular) y notas en 7 apartados; gráficas y comparativo;
-adjuntos; configuración de horarios y Google Calendar; reservación pública; cálculo dietético completo
-(5 fórmulas + macros); planes con IA sobre SMAE; asistente de WhatsApp; panel completo; portal del paciente.
+El árbol de trabajo al 26 de noviembre incluye administración por consultorio, roles, bloqueo temporal,
+expediente clínico con adjuntos, agenda, reservación pública, cálculo dietético y portal.
+Calendar cuenta con sincronización probada con un proveedor ficticio y bloqueos verificados en MySQL y Edge.
+La [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes)
+indica qué se probó y qué criterios siguen pendientes. Conserva los requisitos de las siguientes secciones
+al ampliar el sistema.
 
 ## 4. Modelo de datos objetivo (paquete `com.nutricion.entidades`)
 
@@ -280,17 +306,18 @@ Entidades nuevas o modificadas. Las marcadas con 🏢 llevan `@ManyToOne Consult
 | Entidad | Campos clave | Historias |
 |---------|--------------|-----------|
 | `Consultorio` | nombre, teléfono, email, dirección (para confirmaciones), slug público, activo, fechaRegistro | HU-01, HU-05 |
-| `Usuario` 🏢 | + `rol` (ADMIN / NUTRIOLOGO / RECEPCION), `activo`, `intentosFallidos`, `bloqueadoHasta`, `googleRefreshToken` | HU-02, HU-03, HU-16 |
+| `Usuario` 🏢 | + `rol` (ADMIN / NUTRIOLOGO / RECEPCION), `activo`, `intentosFallidos`, `bloqueadoHasta` | HU-02, HU-03 |
 | `TokenRecuperacion` | usuario, token aleatorio, expira, usado | HU-04 |
 | `Paciente` 🏢 | + antecedentes heredofamiliares y personales, `codigoAcceso` único, `whatsapp`, `List<Alergia>` + `alergiasOtras` (texto libre) | HU-06, HU-07, HU-42 |
 | `Alergia` | catálogo: nombre, tipo (ALERGIA / INTOLERANCIA), grupo de alimento | HU-07, HU-26 |
 | `Consulta` 🏢 | + `grasaVisceral`, `cerrada` (boolean), relación 1:1 con `NotaClinica` | HU-08, HU-10 |
 | `NotaClinica` | los **7 apartados** como columnas `@Lob` independientes (confirmar nombres con el nutriólogo; propuesta: motivo, historia dietética, actividad física, signos y síntomas, diagnóstico nutricio, intervención, monitoreo). Solo lectura si `consulta.cerrada` | HU-10 |
-| `ArchivoAdjunto` 🏢 | paciente, categoría (`LABORATORIO`, `ESTUDIO`, `FOTO_PROGRESO`), nombreOriginal, rutaDisco, mimeType, tamaño, fechaCarga | HU-12 – HU-14 |
+| `ArchivoAdjunto` 🏢 | paciente, categoría (`LABORATORIO`, `ESTUDIO`, `FOTO_PROGRESO`), nombreOriginal, rutaDisco, mimeType, tamaño, fechaCarga, fechaFoto para fotografías de progreso | HU-12 – HU-14 |
 | `HorarioLaboral` 🏢 | díaSemana, horaInicio, horaFin (varios bloques por día) | HU-15 |
 | `ConfiguracionAgenda` 🏢 | duracionConsultaMin, anticipacionMinimaHoras, minutosRecordatorioNutriologo, minutosExpiracionApartado, diasPacienteActivo | HU-15, HU-18, HU-31, HU-37 |
-| `BloqueoCalendario` 🏢 | inicio, fin, googleEventId, origen (GOOGLE / MANUAL) | HU-16 |
-| `Cita` 🏢 | + `googleEventId`, `origen` (PANEL / PORTAL / WHATSAPP), `expiraApartado`; agregar `APARTADA` y `CONFIRMADA` a `EstadoCita` | HU-17, HU-20, HU-31, HU-32 |
+| `VinculoGoogleCalendar` 🏢 | vínculo por consultorio, marca de sus eventos, token cifrado, fecha y estado de sincronización | HU-16 |
+| `BloqueoCalendario` 🏢 | inicio y fin del evento ocupado importado | HU-16 |
+| `Cita` 🏢 | + `origen` (PANEL / PORTAL / WHATSAPP), `expiraApartado`; agregar `APARTADA` y `CONFIRMADA` a `EstadoCita` | HU-17, HU-20, HU-31, HU-32 |
 | `Pago` 🏢 | paciente, consulta, monto, método, estado, fecha (complementa los campos de pago de `Consulta`) | HU-38, HU-39 |
 | `PlanTratamiento` | paciente, objetivo (`PERDIDA`, `MANTENIMIENTO`, `GANANCIA`), fórmula, factorActividad, GEB, GET, metaKcal, % y gramos de proteínas / lípidos / HC, fecha | HU-22 – HU-24 |
 | `GrupoEquivalente` / `AlimentoSmae` | catálogo **SMAE**: grupo (verduras, frutas, cereales sin/con grasa, leguminosas, AOA muy bajo/bajo/moderado/alto aporte de grasa, leche, aceites y grasas, azúcares…), kcal/prot/líp/HC por equivalente, alimento, porción, unidad, `regionalOaxaca`, alérgenos | HU-25, HU-26, HU-29 |

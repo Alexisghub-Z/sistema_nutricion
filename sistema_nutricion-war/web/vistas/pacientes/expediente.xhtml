@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:event type="preRenderView" listener="#{expedienteBean.inicializar}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="titulo">Expediente · #{expedienteBean.paciente != null ? expedienteBean.paciente.nombre : 'Paciente'}</ui:define>
+
+    <ui:define name="content">
+        <h:panelGroup rendered="#{expedienteBean.paciente == null}">
+            <div class="tarjeta estado-vacio">
+                <h2>No se encontró el expediente</h2>
+                <p>El paciente solicitado no existe o no se especificó un identificador válido.</p>
+                <h:link outcome="/vistas/pacientes/lista" value="Volver a la lista de pacientes" styleClass="boton boton-primario" />
+            </div>
+        </h:panelGroup>
+
+        <h:panelGroup rendered="#{expedienteBean.paciente != null}">
+            <div class="migas">
+                <h:link outcome="/vistas/pacientes/lista" value="← Pacientes" />
+                <span>/</span>
+                <span>Expediente clínico</span>
+            </div>
+
+            <!-- Cabecera del paciente -->
+            <h:panelGroup id="resumenExpediente" layout="block" styleClass="tarjeta perfil-cabecera">
+                <div class="perfil-info">
+                    <div class="perfil-avatar">
+                        #{expedienteBean.paciente.nombre.substring(0, 1).toUpperCase()}
+                    </div>
+                    <div>
+                        <h1 class="perfil-nombre">#{expedienteBean.paciente.nombre}</h1>
+                        <div class="perfil-meta">
+                            <span>#{expedienteBean.paciente.edad} años</span>
+                            <h:panelGroup rendered="#{expedienteBean.paciente.sexo != null}">
+                                <span>· #{expedienteBean.paciente.sexo.etiqueta}</span>
+                            </h:panelGroup>
+                            <span>· #{expedienteBean.paciente.email}</span>
+                            <span>· #{expedienteBean.paciente.telefono}</span>
+                            <h:panelGroup rendered="#{not empty expedienteBean.paciente.codigoAcceso}">
+                                <span>· Portal: <code>#{expedienteBean.paciente.codigoAcceso}</code></span>
+                            </h:panelGroup>
+                        </div>
+                        <div class="perfil-etiquetas" style="margin-top: 8px;">
+                            <ui:repeat value="#{expedienteBean.paciente.alergiasCatalogo}" var="al">
+                                <span class="badge #{al.tipo.name() eq 'ALERGIA' ? 'badge-peligro' : 'badge-alerta'}">
+                                    #{al.tipo.etiqueta}: #{al.nombre}
+                                </span>
+                            </ui:repeat>
+                            <h:panelGroup rendered="#{not empty expedienteBean.paciente.alergias}">
+                                <span class="badge badge-peligro">Alergia: #{expedienteBean.paciente.alergias}</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not empty expedienteBean.paciente.intolerancias}">
+                                <span class="badge badge-alerta">Intolerancia: #{expedienteBean.paciente.intolerancias}</span>
+                            </h:panelGroup>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="perfil-metricas">
+                    <div class="metrica-mini">
+                        <span class="metrica-mini-etiqueta">Último peso</span>
+                        <span class="metrica-mini-valor">
+                            <h:outputText value="#{expedienteBean.ultimaConsulta != null and expedienteBean.ultimaConsulta.peso != null ? expedienteBean.ultimaConsulta.peso : '—'}" />
+                            <h:outputText value=" kg" rendered="#{expedienteBean.ultimaConsulta != null and expedienteBean.ultimaConsulta.peso != null}" />
+                        </span>
+                    </div>
+                    <div class="metrica-mini">
+                        <span class="metrica-mini-etiqueta">IMC actual</span>
+                        <span class="metrica-mini-valor">
+                            <h:outputText value="#{expedienteBean.ultimaConsulta != null and expedienteBean.ultimaConsulta.imc != null ? expedienteBean.ultimaConsulta.imc : '—'}" />
+                        </span>
+                        <h:panelGroup rendered="#{expedienteBean.ultimaConsulta != null and expedienteBean.ultimaConsulta.imc != null}">
+                            <span class="#{expedienteBean.getImcBadgeClass(expedienteBean.ultimaConsulta.imc)}">
+                                #{expedienteBean.ultimaConsulta.clasificacionImc}
+                            </span>
+                        </h:panelGroup>
+                    </div>
+                    <h:form id="frmAccionCabecera">
+                        <p:commandButton value="Actualizar datos" action="#{expedienteBean.actualizarDatos}"
+                                         process="@this" update=":resumenExpediente :tabsExpediente:frmCalculo:panelResultadosCalculo"
+                                         icon="ui-icon-refresh" styleClass="btn-secundario" />
+                        <p:commandButton value="Nueva consulta" action="#{expedienteBean.nuevaConsulta}"
+                                         process="@this" update=":tabsExpediente"
+                                         icon="ui-icon-plus" styleClass="btn-primario" />
+                    </h:form>
+                </div>
+            </h:panelGroup>
+
+            <p:tabView id="tabsExpediente" activeIndex="#{expedienteBean.tabActivo}" styleClass="tabs-clinicas"
+                       onTabShow="window.dispatchEvent(new Event('resize'));">
+                <!-- PESTAÑA 1: HISTORIAL DE CONSULTAS -->
+                <p:tab title="Historial de consultas (#{expedienteBean.historial.size()})">
+                    <h:form id="frmHistorial">
+                        <p:dataTable value="#{expedienteBean.historial}" var="con"
+                                     emptyMessage="Aún no hay consultas registradas para este paciente."
+                                     rows="10" paginator="true" paginatorAlwaysVisible="false">
+                            <p:column headerText="Fecha" style="width:140px">
+                                <h:outputText value="#{con.fecha}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" locale="es_MX" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Motivo">
+                                #{empty con.motivo ? 'Seguimiento nutricional' : con.motivo}
+                            </p:column>
+                            <p:column headerText="Peso" style="width:90px">
+                                <h:outputText value="#{con.peso} kg" rendered="#{con.peso != null}" />
+                                <h:outputText value="—" rendered="#{con.peso == null}" />
+                            </p:column>
+                            <p:column headerText="IMC" style="width:145px">
+                                <h:panelGroup rendered="#{con.imc != null}">
+                                    <strong>#{con.imc}</strong>
+                                    <span class="#{expedienteBean.getImcBadgeClass(con.imc)}" style="margin-left:6px">
+                                        #{con.clasificacionImc}
+                                    </span>
+                                </h:panelGroup>
+                                <h:outputText value="—" rendered="#{con.imc == null}" />
+                            </p:column>
+                            <p:column headerText="% Grasa" style="width:90px">
+                                <h:outputText value="#{con.grasaCorporal}%" rendered="#{con.grasaCorporal != null}" />
+                                <h:outputText value="—" rendered="#{con.grasaCorporal == null}" />
+                            </p:column>
+                            <p:column headerText="Estado" style="width:105px">
+                                <span class="badge #{con.cerrada ? 'badge-neutro' : 'badge-exito'}">
+                                    #{con.estadoTexto}
+                                </span>
+                            </p:column>
+                            <p:column headerText="" style="width:110px">
+                                <p:commandButton value="#{con.cerrada ? 'Ver' : 'Continuar'}"
+                                                 icon="#{con.cerrada ? 'ui-icon-search' : 'ui-icon-pencil'}"
+                                                 action="#{expedienteBean.verConsulta(con)}"
+                                                 process="@this" update=":tabsExpediente"
+                                                 styleClass="btn-secundario" />
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </p:tab>
+
+                <!-- PESTAÑA 2: CAPTURA / DETALLE DE CONSULTA (HU-08, HU-10) -->
+                <p:tab title="#{expedienteBean.consultaActual.id == null ? 'Nueva consulta' : (expedienteBean.consultaActual.cerrada ? 'Consulta cerrada' : 'Editar consulta')}">
+                    <h:form id="frmConsulta">
+                        <p:messages id="msgsConsulta" closable="true" />
+
+                        <h:panelGroup rendered="#{expedienteBean.consultaActual.cerrada}" layout="block" styleClass="alerta-solo-lectura">
+                            <strong>Consulta cerrada (solo lectura):</strong>
+                            <h:outputText value=" cerrada el " rendered="#{expedienteBean.consultaActual.fechaCierre != null}" />
+                            <h:outputText value="#{expedienteBean.consultaActual.fechaCierre}" rendered="#{expedienteBean.consultaActual.fechaCierre != null}">
+                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" locale="es_MX" />
+                            </h:outputText>
+                            <h:outputText value=". No es posible modificar las mediciones ni las notas clínicas." />
+                        </h:panelGroup>
+
+                        <h2 class="subtitulo-seccion">1. Mediciones antropométricas y signos (HU-08)</h2>
+                        <div class="rejilla-cuatro">
+                            <div class="campo">
+                                <p:outputLabel for="peso" value="Peso (kg)" />
+                                <p:inputText id="peso" value="#{expedienteBean.consultaActual.peso}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="Ej. 68.5">
+                                    <f:validateDoubleRange minimum="2" maximum="400" />
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularImc}" update="imcLivePanel" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularImc}" update="imcLivePanel" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="talla" value="Talla (m)" />
+                                <p:inputText id="talla" value="#{expedienteBean.consultaActual.talla}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="Ej. 1.65">
+                                    <f:validateDoubleRange minimum="0.4" maximum="2.5" />
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularImc}" update="imcLivePanel" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularImc}" update="imcLivePanel" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <label>IMC calculado</label>
+                                <h:panelGroup id="imcLivePanel" layout="block" styleClass="imc-caja">
+                                    <strong style="font-size: 18px;">
+                                        #{expedienteBean.consultaActual.imc != null ? expedienteBean.consultaActual.imc : '—'}
+                                    </strong>
+                                    <span class="#{expedienteBean.getImcBadgeClass(expedienteBean.consultaActual.imc)}" style="margin-left: 8px;">
+                                        #{expedienteBean.consultaActual.clasificacionImc}
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="presion" value="Presión arterial" />
+                                <p:inputText id="presion" value="#{expedienteBean.consultaActual.presionArterial}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" maxlength="20" placeholder="Ej. 120/80" />
+                            </div>
+
+                            <div class="campo">
+                                <p:outputLabel for="grasa" value="% Grasa corporal" />
+                                <p:inputText id="grasa" value="#{expedienteBean.consultaActual.grasaCorporal}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="1 - 75%">
+                                    <f:validateDoubleRange minimum="1" maximum="75" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="musculo" value="Masa muscular (kg)" />
+                                <p:inputText id="musculo" value="#{expedienteBean.consultaActual.masaMuscular}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="Ej. 28.4">
+                                    <f:validateDoubleRange minimum="1" maximum="200" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="visceral" value="Grasa visceral (nivel)" />
+                                <p:inputText id="visceral" value="#{expedienteBean.consultaActual.grasaVisceral}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="1 - 30">
+                                    <f:validateDoubleRange minimum="1" maximum="30" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="agua" value="% Agua corporal" />
+                                <p:inputText id="agua" value="#{expedienteBean.consultaActual.porcentajeAgua}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="10 - 85%">
+                                    <f:validateDoubleRange minimum="10" maximum="85" />
+                                </p:inputText>
+                            </div>
+
+                            <div class="campo">
+                                <p:outputLabel for="cintura" value="Cintura (cm)" />
+                                <p:inputText id="cintura" value="#{expedienteBean.consultaActual.cintura}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="30 - 250 cm">
+                                    <f:validateDoubleRange minimum="30" maximum="250" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="cadera" value="Cadera (cm)" />
+                                <p:inputText id="cadera" value="#{expedienteBean.consultaActual.cadera}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="30 - 250 cm">
+                                    <f:validateDoubleRange minimum="30" maximum="250" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="monto" value="Monto de consulta ($)" />
+                                <p:inputText id="monto" value="#{expedienteBean.consultaActual.montoConsulta}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" placeholder="350.00" />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="estadoPago" value="Estado de pago" />
+                                <p:selectOneMenu id="estadoPago" value="#{expedienteBean.consultaActual.estadoPago}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}">
+                                    <f:selectItems value="#{catalogosBean.estadosPago}" var="ep" itemLabel="#{ep.etiqueta}" itemValue="#{ep}" />
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+
+                        <h2 class="subtitulo-seccion" style="margin-top: 24px;">2. Nota clínica en siete apartados (HU-10)</h2>
+                        <div class="rejilla">
+                            <div class="campo campo-ancho">
+                                <p:outputLabel for="nMotivo" value="1. Motivo de consulta" />
+                                <p:inputText id="nMotivo" value="#{expedienteBean.consultaActual.motivo}"
+                                             disabled="#{expedienteBean.consultaActual.cerrada}" maxlength="500"
+                                             placeholder="Ej. Control de peso y mejora de hábitos alimentarios" />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nHistoria" value="2. Historia dietética / Recordatorio" />
+                                <p:inputTextarea id="nHistoria" value="#{expedienteBean.consultaActual.historiaDietetica}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="4000"
+                                                 placeholder="Horarios de comida, consumo de agua, recordatorio de 24 h..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nActividad" value="3. Actividad física" />
+                                <p:inputTextarea id="nActividad" value="#{expedienteBean.consultaActual.actividadFisica}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="2000"
+                                                 placeholder="Tipo de ejercicio, frecuencia semanal, duración e intensidad..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nSignos" value="4. Signos y síntomas clínicos" />
+                                <p:inputTextarea id="nSignos" value="#{expedienteBean.consultaActual.signosSintomas}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="2000"
+                                                 placeholder="Fatiga, síntomas gastrointestinales, calidad de sueño..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nDiagnostico" value="5. Diagnóstico nutricio" />
+                                <p:inputTextarea id="nDiagnostico" value="#{expedienteBean.consultaActual.diagnostico}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="2000"
+                                                 placeholder="Evaluación nutricional y hallazgos antropométricos..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nIntervencion" value="6. Intervención y estrategia nutricional" />
+                                <p:inputTextarea id="nIntervencion" value="#{expedienteBean.consultaActual.intervencion}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="4000"
+                                                 placeholder="Plan de alimentación indicado, distribución calórica y educación..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="nMonitoreo" value="7. Monitoreo y metas" />
+                                <p:inputTextarea id="nMonitoreo" value="#{expedienteBean.consultaActual.monitoreo}"
+                                                 disabled="#{expedienteBean.consultaActual.cerrada}" rows="3" maxlength="2000"
+                                                 placeholder="Metas para la siguiente consulta e indicadores a vigilar..." />
+                            </div>
+                        </div>
+
+                        <div class="acciones-form" style="margin-top: 20px;">
+                            <p:commandButton value="Guardar borrador" action="#{expedienteBean.guardarConsulta(false)}"
+                                             rendered="#{!expedienteBean.consultaActual.cerrada}"
+                                             process="@form" update=":resumenExpediente :tabsExpediente :growl"
+                                             icon="ui-icon-disk" styleClass="btn-secundario" />
+                            <p:commandButton value="Cerrar consulta (Solo lectura)" action="#{expedienteBean.guardarConsulta(true)}"
+                                             rendered="#{!expedienteBean.consultaActual.cerrada}"
+                                             process="@form" update=":resumenExpediente :tabsExpediente :growl"
+                                             icon="ui-icon-locked" styleClass="btn-primario">
+                                <p:confirm header="Cerrar consulta"
+                                           message="Una vez cerrada, la consulta y sus siete apartados quedarán en modo solo lectura. ¿Continuar?"
+                                           icon="ui-icon-alert" />
+                            </p:commandButton>
+                        </div>
+                    </h:form>
+                </p:tab>
+
+                <!-- PESTAÑA 3: ANTECEDENTES CLÍNICOS (HU-06) -->
+                <p:tab title="Antecedentes clínicos">
+                    <h:form id="frmAntecedentes">
+                        <p:messages id="msgsAnt" closable="true" />
+                        <div class="rejilla">
+                            <div class="campo campo-ancho">
+                                <p:outputLabel for="motivoP" value="Motivo principal de atención" />
+                                <p:inputText id="motivoP" value="#{expedienteBean.paciente.motivoPrincipal}" maxlength="500"
+                                             placeholder="Objetivo general del paciente al iniciar seguimiento nutricional" />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="antFam" value="Antecedentes heredofamiliares" />
+                                <p:inputTextarea id="antFam" value="#{expedienteBean.paciente.antecedentesFamiliares}" rows="4" maxlength="2000" autoResize="false"
+                                                 placeholder="Diabetes, hipertensión, dislipidemias, obesidad, cardiopatías en familiares directos..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="antPat" value="Antecedentes personales patológicos" />
+                                <p:inputTextarea id="antPat" value="#{expedienteBean.paciente.antecedentesPatologicos}" rows="4" maxlength="2000" autoResize="false"
+                                                 placeholder="Enfermedades crónicas, cirugías previas, hospitalizaciones..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="antNoPat" value="Antecedentes personales no patológicos" />
+                                <p:inputTextarea id="antNoPat" value="#{expedienteBean.paciente.antecedentesNoPatologicos}" rows="4" maxlength="2000" autoResize="false"
+                                                 placeholder="Tabaquismo, alcohol, ocupación, hábitos de sueño e hidratación..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="meds" value="Medicamentos y suplementos actuales" />
+                                <p:inputTextarea id="meds" value="#{expedienteBean.paciente.medicamentosActuales}" rows="4" maxlength="1000" autoResize="false"
+                                                 placeholder="Fármacos, dosis y suplementos alimenticios actuales..." />
+                            </div>
+                        </div>
+                        <div class="acciones-form">
+                            <p:commandButton value="Guardar antecedentes" action="#{expedienteBean.guardarAntecedentes}"
+                                             process="@form" update="@form :resumenExpediente :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                        </div>
+                    </h:form>
+                </p:tab>
+
+                <!-- PESTAÑA 4: CATÁLOGO DE ALERGIAS E INTOLERANCIAS (HU-07) -->
+                <p:tab title="Alergias e intolerancias">
+                    <h:form id="frmAlergias">
+                        <p:messages id="msgsAlergias" closable="true" />
+                        <p class="texto-ayuda">
+                            Selecciona las alergias e intolerancias del catálogo. Anota abajo las que falten.
+                        </p>
+                        <div class="bloque-catalogo">
+                            <p:selectManyCheckbox id="selAlergias" value="#{expedienteBean.alergiasSeleccionadas}"
+                                                  layout="pageDirection" converter="javax.faces.Long">
+                                <f:selectItems value="#{expedienteBean.catalogoAlergias}" var="a"
+                                               itemLabel="#{a.nombre} — #{a.tipo.etiqueta} (#{a.grupoAlimento})"
+                                               itemValue="#{a.id}" />
+                            </p:selectManyCheckbox>
+                        </div>
+                        <div class="rejilla" style="margin-top: 16px;">
+                            <div class="campo campo-ancho">
+                                <p:outputLabel for="otrasAl" value="Otras alergias o intolerancias (texto libre)" />
+                                <p:inputTextarea id="otrasAl" value="#{expedienteBean.paciente.alergiasOtras}" rows="2" maxlength="1000" autoResize="false"
+                                                 placeholder="Especifica ingredientes adicionales o reacciones particulares..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="prefAl" value="Preferencias alimentarias" />
+                                <p:inputTextarea id="prefAl" value="#{expedienteBean.paciente.preferencias}" rows="2" maxlength="1000" autoResize="false"
+                                                 placeholder="Vegetariano, vegano, sin carne roja..." />
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="disgAl" value="Alimentos que no le agradan" />
+                                <p:inputTextarea id="disgAl" value="#{expedienteBean.paciente.disgustos}" rows="2" maxlength="1000" autoResize="false"
+                                                 placeholder="Alimentos a evitar por preferencia..." />
+                            </div>
+                        </div>
+                        <div class="acciones-form">
+                            <p:commandButton value="Guardar alergias y preferencias" action="#{expedienteBean.guardarAlergias}"
+                                             process="@form" update="@form :resumenExpediente :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                        </div>
+                    </h:form>
+                </p:tab>
+
+                <!-- PESTAÑA 5: EVOLUCIÓN, GRÁFICAS Y COMPARATIVO (HU-09, HU-11) -->
+                <p:tab title="Evolución y gráficas">
+                    <h:form id="frmEvolucion">
+                        <h:panelGroup rendered="#{expedienteBean.hayComparativo}" layout="block" style="margin-bottom: 24px;">
+                            <h2 class="subtitulo-seccion">Última consulta y consulta anterior</h2>
+                            <div class="comparativo-grid">
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">Peso corporal</span>
+                                    <div class="comparativo-valores">
+                                        <strong>#{expedienteBean.ultimaConsulta.peso != null ? expedienteBean.ultimaConsulta.peso : '—'} kg</strong>
+                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.peso != null ? expedienteBean.consultaAnterior.peso : '—'} kg</span>
+                                    </div>
+                                    <span class="badge badge-neutro">
+                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.peso, expedienteBean.consultaAnterior.peso, 'kg')}
+                                    </span>
+                                </div>
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">IMC</span>
+                                    <div class="comparativo-valores">
+                                        <strong>#{expedienteBean.ultimaConsulta.imc != null ? expedienteBean.ultimaConsulta.imc : '—'}</strong>
+                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.imc != null ? expedienteBean.consultaAnterior.imc : '—'}</span>
+                                    </div>
+                                    <span class="badge badge-neutro">
+                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.imc, expedienteBean.consultaAnterior.imc, '')}
+                                    </span>
+                                </div>
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">% Grasa corporal</span>
+                                    <div class="comparativo-valores">
+                                        <strong>#{expedienteBean.ultimaConsulta.grasaCorporal != null ? expedienteBean.ultimaConsulta.grasaCorporal : '—'}%</strong>
+                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.grasaCorporal != null ? expedienteBean.consultaAnterior.grasaCorporal : '—'}%</span>
+                                    </div>
+                                    <span class="badge badge-neutro">
+                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.grasaCorporal, expedienteBean.consultaAnterior.grasaCorporal, '%')}
+                                    </span>
+                                </div>
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">Cintura</span>
+                                    <div class="comparativo-valores">
+                                        <strong>#{expedienteBean.ultimaConsulta.cintura != null ? expedienteBean.ultimaConsulta.cintura : '—'} cm</strong>
+                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.cintura != null ? expedienteBean.consultaAnterior.cintura : '—'} cm</span>
+                                    </div>
+                                    <span class="badge badge-neutro">
+                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.cintura, expedienteBean.consultaAnterior.cintura, 'cm')}
+                                    </span>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                        <div class="encabezado-pagina" style="margin-bottom: 14px;">
+                            <h2 class="subtitulo-seccion" style="margin:0; border:0;">Gráficas por indicador</h2>
+                            <div class="filtro-fechas">
+                                <p:calendar value="#{expedienteBean.evolucionDesde}" pattern="dd/MM/yyyy" placeholder="Desde" locale="es" size="10" />
+                                <p:calendar value="#{expedienteBean.evolucionHasta}" pattern="dd/MM/yyyy" placeholder="Hasta" locale="es" size="10" />
+                                <p:commandButton value="Filtrar" action="#{expedienteBean.actualizarGraficas}" update="@form" styleClass="btn-primario" icon="ui-icon-search" />
+                                <p:commandButton value="Limpiar" action="#{expedienteBean.limpiarFiltroGraficas}" update="@form" styleClass="btn-secundario" />
+                            </div>
+                        </div>
+
+                        <div class="graficas-grid">
+                            <div class="tarjeta" style="margin-bottom:0;">
+                                <p:chart type="line" model="#{expedienteBean.graficaPeso}" rendered="#{expedienteBean.graficaPeso != null}" style="height:260px;" />
+                                <h:outputText styleClass="texto-ayuda" rendered="#{expedienteBean.graficaPeso == null}" value="Sin datos de peso en este rango." />
+                            </div>
+                            <div class="tarjeta" style="margin-bottom:0;">
+                                <p:chart type="line" model="#{expedienteBean.graficaImc}" rendered="#{expedienteBean.graficaImc != null}" style="height:260px;" />
+                                <h:outputText styleClass="texto-ayuda" rendered="#{expedienteBean.graficaImc == null}" value="Sin datos de IMC en este rango." />
+                            </div>
+                            <div class="tarjeta" style="margin-bottom:0;">
+                                <p:chart type="line" model="#{expedienteBean.graficaGrasa}" rendered="#{expedienteBean.graficaGrasa != null}" style="height:260px;" />
+                                <h:outputText styleClass="texto-ayuda" rendered="#{expedienteBean.graficaGrasa == null}" value="Sin datos de grasa corporal en este rango." />
+                            </div>
+                            <div class="tarjeta" style="margin-bottom:0;">
+                                <p:chart type="line" model="#{expedienteBean.graficaMusculo}" rendered="#{expedienteBean.graficaMusculo != null}" style="height:260px;" />
+                                <h:outputText styleClass="texto-ayuda" rendered="#{expedienteBean.graficaMusculo == null}" value="Sin datos de masa muscular en este rango." />
+                            </div>
+                        </div>
+                    </h:form>
+                </p:tab>
+
+                <!-- PESTAÑA 6: CÁLCULO DIETÉTICO Y PLAN DE TRATAMIENTO (HU-22, HU-23, HU-24) -->
+                <p:tab title="Cálculo dietético">
+                    <h:form id="frmCalculo">
+                        <p:messages id="msgsCalculo" closable="true" />
+                        <h2 class="subtitulo-seccion">Parámetros antropométricos y gasto energético (HU-22)</h2>
+                        <div class="rejilla-cuatro">
+                            <div class="campo">
+                                <p:outputLabel for="calcPeso" value="Peso (kg)" />
+                                <p:inputText id="calcPeso" value="#{expedienteBean.planActual.pesoUsado}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcTalla" value="Talla (m)" />
+                                <p:inputText id="calcTalla" value="#{expedienteBean.planActual.tallaUsada}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcGrasa" value="% Grasa (Katch / Cunningham)" />
+                                <p:inputText id="calcGrasa" value="#{expedienteBean.planActual.grasaUsada}" placeholder="Opcional">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcFormula" value="Fórmula energética" />
+                                <p:selectOneMenu id="calcFormula" value="#{expedienteBean.planActual.formula}">
+                                    <f:selectItems value="#{catalogosBean.formulas}" var="f" itemLabel="#{f.etiqueta}" itemValue="#{f}" />
+                                    <p:ajax listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcActividad" value="Factor de actividad" />
+                                <p:selectOneMenu id="calcActividad" value="#{expedienteBean.planActual.factorActividad}">
+                                    <f:selectItems value="#{catalogosBean.factoresActividad}" var="fa" itemLabel="#{fa.etiqueta}" itemValue="#{fa}" />
+                                    <p:ajax listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcObjetivo" value="Objetivo (HU-23)" />
+                                <p:selectOneMenu id="calcObjetivo" value="#{expedienteBean.planActual.objetivo}">
+                                    <f:selectItems value="#{catalogosBean.objetivosTratamiento}" var="ob" itemLabel="#{ob.etiqueta}" itemValue="#{ob}" />
+                                    <p:ajax listener="#{expedienteBean.alCambiarObjetivo}" update="panelResultadosCalculo calcAjuste calcProt calcLip calcHc" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcAjuste" value="Ajuste calórico (kcal)" />
+                                <p:inputText id="calcAjuste" value="#{expedienteBean.planActual.ajusteKcal}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                    <p:ajax event="change" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                        </div>
+
+                        <h2 class="subtitulo-seccion" style="margin-top:20px;">Distribución de macronutrientes (HU-24)</h2>
+                        <div class="rejilla-cuatro">
+                            <div class="campo">
+                                <p:outputLabel for="calcProt" value="% Proteínas (4 kcal/g)" />
+                                <p:inputText id="calcProt" value="#{expedienteBean.planActual.pctProteinas}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcLip" value="% Lípidos (9 kcal/g)" />
+                                <p:inputText id="calcLip" value="#{expedienteBean.planActual.pctLipidos}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcHc" value="% Carbohidratos (4 kcal/g)" />
+                                <p:inputText id="calcHc" value="#{expedienteBean.planActual.pctCarbohidratos}">
+                                    <p:ajax event="keyup" delay="250" listener="#{expedienteBean.recalcularPlan}" update="panelResultadosCalculo" />
+                                </p:inputText>
+                            </div>
+                            <div class="campo">
+                                <p:outputLabel for="calcObs" value="Observaciones del plan" />
+                                <p:inputText id="calcObs" value="#{expedienteBean.planActual.observaciones}" placeholder="Notas dietéticas..." />
+                            </div>
+                        </div>
+
+                        <h:panelGroup id="panelResultadosCalculo" layout="block" style="margin-top:18px;">
+                            <h:panelGroup rendered="#{expedienteBean.formulaFaltaGrasa}" layout="block" styleClass="alerta-solo-lectura">
+                                Esta fórmula requiere capturar el <strong>% de grasa corporal</strong> del paciente para poder calcular el GEB.
+                            </h:panelGroup>
+
+                            <div class="comparativo-grid">
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">GEB (Basal)</span>
+                                    <strong class="indicador-valor" style="font-size:22px;">#{expedienteBean.planActual.geb != null ? expedienteBean.planActual.geb : '—'} kcal</strong>
+                                </div>
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">GET (Total)</span>
+                                    <strong class="indicador-valor" style="font-size:22px;">#{expedienteBean.planActual.gastoTotal != null ? expedienteBean.planActual.gastoTotal : '—'} kcal</strong>
+                                </div>
+                                <div class="comparativo-card" style="border-color: var(--verde); background: var(--verde-claro);">
+                                    <span class="comparativo-etiqueta" style="color: var(--verde-oscuro);">Meta calórica diaria</span>
+                                    <strong class="indicador-valor" style="font-size:24px;">#{expedienteBean.planActual.metaKcal != null ? expedienteBean.planActual.metaKcal : '—'} kcal</strong>
+                                </div>
+                                <div class="comparativo-card">
+                                    <span class="comparativo-etiqueta">Distribución (#{expedienteBean.sumaMacros}%)</span>
+                                    <div class="macro-resumen">
+                                        <span class="macro-pill">P: <strong>#{expedienteBean.planActual.gramosProteinas != null ? expedienteBean.planActual.gramosProteinas : '—'} g</strong></span>
+                                        <span class="macro-pill">L: <strong>#{expedienteBean.planActual.gramosLipidos != null ? expedienteBean.planActual.gramosLipidos : '—'} g</strong></span>
+                                        <span class="macro-pill">HC: <strong>#{expedienteBean.planActual.gramosCarbohidratos != null ? expedienteBean.planActual.gramosCarbohidratos : '—'} g</strong></span>
+                                    </div>
+                                    <h:outputText value="La suma debe ser 100%" style="color:var(--rojo); font-size:12px;" rendered="#{expedienteBean.sumaMacros ne 100}" />
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                        <div class="acciones-form">
+                            <p:commandButton value="Guardar plan de tratamiento" action="#{expedienteBean.guardarPlanTratamiento}"
+                                             update="@form :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                        </div>
+
+                        <h2 class="subtitulo-seccion" style="margin-top:24px;">Planes de tratamiento guardados</h2>
+                        <p:dataTable value="#{expedienteBean.planesGuardados}" var="pt" emptyMessage="Aún no hay planes de tratamiento guardados.">
+                            <p:column headerText="Fecha" style="width:120px">
+                                <h:outputText value="#{pt.fecha}"><f:convertDateTime pattern="dd/MM/yyyy" locale="es_MX" /></h:outputText>
+                            </p:column>
+                            <p:column headerText="Objetivo">#{pt.objetivo.etiqueta}</p:column>
+                            <p:column headerText="Fórmula">#{pt.formula.etiqueta}</p:column>
+                            <p:column headerText="GEB / GET">#{pt.geb} / #{pt.gastoTotal} kcal</p:column>
+                            <p:column headerText="Meta diaria"><strong>#{pt.metaKcal} kcal</strong></p:column>
+                            <p:column headerText="Macros (g)">
+                                P #{pt.gramosProteinas}g · L #{pt.gramosLipidos}g · HC #{pt.gramosCarbohidratos}g
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </p:tab>
+                <p:tab title="Archivos">
+                    <ui:include src="/WEB-INF/fragmentos/archivos.xhtml" />
+                </p:tab>
+            </p:tabView>
+        </h:panelGroup>
+    </ui:define>
+
+</ui:composition>

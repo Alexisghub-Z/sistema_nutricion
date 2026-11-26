@@ -22,11 +22,15 @@
         <div id="top">
             <ui:insert name="top">
                 <div class="barra">
-                    <h:link outcome="/vistas/dashboard" styleClass="marca">
+                    <h:link outcome="#{loginBean.recepcion ? '/vistas/agenda/agenda' : '/vistas/dashboard'}" styleClass="marca">
                         <h:graphicImage name="img/logo.svg" alt="" styleClass="marca-logo" />
                         <span>Nutri<strong>Vida</strong></span>
                     </h:link>
                     <h:form id="frmSesion" styleClass="sesion">
+                        <span class="badge badge-neutro">
+                            #{loginBean.consultorioActivo.nombre}
+                        </span>
+                        <span class="badge badge-exito">#{loginBean.usuario.rol.etiqueta}</span>
                         <span class="sesion-nombre">#{loginBean.usuario.nombre}</span>
                         <p:commandButton value="Salir" action="#{loginBean.salir}" ajax="false"
                                          icon="ui-icon-power" styleClass="btn-secundario" />
@@ -39,11 +43,22 @@
             <div id="menu">
                 <ui:insert name="menu">
                     <nav class="menu-lateral">
-                        <h:link outcome="/vistas/dashboard" styleClass="#{view.viewId eq '/vistas/dashboard.xhtml' ? 'activo' : ''}">
+                        <h:link outcome="/vistas/dashboard" rendered="#{loginBean.puedeVerExpedientes}" styleClass="#{view.viewId eq '/vistas/dashboard.xhtml' ? 'activo' : ''}">
                             <span class="ico">▦</span> Inicio
                         </h:link>
-                        <h:link outcome="/vistas/pacientes/lista" styleClass="#{view.viewId.startsWith('/vistas/pacientes') ? 'activo' : ''}">
+                        <h:link outcome="/vistas/pacientes/lista" rendered="#{loginBean.puedeVerExpedientes}" styleClass="#{view.viewId.startsWith('/vistas/pacientes') ? 'activo' : ''}">
                             <span class="ico">☺</span> Pacientes
+                        </h:link>
+                        <h:link outcome="/vistas/agenda/agenda" styleClass="#{view.viewId eq '/vistas/agenda/agenda.xhtml' ? 'activo' : ''}">
+                            <span class="ico">📅</span> Agenda
+                        </h:link>
+                        <h:link outcome="/vistas/agenda/configuracion" rendered="#{loginBean.puedeVerExpedientes}"
+                                styleClass="#{view.viewId eq '/vistas/agenda/configuracion.xhtml' ? 'activo' : ''}">
+                            <span class="ico">⏱</span> Horarios
+                        </h:link>
+                        <h:link outcome="/vistas/admin/usuarios" rendered="#{loginBean.admin}"
+                                styleClass="#{view.viewId.startsWith('/vistas/admin') ? 'activo' : ''}">
+                            <span class="ico">⚙</span> Administración
                         </h:link>
                         <h:link outcome="/index" target="_blank">
                             <span class="ico">↗</span> Sitio público

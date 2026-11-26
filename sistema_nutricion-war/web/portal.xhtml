@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantilla.xhtml">
+
+    <ui:define name="titulo">Portal del paciente · NutriVida</ui:define>
+
+    <ui:define name="content">
+        <h:form id="frmPortal">
+            <!-- Acceso con código único (HU-42) -->
+            <h:panelGroup rendered="#{portalPacienteBean.paciente == null}" layout="block" styleClass="acceso">
+                <div class="tarjeta tarjeta-acceso">
+                    <h:graphicImage name="img/logo.svg" alt="" styleClass="acceso-logo" />
+                    <h1>Portal del paciente</h1>
+                    <p class="texto-ayuda" style="text-align:center;">
+                        Escribe el código que te dio tu nutriólogo para consultar tu próxima cita y tus mediciones.
+                    </p>
+                    <p:messages id="msgsPortal" closable="true" />
+                    <div class="campo">
+                        <p:outputLabel for="codPortal" value="Código de acceso" />
+                        <p:inputText id="codPortal" value="#{portalPacienteBean.codigoAcceso}" required="true"
+                                     requiredMessage="Escribe tu código de acceso." maxlength="12"
+                                     placeholder="Ej. AB3K9P2M" />
+                    </div>
+                    <p:commandButton value="Entrar al portal" action="#{portalPacienteBean.ingresar}"
+                                     update="@form :growl" icon="ui-icon-unlocked" styleClass="btn-primario btn-bloque" />
+                </div>
+            </h:panelGroup>
+
+            <!-- Vista de solo lectura del paciente (HU-43, HU-44) -->
+            <h:panelGroup rendered="#{portalPacienteBean.paciente != null}">
+                <div class="tarjeta perfil-cabecera">
+                    <div class="perfil-info">
+                        <div class="perfil-avatar">
+                            #{portalPacienteBean.paciente.nombre.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div>
+                            <h1 class="perfil-nombre">Hola, #{portalPacienteBean.paciente.nombre}</h1>
+                            <div class="perfil-meta">
+                                <span>#{portalPacienteBean.paciente.consultorio.nombre}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <p:commandButton value="Actualizar portal" action="#{portalPacienteBean.actualizar}"
+                                         process="@this" update="@form :growl" icon="ui-icon-refresh"
+                                         styleClass="btn-secundario js-actualizar-al-volver" />
+                        <p:commandButton value="Imprimir resumen" type="button" onclick="window.print()"
+                                         icon="ui-icon-print" styleClass="btn-secundario" />
+                        <p:commandButton value="Cerrar portal" action="#{portalPacienteBean.salir}"
+                                         process="@this" update="@form" icon="ui-icon-power" styleClass="btn-secundario" />
+                    </div>
+                </div>
+
+                <section class="tarjeta">
+                    <h2>Próxima cita</h2>
+                    <h:panelGroup rendered="#{portalPacienteBean.siguienteCita == null}" layout="block">
+                        <p>No tienes una cita próxima.</p>
+                        <h:link outcome="/reservar" value="Consultar horarios">
+                            <f:param name="c" value="#{portalPacienteBean.paciente.consultorio.slug}" />
+                        </h:link>
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{portalPacienteBean.siguienteCita != null}" layout="block">
+                        <ui:param name="ci" value="#{portalPacienteBean.siguienteCita}" />
+                        <div class="comparativo-grid cita-resumen">
+                            <div class="comparativo-card">
+                                <span class="comparativo-etiqueta">Fecha y hora</span>
+                                <h:outputText value="#{ci.fechaHora}">
+                                    <f:convertDateTime pattern="EEE dd/MM/yyyy HH:mm" locale="es_MX" />
+                                </h:outputText>
+                            </div>
+                            <div class="comparativo-card">
+                                <span class="comparativo-etiqueta">Modalidad</span>
+                                <span>#{ci.tipo.etiqueta}</span>
+                                <h:outputText value="#{portalPacienteBean.paciente.consultorio.direccion}" styleClass="texto-ayuda" />
+                            </div>
+                            <div class="comparativo-card">
+                                <span class="comparativo-etiqueta">Estado</span>
+                                <span class="badge #{ci.estado.name() eq 'CONFIRMADA' ? 'badge-exito' : 'badge-alerta'}">
+                                    #{ci.estado.etiqueta}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="acciones-form">
+                            <p:commandButton value="Confirmar cita" action="#{portalPacienteBean.actualizarCita('CONFIRMADA')}"
+                                             rendered="#{ci.estado.name() eq 'PENDIENTE'}"
+                                             process="@this" update="@form :growl" styleClass="btn-primario" />
+                            <p:commandButton value="Cancelar cita" action="#{portalPacienteBean.actualizarCita('CANCELADA')}"
+                                             process="@this" update="@form :growl" styleClass="btn-secundario"
+                                             onclick="if (!window.confirm('¿Deseas cancelar tu próxima cita?')) return false;" />
+                        </div>
+                    </h:panelGroup>
+                </section>
+
+                <!-- Últimas mediciones (HU-43) -->
+                <h:panelGroup rendered="#{portalPacienteBean.ultimaConsulta != null}" layout="block" styleClass="indicadores">
+                    <div class="indicador">
+                        <span class="indicador-valor">#{portalPacienteBean.ultimaConsulta.peso} kg</span>
+                        <span class="indicador-nombre">Último peso</span>
+                    </div>
+                    <div class="indicador">
+                        <span class="indicador-valor">#{portalPacienteBean.ultimaConsulta.imc}</span>
+                        <span class="indicador-nombre">IMC (#{portalPacienteBean.ultimaConsulta.clasificacionImc})</span>
+                    </div>
+                    <div class="indicador">
+                        <span class="indicador-valor">
+                            #{portalPacienteBean.ultimaConsulta.grasaCorporal != null ? portalPacienteBean.ultimaConsulta.grasaCorporal : '—'}%
+                        </span>
+                        <span class="indicador-nombre">Grasa corporal</span>
+                    </div>
+                    <div class="indicador">
+                        <span class="indicador-valor">
+                            #{portalPacienteBean.ultimaConsulta.cintura != null ? portalPacienteBean.ultimaConsulta.cintura : '—'} cm
+                        </span>
+                        <span class="indicador-nombre">Cintura</span>
+                    </div>
+                </h:panelGroup>
+
+                <!-- Gráficas de evolución -->
+                <h:panelGroup rendered="#{not empty portalPacienteBean.consultas}" layout="block" styleClass="tarjeta">
+                    <h2>Tu evolución</h2>
+                    <div class="graficas-grid">
+                        <p:chart type="line" model="#{portalPacienteBean.graficaPeso}" widgetVar="portalPeso" style="height:260px;"
+                                 rendered="#{not empty portalPacienteBean.graficaPeso.series}" />
+                        <p:chart type="line" model="#{portalPacienteBean.graficaImc}" widgetVar="portalImc" style="height:260px;"
+                                 rendered="#{not empty portalPacienteBean.graficaImc.series}" />
+                    </div>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{empty portalPacienteBean.consultas}" layout="block" styleClass="tarjeta">
+                    <h2>Tu evolución</h2>
+                    <p>Las mediciones aparecerán al cerrar tu primera consulta.</p>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:form>
+        <h:outputScript name="js/actualizar-al-volver.js" target="body" />
+        <h:outputScript target="body">
+            window.addEventListener('resize', function () {
+                ['portalPeso', 'portalImc'].forEach(function (nombre) {
+                    var grafica = PrimeFaces.widgets[nombre];
+                    if (grafica &amp;&amp; grafica.plot &amp;&amp; grafica.jq.is(':visible')) {
+                        grafica.plot.replot();
+                    }
+                });
+            });
+        </h:outputScript>
+    </ui:define>
+
+</ui:composition>

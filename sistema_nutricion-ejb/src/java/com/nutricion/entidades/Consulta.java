@@ -9,7 +9,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "consultas")
 @NamedQueries({
-    @NamedQuery(name = "Consulta.porPaciente", query = "SELECT c FROM Consulta c WHERE c.paciente = :paciente ORDER BY c.fecha DESC"),
+    @NamedQuery(name = "Consulta.porPaciente", query = "SELECT c FROM Consulta c WHERE c.paciente = :paciente ORDER BY c.fecha DESC, c.id DESC"),
     @NamedQuery(name = "Consulta.porPacienteAsc", query = "SELECT c FROM Consulta c WHERE c.paciente = :paciente ORDER BY c.fecha"),
     @NamedQuery(name = "Consulta.recientes", query = "SELECT c FROM Consulta c ORDER BY c.fecha DESC"),
     @NamedQuery(name = "Consulta.contarEntre", query = "SELECT COUNT(c) FROM Consulta c WHERE c.fecha >= :desde AND c.fecha < :hasta"),
@@ -55,20 +55,57 @@ public class Consulta implements Serializable {
     /** porcentaje */
     @Column(name = "porcentaje_agua")
     private Double porcentajeAgua;
+    /** nivel 1 - 30 */
+    @Column(name = "grasa_visceral")
+    private Double grasaVisceral;
     /** cm */
     private Double cintura;
     /** cm */
     private Double cadera;
+    /** ej. 120/80 */
+    @Column(name = "presion_arterial", length = 20)
+    private String presionArterial;
 
-    // ---- Notas clínicas ----
-    @Column(length = 2000)
-    private String notas;
+    // ---- Notas clínicas: 7 apartados independientes (HU-10) ----
+    /** 2. Historia dietética */
+    @Lob
+    @Column(name = "historia_dietetica")
+    private String historiaDietetica;
+    /** 3. Actividad física */
+    @Lob
+    @Column(name = "actividad_fisica")
+    private String actividadFisica;
+    /** 4. Signos y síntomas */
+    @Lob
+    @Column(name = "signos_sintomas")
+    private String signosSintomas;
+    /** 5. Diagnóstico nutricio */
     @Column(length = 2000)
     private String diagnostico;
+    /** 6. Intervención y estrategia nutricional */
+    @Lob
+    @Column(name = "intervencion")
+    private String intervencion;
+    /** 7. Monitoreo y metas */
+    @Lob
+    @Column(name = "monitoreo")
+    private String monitoreo;
+
+    // Campos heredados de la versión inicial (compatibilidad)
+    @Column(length = 2000)
+    private String notas;
     @Column(length = 2000)
     private String objetivo;
     @Column(name = "plan_nutricional", length = 4000)
     private String plan;
+
+    /** Si está cerrada, la consulta y su nota clínica quedan en solo lectura (HU-10). */
+    @Column(nullable = false)
+    private boolean cerrada = false;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_cierre")
+    private Date fechaCierre;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "proxima_cita")
@@ -127,10 +164,29 @@ public class Consulta implements Serializable {
     public void setMasaMuscular(Double masaMuscular) { this.masaMuscular = masaMuscular; }
     public Double getPorcentajeAgua() { return porcentajeAgua; }
     public void setPorcentajeAgua(Double porcentajeAgua) { this.porcentajeAgua = porcentajeAgua; }
+    public Double getGrasaVisceral() { return grasaVisceral; }
+    public void setGrasaVisceral(Double grasaVisceral) { this.grasaVisceral = grasaVisceral; }
     public Double getCintura() { return cintura; }
     public void setCintura(Double cintura) { this.cintura = cintura; }
     public Double getCadera() { return cadera; }
     public void setCadera(Double cadera) { this.cadera = cadera; }
+    public String getPresionArterial() { return presionArterial; }
+    public void setPresionArterial(String presionArterial) { this.presionArterial = presionArterial; }
+    public String getHistoriaDietetica() { return historiaDietetica; }
+    public void setHistoriaDietetica(String historiaDietetica) { this.historiaDietetica = historiaDietetica; }
+    public String getActividadFisica() { return actividadFisica; }
+    public void setActividadFisica(String actividadFisica) { this.actividadFisica = actividadFisica; }
+    public String getSignosSintomas() { return signosSintomas; }
+    public void setSignosSintomas(String signosSintomas) { this.signosSintomas = signosSintomas; }
+    public String getIntervencion() { return intervencion; }
+    public void setIntervencion(String intervencion) { this.intervencion = intervencion; }
+    public String getMonitoreo() { return monitoreo; }
+    public void setMonitoreo(String monitoreo) { this.monitoreo = monitoreo; }
+    public boolean isCerrada() { return cerrada; }
+    public void setCerrada(boolean cerrada) { this.cerrada = cerrada; }
+    public Date getFechaCierre() { return fechaCierre; }
+    public void setFechaCierre(Date fechaCierre) { this.fechaCierre = fechaCierre; }
+    public String getEstadoTexto() { return cerrada ? "Cerrada" : "Borrador"; }
     public String getNotas() { return notas; }
     public void setNotas(String notas) { this.notas = notas; }
     public String getDiagnostico() { return diagnostico; }

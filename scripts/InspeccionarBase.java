@@ -39,7 +39,9 @@ public class InspeccionarBase {
             db.setReadOnly(true);
             DatabaseMetaData metadata = db.getMetaData();
             System.out.println("BASE " + db.getCatalog() + " MOTOR " + metadata.getDatabaseProductName() + " " + metadata.getDatabaseProductVersion());
-            for (String table : new String[]{"usuarios", "pacientes", "citas", "consultas"}) {
+            for (String table : new String[]{"consultorios", "usuarios", "pacientes", "alergias", "paciente_alergias",
+                    "citas", "consultas", "horarios_laborales", "configuracion_agenda", "planes_tratamiento",
+                    "archivos_adjuntos", "vinculos_google_calendar", "bloqueos_calendario"}) {
                 System.out.println("TABLA " + table);
                 try (ResultSet columns = metadata.getColumns(db.getCatalog(), null, table, null)) {
                     while (columns.next()) System.out.println("  COLUMNA " + columns.getString("COLUMN_NAME") + " "
@@ -50,7 +52,13 @@ public class InspeccionarBase {
                             + keys.getString("PKTABLE_NAME") + "." + keys.getString("PKCOLUMN_NAME"));
                 }
                 try (ResultSet indexes = metadata.getIndexInfo(db.getCatalog(), null, table, true, false)) {
-                    while (indexes.next()) System.out.println("  UNIQUE " + indexes.getString("COLUMN_NAME"));
+                    while (indexes.next()) {
+                        String columna = indexes.getString("COLUMN_NAME");
+                        if (columna != null) {
+                            System.out.println("  UNIQUE " + indexes.getString("INDEX_NAME") + " "
+                                    + indexes.getInt("ORDINAL_POSITION") + " " + columna);
+                        }
+                    }
                 }
             }
         }

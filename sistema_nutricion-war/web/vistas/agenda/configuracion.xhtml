@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Horarios y configuración de agenda</ui:define>
+
+    <ui:define name="content">
+        <div class="migas">
+            <h:link outcome="/vistas/agenda/agenda" value="← Agenda" />
+            <span>/</span>
+            <span>Configuración de horarios</span>
+        </div>
+
+        <h:form id="frmConfigAgenda">
+            <p:messages id="msgsCfg" closable="true" />
+
+            <div class="tarjeta">
+                <h1 style="font-size:22px; margin-bottom:16px;">Configuración de agenda y horarios</h1>
+                <div class="rejilla">
+                    <div class="campo">
+                        <p:outputLabel for="cfgDur" value="Duración estándar (min)" />
+                        <p:selectOneMenu id="cfgDur" value="#{configAgendaBean.configuracion.duracionConsultaMin}">
+                            <f:selectItems value="#{catalogosBean.duraciones}" var="d" itemLabel="#{d} minutos" itemValue="#{d}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="cfgAnt" value="Anticipación mínima (horas)" />
+                        <p:inputText id="cfgAnt" value="#{configAgendaBean.configuracion.anticipacionMinimaHoras}" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="tarjeta">
+                <h2 class="subtitulo-seccion">Horarios laborales por día de la semana</h2>
+                <p:dataTable value="#{configAgendaBean.horarios}" var="h">
+                    <p:column headerText="Día"><strong>#{h.nombreDia}</strong></p:column>
+                    <p:column headerText="Laboral" style="width:90px; text-align:center;">
+                        <p:selectBooleanCheckbox value="#{h.activo}" />
+                    </p:column>
+                    <p:column headerText="Hora inicio (HH:mm)">
+                        <p:inputText value="#{h.horaInicio}" maxlength="5" style="width:110px;" />
+                    </p:column>
+                    <p:column headerText="Hora fin (HH:mm)">
+                        <p:inputText value="#{h.horaFin}" maxlength="5" style="width:110px;" />
+                    </p:column>
+                </p:dataTable>
+
+                <div class="acciones-form">
+                    <p:commandButton value="Guardar configuración" action="#{configAgendaBean.guardar}"
+                                     update="@form :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                </div>
+            </div>
+        </h:form>
+
+        <h:form id="frmGoogleCalendar" styleClass="tarjeta">
+            <h2 class="subtitulo-seccion">Google Calendar</h2>
+            <h:panelGroup layout="block" rendered="#{param.google eq 'ok' and googleCalendarBean.vinculado}"
+                          styleClass="texto-ayuda">Cuenta vinculada. La agenda se sincroniza cada cinco minutos.</h:panelGroup>
+            <h:panelGroup layout="block" rendered="#{param.google eq 'error'}" styleClass="alerta-solo-lectura">
+                La autorización no se completó. Vuelve a iniciar la vinculación desde esta pantalla.
+            </h:panelGroup>
+            <h:panelGroup layout="block" rendered="#{param.google eq 'cancelado'}" styleClass="texto-ayuda">
+                Se canceló la autorización de Google Calendar.
+            </h:panelGroup>
+            <h:panelGroup rendered="#{not googleCalendarBean.configurado}" layout="block" styleClass="texto-ayuda">
+                La vinculación requiere la configuración de Google en el servidor.
+            </h:panelGroup>
+            <h:panelGroup rendered="#{googleCalendarBean.vinculado}" layout="block">
+                <p>Calendario principal vinculado.</p>
+                <h:panelGroup rendered="#{googleCalendarBean.ultimaSincronizacion ne null}" layout="block">
+                    Última sincronización
+                    <h:outputText value="#{googleCalendarBean.ultimaSincronizacion}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                    </h:outputText>
+                </h:panelGroup>
+                <h:panelGroup layout="block" rendered="#{googleCalendarBean.errorSincronizacion}" styleClass="texto-ayuda">
+                    No se completó la última sincronización. Revisa el vínculo si persiste.
+                </h:panelGroup>
+            </h:panelGroup>
+            <h:panelGroup rendered="#{googleCalendarBean.configurado or googleCalendarBean.vinculado}" layout="block">
+                <p class="texto-ayuda">La agenda importa ocupaciones y publica próximas citas como «Consulta NutriVida» en los siguientes 90 días.</p>
+                <div class="acciones-form">
+                    <p:commandButton value="#{googleCalendarBean.vinculado ? 'Volver a vincular' : 'Vincular Google Calendar'}"
+                                     action="#{googleCalendarBean.conectar}" ajax="false"
+                                     rendered="#{googleCalendarBean.configurado}" icon="ui-icon-link" styleClass="btn-secundario" />
+                    <p:commandButton value="Desvincular" action="#{googleCalendarBean.desvincular}" process="@this"
+                                     rendered="#{googleCalendarBean.vinculado}" update="@form :growl" styleClass="btn-secundario" />
+                </div>
+            </h:panelGroup>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

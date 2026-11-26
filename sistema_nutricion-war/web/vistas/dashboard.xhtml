@@ -10,29 +10,42 @@
     <ui:define name="titulo">Inicio</ui:define>
 
     <ui:define name="content">
-        <h1>Hola, #{loginBean.usuario.nombre}</h1>
+        <h:panelGroup rendered="#{param.denegado eq '1'}" layout="block" styleClass="alerta-solo-lectura">
+            No tienes permisos para acceder a esa sección con tu rol actual (#{loginBean.usuario.rol.etiqueta}).
+        </h:panelGroup>
 
+        <div class="encabezado-pagina">
+            <h1>Hola, #{loginBean.usuario.nombre}</h1>
+            <h:form id="frmPanel" styleClass="filtro-fechas">
+                <span class="badge badge-neutro">#{loginBean.consultorioActivo.nombre}</span>
+                <p:commandButton value="Actualizar panel" process="@this" update=":resumenPanel"
+                                 icon="ui-icon-refresh" styleClass="btn-secundario js-actualizar-al-volver" />
+            </h:form>
+        </div>
+
+        <h:panelGroup id="resumenPanel" layout="block">
         <div class="indicadores">
             <div class="indicador">
                 <span class="indicador-valor">#{dashboardBean.totalPacientes}</span>
                 <span class="indicador-nombre">Pacientes</span>
             </div>
             <div class="indicador">
-                <span class="indicador-valor">#{dashboardBean.citasHoy.size()}</span>
-                <span class="indicador-nombre">Citas hoy</span>
+                <span class="indicador-valor">#{dashboardBean.citasPorAtenderHoy}</span>
+                <span class="indicador-nombre">Citas por atender hoy</span>
+                <span class="texto-ayuda">#{dashboardBean.citasCompletadasHoy} completadas</span>
             </div>
             <div class="indicador">
                 <span class="indicador-valor">#{dashboardBean.consultasMes}</span>
                 <span class="indicador-nombre">Consultas este mes</span>
             </div>
-            <div class="indicador">
+            <h:panelGroup rendered="#{loginBean.puedeVerExpedientes}" layout="block" styleClass="indicador">
                 <span class="indicador-valor">
                     <h:outputText value="#{dashboardBean.ingresosMes}">
                         <f:convertNumber type="currency" currencySymbol="$" locale="es_MX" />
                     </h:outputText>
                 </span>
                 <span class="indicador-nombre">Ingresos del mes</span>
-            </div>
+            </h:panelGroup>
         </div>
 
         <div class="tarjeta">
@@ -46,8 +59,11 @@
                 <p:column headerText="Paciente">#{c.paciente.nombre}</p:column>
                 <p:column headerText="Motivo">#{c.motivo}</p:column>
                 <p:column headerText="Modalidad">#{c.tipo.etiqueta}</p:column>
+                <p:column headerText="Estado">#{c.estado.etiqueta}</p:column>
             </p:dataTable>
         </div>
+        </h:panelGroup>
+        <h:outputScript name="js/actualizar-al-volver.js" target="body" />
     </ui:define>
 
 </ui:composition>

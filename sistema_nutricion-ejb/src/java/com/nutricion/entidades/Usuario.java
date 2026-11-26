@@ -7,7 +7,9 @@ import javax.persistence.*;
 @Entity
 @Table(name = "usuarios")
 @NamedQueries({
+    @NamedQuery(name = "Usuario.todos", query = "SELECT u FROM Usuario u ORDER BY u.nombre"),
     @NamedQuery(name = "Usuario.porEmail", query = "SELECT u FROM Usuario u WHERE u.email = :email"),
+    @NamedQuery(name = "Usuario.porConsultorio", query = "SELECT u FROM Usuario u WHERE u.consultorio = :consultorio ORDER BY u.nombre"),
     @NamedQuery(name = "Usuario.contar", query = "SELECT COUNT(u) FROM Usuario u")
 })
 public class Usuario implements Serializable {
@@ -31,6 +33,20 @@ public class Usuario implements Serializable {
     @Column(nullable = false, length = 20)
     private Rol rol = Rol.ADMIN;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "consultorio_id")
+    private Consultorio consultorio;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "intentos_fallidos", nullable = false)
+    private int intentosFallidos = 0;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "bloqueado_hasta")
+    private Date bloqueadoHasta;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "fecha_registro", nullable = false)
     private Date fechaRegistro;
@@ -52,6 +68,15 @@ public class Usuario implements Serializable {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public Rol getRol() { return rol; }
     public void setRol(Rol rol) { this.rol = rol; }
+    public Consultorio getConsultorio() { return consultorio; }
+    public void setConsultorio(Consultorio consultorio) { this.consultorio = consultorio; }
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
+    public int getIntentosFallidos() { return intentosFallidos; }
+    public void setIntentosFallidos(int intentosFallidos) { this.intentosFallidos = intentosFallidos; }
+    public Date getBloqueadoHasta() { return bloqueadoHasta; }
+    public void setBloqueadoHasta(Date bloqueadoHasta) { this.bloqueadoHasta = bloqueadoHasta; }
+    public boolean isBloqueadoAhora() { return bloqueadoHasta != null && bloqueadoHasta.after(new Date()); }
     public Date getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(Date fechaRegistro) { this.fechaRegistro = fechaRegistro; }
 

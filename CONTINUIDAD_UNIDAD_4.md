@@ -1,5 +1,93 @@
 # Continuidad de sistema_nutricion / Unidad 4
 
+## Continuación del 26 de noviembre de 2026
+
+Se reprodujeron cuatro problemas de actualización en el despliegue del 25 de noviembre. Si se guardaba una ficha de paciente abierta antes de escribir un antecedente, el antecedente podía desaparecer. La agenda retenía el nombre y teléfono anteriores en el selector. El panel y el portal abiertos podían seguir mostrando una cita después de completarla. Al cerrar una consulta, la cabecera del expediente conservaba el peso anterior. Evidencia en `.cache/revision-continuacion/agenda-5670239286.txt`.
+
+- La ficha general, los antecedentes y las alergias escriben sus propios campos. La edición del paciente conserva los datos clínicos recién guardados y el expediente actualiza la cabecera al cerrar la consulta. **Actualizar datos** vuelve a leer la ficha sin volver a renderizar los formularios clínicos.
+- La agenda relee el selector al abrir una cita. Al seleccionar un evento, el calendario y la tabla muestran la misma fecha. La agenda puede actualizarse conservando el rango visible y la edición de duración se hace en el diálogo de cita.
+- El panel distingue citas por atender hoy y completadas. La agenda, el panel y el portal se actualizan con su botón o al volver a la vista. En Edge se comprobó el manejador de foco y se probó que un Ajax con la sesión revocada devuelve al acceso.
+
+### Google Calendar (HU-16)
+
+Se añadió la vinculación por consultorio, el cliente de Calendar y una tarea EJB cada cinco minutos. El ciclo cubre los próximos 90 días del calendario principal. Los bloqueos se guardan en `bloqueos_calendario` y afectan tanto el calendario de la agenda como la confirmación de una reserva. La aplicación publica citas con el título **Consulta NutriVida**. El token se guarda cifrado en `vinculos_google_calendar`.
+
+Se comprobó con un proveedor HTTP ficticio la autorización, importación paginada, creación, reprogramación y cancelación de citas, conservación de bloqueos ante una caída y recuperación de un evento borrado. En Edge, un bloqueo de 09:00 a 10:00 dejó libre el turno siguiente, rechazó una reserva que ya se había seleccionado y afectó solo al consultorio indicado. A las 08:45 Payara registró una ejecución automática correcta del temporizador local. Evidencia en `.cache/revision-continuacion/calendario-timer.txt`. La validación de OAuth y de la sincronización con una cuenta real queda pendiente. La [sección de Calendar](README.md#vincular-google-calendar) indica las propiedades del dominio y cómo probar el flujo.
+
+### Estado entregado
+
+El EAR activo está en `.cache/despliegues/20261126-083353-223`. Ant reportó `BUILD SUCCESSFUL`, la portada respondió HTTP 200 y `NutricionMySQLPool` pasó el ping. La inspección de MySQL 8.0.41 confirmó 13 tablas y `historia_dietetica` como `LONGTEXT`. El trabajo sigue local sobre `main` en `53ad585342762ca74131e5ee723d30e6a5e94c17`.
+
+| Verificación | Comprobaciones | Evidencia en `.cache/revision-continuacion/` |
+|---|---:|---|
+| Java y validaciones de pacientes | 22 | `scripts/probar-validaciones.ps1` |
+| Calendar con proveedor ficticio | 15 | `calendario-protocolo-final.txt` |
+| Cambios de paciente, agenda, panel y portal | 14 | `agenda-5703812745.txt` |
+| Bloqueos de Calendar en Edge y MySQL | 7 | `calendar-final-5703711699.txt` |
+| Agenda, expediente, portal y recepción | 38 | `agenda-5703717729.txt` |
+| Adjuntos | 24 | `agenda-5703813769.txt` |
+| Contactos entre consultorios | 10 | `agenda-5703813123.txt` |
+| CRUD de pacientes | 17 | `crud-26-noviembre.txt` |
+
+Se limpiaron los registros ficticios de cada ejecución. La aplicación queda disponible en [NutriVida local](http://localhost:8080/sistema_nutricion-war/). Quedan por verificar la cuenta real de Calendar, la expiración por inactividad y la impresión del portal. El siguiente módulo de agenda pendiente es recordatorios (HU-18).
+
+### Revisión para publicación
+
+Se recompiló y desplegó el EAR sobre la base `53ad585` en `.cache/despliegues/20261126-085842-885`. Payara 5.2022.3 respondió HTTP 200 y pasó el ping de `NutricionMySQLPool`. Volvieron a pasar las 22 pruebas Java de pacientes, las 15 de Calendar con proveedor ficticio y las 110 comprobaciones en Edge. Las pruebas crearon y limpiaron sus consultorios y pacientes ficticios. La evidencia de esta repetición está en `.cache/revision-continuacion/revision-git-despliegue.txt`, `revision-git-crud.txt`, `agenda-5705163907.txt`, `agenda-5705189135.txt`, `agenda-5705221107.txt`, `agenda-5705233588.txt` y `calendar-final-5705160321.txt`.
+
+## Continuación del 25 de noviembre de 2026
+
+Se ejecutó `git fetch --prune origin` y `git pull --ff-only`. `main` y `origin/main` están en `53ad585342762ca74131e5ee723d30e6a5e94c17`. Al retomar había 24 archivos modificados y 26 nuevos en el árbol local. Ese trabajo y las correcciones de esta sesión siguen en el árbol de trabajo.
+
+- El alta de un consultorio crea su primera cuenta de administración en la misma transacción. El consultorio de la cuenta determina los accesos, las búsquedas y los cambios de agenda. Recepción abre la agenda al entrar.
+- Los horarios y la duración se guardan juntos por consultorio. La disponibilidad pública y el guardado consultan las mismas citas activas. La reserva comprueba el horario dentro de una transacción que bloquea la fila del consultorio.
+- La reserva muestra el código de cita. El nutriólogo encuentra el código del portal en el expediente. El portal presenta la próxima cita con confirmación y cancelación, y la evolución de mediciones de consultas cerradas o históricas completadas.
+- El historial del expediente consulta las filas persistidas de MySQL. Antes podía conservar vacía una colección de consultas que ya se había cargado y ocultar una consulta recién guardada.
+- Se vinculó la configuración antigua de agenda al consultorio principal y se inicializó la versión de las citas antiguas. La estructura se conserva con la ampliación de tablas de EclipseLink. MySQL devuelve `historia_dietetica` como `LONGTEXT`.
+
+La aplicación se ejecuta en [NutriVida local](http://localhost:8080/sistema_nutricion-war/). Usar JDK 17, Payara 5.2022.3 y el EAR raíz. Para repetir la verificación, ejecutar `scripts/probar-validaciones.ps1` y luego `scripts/desplegar-local.ps1`. El acceso de demostración se describe en el README. Los recorridos de pacientes, agenda y consultorio usan registros ficticios que se eliminan al terminar.
+
+El despliegue activo al pedir el traspaso es `.cache/despliegues/20261125-211908-023`. Ant compiló ese EAR y la página respondió HTTP 200. El pool pasó el ping y se verificaron diez tablas en MySQL. Las 22 pruebas Java pasaron antes del último ajuste XHTML. El recorrido de 17 comprobaciones de pacientes pasó en un despliegue previo de esta sesión.
+
+El recorrido en `.cache/revision-continuacion/flujo-agenda.js` confirmó el aislamiento de dos consultorios, reservas simultáneas, reprogramación por recepción, confirmación y cancelación desde el portal, persistencia de los siete apartados y reapertura en solo lectura. Encontró las seis pestañas como paneles independientes después de cambiar el selector de alergias a `pageDirection`. Después venció la espera del mensaje de guardado de antecedentes. La prueba aislada `.cache/revision-continuacion/diagnostico-antecedentes.js` sí guardó y mostró el mensaje. El diagnóstico de evolución mostró las cuatro gráficas. Queda repetir el recorrido integral y confirmar catálogo, filtro de fechas, cálculo, portal con mediciones y bloqueo/desactivación. Se eliminaron los dos consultorios de la ejecución y sus registros ficticios con `FixtureNutricion`.
+
+Al recibir ese traspaso quedaban pendientes los adjuntos del expediente (HU-12 a HU-14) y la unicidad de correo y teléfono de pacientes por consultorio. La [matriz vigente](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes) recoge la evidencia de ambos avances.
+
+### Recorrido integral retomado
+
+El guardado de una consulta procesaba otra vez el parámetro JSF `id` y podía dejar el expediente sin paciente para las peticiones siguientes. Se fija el identificador al abrir el expediente y el guardado procesa el formulario de la consulta. La pestaña cambia a solo lectura en la respuesta Ajax y luego se pueden guardar antecedentes en la misma página.
+
+El campo libre de alergias desplazaba el botón Guardar al redimensionarse al perder el foco. Se desactivó ese redimensionamiento en los tres campos de la pestaña. En el portal, las gráficas se redibujan al cambiar el ancho de la ventana.
+
+- Ant compiló y Payara sirvió HTTP 200 desde `.cache/despliegues/20261125-223958-837`. El ping de `NutricionMySQLPool` y las 22 pruebas Java de validación pasaron.
+- Edge ejecutó 38 comprobaciones con dos consultorios ficticios. Además de agenda, portal de citas y notas clínicas, guardó y volvió a leer antecedentes y alergias, filtró las cuatro gráficas, comprobó el plan dietético tras recargar, mostró las mediciones cerradas en el portal a 390 px y verificó el bloqueo, desbloqueo y revocación de la sesión de recepción.
+- El recorrido quedó en `.cache/revision-continuacion/flujo-agenda-base.js`, el resultado en `.cache/revision-continuacion/agenda-5668168864.txt` y la captura ficticia del portal en `.cache/revision-continuacion/portal-390.png`. `FixtureNutricion` eliminó los dos consultorios creados para esa ejecución.
+
+### Adjuntos y contactos por consultorio
+
+- HU-12 a HU-14. La pestaña **Archivos** carga PDF, JPG y PNG de hasta 10 MB, filtra por Laboratorio, Estudio y Fotografía de progreso, y compara dos fotos de fechas distintas. Se eligió almacenar los archivos en `data/nutricion-adjuntos` del dominio de Payara por defecto y la metadata en `archivos_adjuntos`. La fecha de foto toma el día de carga cuando se deja vacía.
+- La descarga requiere una cuenta clínica del mismo consultorio. En Edge se comprobó carga, recarga, descarga, filtro, comparación y denegación con recepción, otra sede y sin sesión. Al borrar el expediente ficticio, su descarga empezó a devolver 404 y el almacenamiento volvió a su conteo anterior.
+- Correo y teléfono se validan en el consultorio desde el panel y la reserva pública. `MigracionContactosPacientes` cambia los índices únicos globales de esos campos a `(consultorio_id, email)` y `(consultorio_id, telefono)` al arrancar. MySQL confirmó que `codigo_acceso` conserva el índice único global. Se probó el mismo contacto en dos sedes, rechazo de duplicados dentro de una sede y reutilización del expediente local al volver a reservar.
+
+### Estado entregado
+
+`main`, `origin/main` y la rama `main` del remoto coinciden en `53ad585342762ca74131e5ee723d30e6a5e94c17`. Los cambios anteriores y los de esta continuación están en el árbol local. El EAR activo es `.cache/despliegues/20261125-225514-900`. Ant reportó `BUILD SUCCESSFUL`, la portada respondió HTTP 200, el pool `NutricionMySQLPool` pasó el ping y volvieron a pasar las 22 pruebas Java.
+
+La corrida final utilizó Edge, Payara y MySQL locales. Los siguientes resultados quedan en `.cache/revision-continuacion/`.
+
+| Recorrido | Comprobaciones | Resultado |
+|---|---:|---|
+| Agenda, expediente, portal y recepción | 38 | `agenda-5669014772.txt` |
+| Adjuntos | 24 | `agenda-5669018664.txt` y `archivos-comparacion.png` |
+| Contactos entre consultorios | 10 | `agenda-5669043806.txt` |
+| CRUD de pacientes | 17 | `crud-final.txt` |
+
+Se limpiaron los dos consultorios ficticios de cada recorrido integral y el paciente ficticio del CRUD. MySQL 8.0.41 mostró 11 tablas, los dos índices compuestos y `historia_dietetica` como `LONGTEXT`. El esquema coincidió al redesplegar. Metadatos en `esquema-antes-contactos.txt` y `esquema-final.txt`. El README tiene un guion manual de adjuntos y los archivos de prueba están en `.cache/revision-continuacion/adjuntos-qa/`.
+
+Quedan por verificar la expiración real de sesión a 30 minutos, la impresión del resumen del portal y los criterios parciales de la matriz. El siguiente módulo pendiente en el orden del README es sincronización de agenda con Google Calendar (HU-16).
+
+## Revisión de referencia del 15 de noviembre de 2026
+
 **Leer este archivo al iniciar otro chat.** Revisión realizada el 15 de noviembre de 2026, a petición de revisar la explicación del profesor, todo `ARCHIVOS`, instalaciones necesarias, modelos e implementación.
 
 El 16-11-2026 se agregó `AGENTS.md` en la raíz para indicar a futuros chats de este proyecto que lean esta guía y el README, y consulten los materiales pertinentes sin pedir al usuario que repita sus rutas. Abrir la conversación en esta misma carpeta; esto conserva instrucciones y contexto en archivos, no una garantía de recordar íntegramente conversaciones anteriores.
@@ -119,4 +207,4 @@ Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el pr
 
 ## Prompt listo para otro chat
 
-> Estamos en sistema_nutricion de Unidad 4. Lee primero CONTINUIDAD_UNIDAD_4.md, README.md y los documentos enlazados. Ya se revisaron los seis archivos de ../ARCHIVOS; usa el índice y la caché local antes de repetir búsquedas. Conserva Java EE 8 javax.*, Ant/NetBeans, JDK 17, Payara 5 y PrimeFaces 5. Se demostraron cuatro tablas MySQL, login, panel y CRUD básico de pacientes con 22 pruebas Java y 17 comprobaciones de navegador. El resto de las 44 HU tiene pendientes documentados. Revalida HEAD, cambios locales y servidor; no publiques ni reinstales herramientas por suposición. Continúa desde el alcance concreto que te indique, manteniendo modelos, historia, implementación y evidencia alineados.
+> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Retoma el Estado entregado del 26 de noviembre. Revalida main y origin/main sobre 53ad585342762ca74131e5ee723d30e6a5e94c17 y conserva los cambios locales. Usa el EAR raíz, Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El despliegue activo quedó en .cache/despliegues/20261126-083353-223, con HTTP 200 en http://localhost:8080/sistema_nutricion-war/. Se corrigieron las actualizaciones de pacientes, agenda, panel y portal. Calendar pasó la prueba con proveedor ficticio y la integración de bloqueos en Edge/MySQL. Pasaron 22 pruebas de pacientes, 15 de protocolo Calendar y 110 comprobaciones en Edge. Las pruebas usaron datos ficticios que se limpiaron. Usa scripts/probar-validaciones.ps1, scripts/probar-calendario-google.ps1 y scripts/desplegar-local.ps1. Falta verificar OAuth y sincronización con una cuenta autorizada de Google. HU-18 es el siguiente módulo pendiente.

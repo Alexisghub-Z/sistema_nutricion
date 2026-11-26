@@ -130,9 +130,121 @@ a { color: var(--verde); }
 .tarjeta-acceso input { width: 100%; }
 .nota { font-size: 12px; color: var(--texto-suave); text-align: center; margin: 0; }
 
+/* ---------- expediente clínico (HU-06, HU-07, HU-08, HU-10) ---------- */
+.enlace-paciente { font-weight: 600; text-decoration: none; color: var(--verde-oscuro); }
+.enlace-paciente:hover { text-decoration: underline; color: var(--verde); }
+
+.migas { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texto-suave); margin-bottom: 12px; }
+.migas a { text-decoration: none; font-weight: 500; }
+
+.perfil-cabecera {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap;
+}
+.perfil-info { display: flex; align-items: flex-start; gap: 16px; }
+.perfil-avatar {
+    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    background: var(--verde-claro); color: var(--verde-oscuro); border: 2px solid #c6f6d5;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+}
+.perfil-nombre { font-size: 22px; margin: 0 0 4px; color: var(--texto); }
+.perfil-meta { display: flex; gap: 8px; flex-wrap: wrap; color: var(--texto-suave); font-size: 14px; }
+.perfil-etiquetas { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.perfil-metricas { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.metrica-mini {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 8px 14px; background: var(--fondo); border-radius: 8px; border: 1px solid var(--borde);
+}
+.metrica-mini-etiqueta { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-suave); }
+.metrica-mini-valor { font-size: 18px; font-weight: 700; color: var(--texto); }
+
+.badge {
+    display: inline-block; padding: 3px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+}
+.badge-exito { background: #def7ec; color: #03543f; }
+.badge-alerta { background: #fef3c7; color: #92400e; }
+.badge-peligro { background: #fde8e8; color: #9b1c1c; }
+.badge-neutro { background: #edf2f7; color: #4a5568; }
+
+.subtitulo-seccion { font-size: 16px; color: var(--verde-oscuro); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--borde); }
+.rejilla-cuatro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+.imc-caja {
+    min-height: 36px; display: flex; align-items: center; padding: 6px 12px;
+    background: var(--fondo); border: 1px solid var(--borde); border-radius: 6px;
+}
+.alerta-solo-lectura {
+    padding: 12px 16px; margin-bottom: 18px; border-radius: 8px;
+    background: #fef3c7; border: 1px solid #f6e05e; color: #744210; font-size: 14px;
+}
+.bloque-catalogo {
+    padding: 16px; background: var(--fondo); border: 1px solid var(--borde); border-radius: 8px;
+}
+.texto-ayuda { color: var(--texto-suave); font-size: 14px; margin: 0 0 12px; }
+.estado-vacio { text-align: center; padding: 40px 20px; }
+
+.tabs-clinicas.ui-tabs { background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio); padding: 12px; }
+.tabs-clinicas .ui-tabs-nav { background: transparent; border: 0; border-bottom: 1px solid var(--borde); margin-bottom: 16px; }
+.tabs-clinicas .ui-tabs-nav li { border-radius: 8px 8px 0 0; }
+.tabs-clinicas .ui-tabs-nav li.ui-tabs-selected a { color: var(--verde-oscuro); font-weight: 600; }
+
+/* ---------- evolución, comparativo y cálculo dietético ---------- */
+.comparativo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.cita-resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-block: 16px; }
+.cita-resumen .texto-ayuda { display: block; margin-top: 4px; }
+.comparativo-card {
+    background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
+}
+.comparativo-etiqueta { font-size: 12px; font-weight: 600; color: var(--texto-suave); text-transform: uppercase; letter-spacing: .04em; }
+.comparativo-valores { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.comparativo-valores strong { font-size: 20px; color: var(--texto); }
+.comparativo-ant { font-size: 12px; color: var(--texto-suave); }
+
+.filtro-fechas { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adjuntos-filtro { margin-bottom: 12px; }
+.adjuntos-progreso { margin-top: 24px; }
+.fotos-progreso { display: flex; flex-wrap: wrap; gap: 16px; list-style: none; padding: 0; }
+.fotos-progreso li { display: grid; gap: 6px; width: 160px; overflow-wrap: anywhere; }
+.fotos-progreso img { width: 100%; height: 120px; object-fit: contain; background: var(--fondo); }
+.fotos-comparadas figure { margin: 0; overflow-wrap: anywhere; }
+.fotos-comparadas img { display: block; width: 100%; height: 320px; object-fit: contain; background: var(--fondo); }
+.fotos-comparadas figcaption { margin-top: 8px; }
+.graficas-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.macro-resumen { display: flex; gap: 6px; flex-wrap: wrap; }
+.macro-pill {
+    font-size: 12px; padding: 3px 8px; border-radius: 6px;
+    background: var(--blanco); border: 1px solid var(--borde); color: var(--texto);
+}
+
+/* ---------- eventos de agenda (p:schedule) ---------- */
+.fc-event.cita-pendiente { background: #fef3c7 !important; border-color: #d97706 !important; color: #78350f !important; }
+.fc-event.cita-confirmada { background: #def7ec !important; border-color: #059669 !important; color: #064e3b !important; }
+.fc-event.cita-completada { background: #e0f2fe !important; border-color: #0284c7 !important; color: #0c4a6e !important; }
+.fc-event.cita-cancelada { background: #fde8e8 !important; border-color: #dc2626 !important; color: #7f1d1d !important; text-decoration: line-through; }
+.fc-event.cita-bloqueo { background: #edf0f4 !important; border-color: #64748b !important; color: #334155 !important; }
+
+/* ---------- reservación pública y portal ---------- */
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.slot-btn.ui-button {
+    background: var(--fondo) !important; color: var(--texto) !important;
+    border: 1px solid var(--borde) !important; border-radius: 8px !important;
+    font-weight: 600 !important; text-shadow: none !important;
+}
+.slot-btn.ui-button:hover { border-color: var(--verde) !important; }
+.slot-activo.ui-button {
+    background: var(--verde) !important; color: var(--blanco) !important;
+    border-color: var(--verde-oscuro) !important;
+}
+.confirmacion-cita { border-left: 5px solid var(--verde); }
+.nav-publica { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
 /* ---------- pantallas angostas ---------- */
 @media (max-width: 860px) {
-    .hero, .servicios, .rejilla { grid-template-columns: 1fr; }
+    .hero, .servicios, .rejilla, .rejilla-cuatro, .comparativo-grid { grid-template-columns: 1fr; }
+    .graficas-grid { grid-template-columns: minmax(0, 1fr); }
     .indicadores { grid-template-columns: 1fr 1fr; }
     #cuerpo { flex-direction: column; }
     #menu { width: auto; border-right: 0; border-bottom: 1px solid var(--borde); padding: 8px; }

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="frmCargaAdjunto" enctype="multipart/form-data">
+        <h2 class="subtitulo-seccion">Subir un archivo</h2>
+        <p:messages id="mensajesCarga" closable="true" />
+        <div class="rejilla">
+            <div class="campo">
+                <h:outputLabel for="categoriaAdjunto" value="Categoría del archivo" />
+                <h:selectOneMenu id="categoriaAdjunto" value="#{expedienteBean.categoriaAdjunto}"
+                                 required="true" requiredMessage="Selecciona la categoría del adjunto.">
+                    <f:selectItem itemLabel="Selecciona una categoría" noSelectionOption="true" />
+                    <f:selectItems value="#{expedienteBean.categoriasAdjunto}" var="categoria"
+                                   itemLabel="#{categoria.etiqueta}" itemValue="#{categoria}" />
+                    <p:ajax update="campoFechaFoto" />
+                </h:selectOneMenu>
+            </div>
+            <h:panelGroup id="campoFechaFoto" layout="block">
+                <h:panelGroup styleClass="campo" layout="block" rendered="#{expedienteBean.categoriaAdjunto eq 'FOTO_PROGRESO'}">
+                    <p:outputLabel for="fechaFoto" value="Fecha de la foto (opcional)" />
+                    <p:calendar id="fechaFoto" value="#{expedienteBean.fechaFoto}" pattern="dd/MM/yyyy"
+                                locale="es" placeholder="Fecha de carga si se deja vacía" />
+                </h:panelGroup>
+            </h:panelGroup>
+            <div class="campo campo-ancho">
+                <h:outputLabel for="archivoAdjunto" value="Archivo" />
+                <p:fileUpload id="archivoAdjunto" mode="simple" />
+                <span class="texto-ayuda">PDF, JPG o PNG de hasta 10 MB. Para fotografías de progreso, usa JPG o PNG.</span>
+            </div>
+        </div>
+        <div class="acciones-form">
+            <p:commandButton value="Subir archivo" action="#{expedienteBean.subirAdjunto}"
+                             ajax="false" icon="ui-icon-arrowthick-1-n" styleClass="btn-primario" />
+        </div>
+    </h:form>
+
+    <h:form id="frmArchivos">
+        <h2 class="subtitulo-seccion">Archivos del expediente</h2>
+        <div class="filtro-fechas adjuntos-filtro">
+            <h:outputLabel for="filtroAdjuntos" value="Filtrar por categoría" />
+            <h:selectOneMenu id="filtroAdjuntos" value="#{expedienteBean.filtroAdjuntos}">
+                <f:selectItem itemLabel="Todas las categorías" noSelectionOption="true" />
+                <f:selectItems value="#{expedienteBean.categoriasAdjunto}" var="categoria"
+                               itemLabel="#{categoria.etiqueta}" itemValue="#{categoria}" />
+                <p:ajax update="tablaAdjuntos" />
+            </h:selectOneMenu>
+        </div>
+        <p:dataTable id="tablaAdjuntos" value="#{expedienteBean.adjuntosFiltrados}" var="adjunto"
+                     rows="10" paginator="true" paginatorAlwaysVisible="false"
+                     emptyMessage="Sin archivos para esta categoría.">
+            <p:column headerText="Nombre">
+                <h:outputLink value="#{request.contextPath}/archivo">
+                    <f:param name="id" value="#{adjunto.id}" />
+                    <h:outputText value="#{adjunto.nombreOriginal}" />
+                </h:outputLink>
+            </p:column>
+            <p:column headerText="Categoría">
+                <h:outputText value="#{adjunto.categoria.etiqueta}" />
+            </p:column>
+            <p:column headerText="Fecha de carga">
+                <h:outputText value="#{adjunto.fechaCarga}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                </h:outputText>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <section class="adjuntos-progreso">
+        <h2 class="subtitulo-seccion">Fotografías de progreso</h2>
+        <h:outputText value="Aún no hay fotografías de progreso." styleClass="texto-ayuda"
+                      rendered="#{empty expedienteBean.fotosProgreso}" />
+        <h:panelGroup layout="block" rendered="#{not empty expedienteBean.fotosProgreso}">
+            <ol class="fotos-progreso">
+                <ui:repeat value="#{expedienteBean.fotosProgreso}" var="foto">
+                    <li>
+                        <h:graphicImage value="/archivo?id=#{foto.id}&amp;vista=1" pt:loading="lazy"
+                                        alt="#{foto.nombreOriginal}" />
+                        <time>
+                            <h:outputText value="#{foto.fechaFoto}">
+                                <f:convertDateTime pattern="dd/MM/yyyy" />
+                            </h:outputText>
+                        </time>
+                        <h:outputText value="#{foto.nombreOriginal}" />
+                    </li>
+                </ui:repeat>
+            </ol>
+            <h:form id="frmCompararFotos" rendered="#{expedienteBean.fotosProgreso.size() ge 2}">
+                <div class="rejilla">
+                    <div class="campo">
+                        <h:outputLabel for="primeraFoto" value="Primera fotografía" />
+                        <h:selectOneMenu id="primeraFoto" value="#{expedienteBean.primeraFotoId}">
+                            <f:selectItem itemLabel="Selecciona una fotografía" noSelectionOption="true" />
+                            <f:selectItems value="#{expedienteBean.fotosProgreso}" var="foto"
+                                           itemValue="#{foto.id}" itemLabel="#{expedienteBean.etiquetaFoto(foto)}" />
+                        </h:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <h:outputLabel for="segundaFoto" value="Segunda fotografía" />
+                        <h:selectOneMenu id="segundaFoto" value="#{expedienteBean.segundaFotoId}">
+                            <f:selectItem itemLabel="Selecciona una fotografía" noSelectionOption="true" />
+                            <f:selectItems value="#{expedienteBean.fotosProgreso}" var="foto"
+                                           itemValue="#{foto.id}" itemLabel="#{expedienteBean.etiquetaFoto(foto)}" />
+                        </h:selectOneMenu>
+                    </div>
+                </div>
+                <div class="acciones-form">
+                    <p:commandButton value="Comparar fotos" action="#{expedienteBean.compararFotos}"
+                                     process="@form" update="comparacionFotos :growl"
+                                     icon="ui-icon-search" styleClass="btn-secundario" />
+                </div>
+                <h:panelGroup id="comparacionFotos" layout="block">
+                    <h:panelGroup rendered="#{not empty expedienteBean.fotosComparadas}" layout="block"
+                                  styleClass="graficas-grid fotos-comparadas">
+                        <ui:repeat value="#{expedienteBean.fotosComparadas}" var="foto">
+                            <figure class="tarjeta">
+                                <h:graphicImage value="/archivo?id=#{foto.id}&amp;vista=1" alt="#{foto.nombreOriginal}" />
+                                <figcaption><h:outputText value="#{expedienteBean.etiquetaFoto(foto)}" /></figcaption>
+                            </figure>
+                        </ui:repeat>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </h:form>
+        </h:panelGroup>
+    </section>
+</ui:composition>

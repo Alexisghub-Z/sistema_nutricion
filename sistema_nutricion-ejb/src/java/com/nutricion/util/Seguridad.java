@@ -44,8 +44,16 @@ public final class Seguridad {
 
     /** Código corto y legible para que el paciente consulte su cita (sin 0/O ni 1/I). */
     public static String codigoCita() {
-        StringBuilder sb = new StringBuilder(8);
-        for (int i = 0; i < 8; i++) {
+        return codigo(8);
+    }
+
+    public static String codigoPortal() {
+        return codigo(12);
+    }
+
+    private static String codigo(int longitud) {
+        StringBuilder sb = new StringBuilder(longitud);
+        for (int i = 0; i < longitud; i++) {
             sb.append(CARACTERES_CODIGO.charAt(RANDOM.nextInt(CARACTERES_CODIGO.length())));
         }
         return sb.toString();

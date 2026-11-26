@@ -26,9 +26,9 @@ El avance comprobable se concentra en **sitio público, acceso, panel y gestión
 | Material y herramientas | [Índice del profesor](MATERIALES_PROFESOR.md), con páginas, ubicaciones y decisión sobre instalaciones. |
 | Preparación del cuestionario | [Preguntas y ejercicio](GUIA_CUESTIONARIO.md). |
 
-## 3. Modelo de datos actual, contrastado con MySQL
+## 3. Modelo de datos, contrastado con MySQL
 
-No confundirlo con el **modelo objetivo** de la sección 4 del README, que añade Consultorio, roles, catálogos, planes, archivos y otros módulos.
+El diagrama y el diccionario de este apartado corresponden a las cuatro tablas verificadas del 15 al 16 de noviembre. Las actualizaciones del 25 y 26 de noviembre se detallan al final de la sección.
 
 ```mermaid
 erDiagram
@@ -80,7 +80,7 @@ erDiagram
     }
 ```
 
-`USUARIOS` queda separado: **hoy no existe una FK entre usuario, consultorio y pacientes**. Dibujar esa relación como implementada sería incorrecto. Una cita pertenece a un paciente; una consulta pertenece a un paciente y puede no tener cita. `consultas.cita_id` admite NULL y es único: a lo sumo una consulta por cita.
+En ese modelo inicial, `USUARIOS` quedaba separado. Una cita pertenece a un paciente y una consulta pertenece a un paciente con cita opcional. `consultas.cita_id` admite NULL y es único.
 
 ### Diccionario de datos
 
@@ -97,13 +97,28 @@ La edad se calcula desde la fecha de nacimiento: no hay columna EDAD. El IMC se 
 
 La eliminación de un paciente usa `CascadeType.REMOVE` sobre citas y consultas en JPA. **No afirmar que MySQL tiene `ON DELETE CASCADE`**: son mecanismos diferentes. El diálogo advierte que se pierde su historial; demostrar eliminación solo con registros ficticios propios.
 
-### Evidencia técnica de persistencia
+### Evidencia técnica de persistencia del modelo inicial
 
 - `sistema_nutricion-ejb/src/conf/persistence.xml`: unidad `NutricionPU`, JTA, recurso `jdbc/nutricion`, cuatro clases registradas y `exclude-unlisted-classes=true`.
 - EclipseLink usa `create-or-extend-tables`: pide crear/extender tablas al desplegar; esto no es un historial de migraciones ni un respaldo.
 - `scripts/InspeccionarBase.java` leyó **solo metadatos** por JDBC: MySQL 8.0.41, las cuatro tablas, FK y columnas únicas. Las credenciales se leyeron localmente de Payara y no se imprimieron.
 - [SQL de demostración](consultas-demostracion.sql): solo lectura, estructura, relaciones y búsqueda restringida al prefijo ficticio `u4.qa.`.
 - `InicioDatos` agrega muestras únicamente si no existen usuarios. No borrar tablas o usuarios para volver a dispararlo.
+
+### Actualización del 25 de noviembre
+
+Se inspeccionaron 11 tablas en MySQL 8.0.41 con `scripts/InspeccionarBase.java`. Las cuentas y pacientes tienen un consultorio
+asociado. En `pacientes`, los índices únicos son `(consultorio_id, email)` y `(consultorio_id, telefono)` para los contactos,
+y `codigo_acceso` para el portal. `MigracionContactosPacientes` aplica la transición de índices al iniciar la aplicación.
+
+`archivos_adjuntos` tiene PK `id` y FK a `pacientes` y `consultorios`. Registra categoría, nombre original, clave de disco
+única, tipo MIME, tamaño en bytes, fecha de carga y fecha de foto si el adjunto es de progreso. La fachada limita las consultas de archivos
+al consultorio de la sesión. Al eliminar un expediente, la transacción retira los metadatos de sus adjuntos y, tras confirmar, se borran
+los archivos asociados en disco.
+
+### Actualización del 26 de noviembre
+
+MySQL mostró 13 tablas tras añadir Calendar. `vinculos_google_calendar` guarda un vínculo por consultorio con su identificador de eventos, el token cifrado y el resultado de sincronización. `bloqueos_calendario` guarda los intervalos ocupados con FK al consultorio e índice por consultorio, inicio y fin. La agenda y la reserva filtran las ocupaciones por consultorio y permiten un turno que empiece justo al terminar un bloqueo. Se verificó con dos consultorios ficticios.
 
 ## 4. Modelo de comportamiento implementado
 
@@ -286,45 +301,49 @@ En servicios también hay reglas de citas (9:00-19:00, no domingo, duración 15-
 
 ## 7. Trazabilidad de historias y pendientes
 
-Los IDs y criterios completos son los del README. **Parcial no significa aprobada ni terminada**; la definición de terminado exige todos los criterios y pruebas con los roles afectados.
+Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. Los criterios completos y las pruebas con los roles afectados siguen en el README.
 
-| Historias | Estado actual | Evidencia / diferencia con lo solicitado |
+| Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
-| HU-01 | Pendiente | No existe alta de Consultorio. |
-| HU-02 | Parcial | Login, hash, sesión y logout. Falta bloqueo por intentos; expiración configurada de 30 min no probada por espera real. |
-| HU-03 | Pendiente | Solo ADMIN; faltan roles y autorización por módulo. |
-| HU-04 | Pendiente | No existe recuperación por correo. |
-| HU-05 | Pendiente | No existe aislamiento por consultorio ni FK tenant. |
-| HU-06 | Parcial | CRUD básico conectado a MySQL y validaciones. Faltan antecedentes heredofamiliares/personales del criterio completo. |
-| HU-07 | Parcial | Texto de alergias/intolerancias. Faltan catálogo y conexión con planes. |
-| HU-08 | Parcial | Entidad Consulta y cálculo IMC; masa muscular y agua ya tienen campos. Faltan grasa visceral, captura y rangos completos. |
-| HU-09 | Pendiente | Hay consulta `evolucion` en servicio, pero no gráficas ni filtros de pantalla. |
-| HU-10 | Parcial | Textos clínicos básicos; no siete apartados ni cierre/solo lectura. |
-| HU-11 | Pendiente | Sin comparativo automático. |
-| HU-12, HU-13, HU-14 | Pendientes | Sin carga, clasificación o línea de tiempo de adjuntos. |
-| HU-15 | Pendiente | Horario fijo en servicio; no configuración de agenda. |
-| HU-16 | Pendiente | Sin Google Calendar. |
-| HU-17 | Parcial | Servicio de citas y reglas; faltan pantalla de agenda, rol recepción y estados objetivo. |
-| HU-18, HU-19 | Pendientes | Sin recordatorios ni vista pública de horarios. |
-| HU-20 | Parcial | Método `agendarPublica`; no flujo público navegable ni protección concurrente certificada. |
-| HU-21 | Pendiente | Sin envío de confirmaciones. |
-| HU-22 | Parcial | Utilidad Mifflin-St Jeor; faltan las otras cuatro fórmulas y pantalla. |
-| HU-23, HU-24 | Pendientes | Sin PlanTratamiento, meta editable ni distribución de macros. |
+| HU-01 | Probada en local | Dos consultorios ficticios creados desde administración con credenciales independientes. |
+| HU-02 | Parcial | Acceso, cierre de sesión, bloqueo al tercer intento fallido y desbloqueo desde Administración probados en Edge. Queda comprobar la expiración a los 30 min mediante espera real. |
+| HU-03 | Parcial | Recepción entra a la agenda y puede reprogramar. Se verificaron restricciones a expediente, archivos, horarios y Administración, y revocación de su sesión al desactivar la cuenta. |
+| HU-04 | Pendiente | Recuperación de contraseña por correo. |
+| HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas y ocupaciones importadas mantienen el ámbito por consultorio. Correo y teléfono siguen siendo únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
+| HU-06 | Parcial | CRUD probado en MySQL. Se verificó que editar el nombre y el teléfono conserva un antecedente guardado mientras estaba abierta la ficha. |
+| HU-07 | Parcial | La selección del catálogo y el texto libre persisten al recargar el expediente. Queda usar el catálogo en la validación de planes. |
+| HU-08 | Parcial | Captura de mediciones, recálculo de IMC y validación de rangos en JSF y Java. Pendiente recorrer todas las mediciones y sus límites. |
+| HU-09 | Probada en local | Cuatro gráficas visibles, dos consultas del mismo día representadas y filtro por fechas aplicado y limpiado en Edge. |
+| HU-10 | Parcial | Siete apartados con borrador, cierre y reapertura en solo lectura. |
+| HU-11 | Parcial | Diferencia numérica y porcentual entre las últimas dos consultas. Pendiente relacionar la valoración de cambios con el objetivo del tratamiento. |
+| HU-12 | Probada en local | Carga y descarga de PDF, JPG y PNG hasta 10 MB, con fecha de carga. Se comprobó rechazo por tamaño y firma incorrecta, y acceso limitado por rol y consultorio. |
+| HU-13 | Probada en local | Laboratorio, Estudio y Fotografía de progreso se asignan al subir. La tabla filtra cada categoría. |
+| HU-14 | Probada en local | Línea de tiempo por fecha de la foto y comparación lado a lado de dos fechas distintas. |
+| HU-15 | Probada en local | Duración, anticipación y un intervalo por día y consultorio. El guardado de parámetros y horario revierte juntos ante un error de validación. |
+| HU-16 | Parcial | Ejecución automática observada en Payara. Con un proveedor ficticio se verificó importar ocupaciones, publicar, reprogramar y cancelar citas. Los intervalos ocupados se verificaron en Edge contra MySQL. Queda conectar una cuenta de Google y verificar el ciclo externo de punta a punta. |
+| HU-17 | Parcial | Agenda con calendario y filtros, reprogramación por recepción y actualización de citas completadas. Tras editar un paciente, el selector vuelve a leer nombre y teléfono. |
+| HU-18 | Pendiente | Recordatorios antes de la consulta. |
+| HU-19 | Parcial | El enlace público excluye citas activas y bloques importados de su consultorio. Se verificó rechazo al confirmar un turno abierto antes del bloqueo. Queda validar con la cuenta real. |
+| HU-20 | Probada en local | Dos reservas simultáneas del mismo turno y consultorio dejaron una cita. Un segundo consultorio pudo reservar esa misma hora. |
+| HU-21 | Pendiente | Envío de confirmaciones por correo o WhatsApp. La página muestra la fecha, el consultorio y el código de cita. |
+| HU-22 | Parcial | Se comprobó precarga de la última medición y persistencia de GEB y GET con la fórmula predeterminada. Queda contrastar todas las fórmulas y rangos con el nutriólogo. |
+| HU-23, HU-24 | Parciales | Meta y macros reaparecen en el plan guardado tras recargar. Queda recorrer los ajustes y límites de las distribuciones editables. |
 | HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
 | HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Sin canal WhatsApp, apartados, timers, derivación o avisos. |
-| HU-37 | Parcial | Panel al cargar con total de pacientes y citas; no pacientes activos configurables ni actualización en tiempo real. |
+| HU-37 | Parcial | Panel con pacientes, próximas citas y contadores de citas por atender y completadas. Se refresca al volver a la vista o pulsar Actualizar panel. Queda implementar pacientes activos según el periodo configurable. |
 | HU-38 | Parcial | Suma importes PAGADO de consultas del mes; no entidad Pago ni comparación con mes anterior. |
 | HU-39, HU-40, HU-41 | Pendientes | Sin listado de pendientes, bandeja WhatsApp o adherencia. |
-| HU-42, HU-43, HU-44 | Pendientes | Sin portal del paciente. Código de Cita no equivale a código de acceso al expediente. |
+| HU-42 | Probada en local | Código de portal propio en el expediente. La confirmación pública entrega el código de la cita. |
+| HU-43 | Probada en local | Próxima cita con ubicación, confirmación y cancelación visibles desde agenda. El portal abierto vuelve a consultar su estado con Actualizar portal. |
+| HU-44 | Parcial | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px. Borradores, notas y planes internos quedan reservados al expediente. Pendiente verificar la impresión del resumen. |
 
 Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo básico, pantallas y documentación, pero faltan sus criterios completos. Esta revisión no prueba entrevistas, validación del asesor/nutriólogo, capacitación o producción (HT-01, HT-02, HT-06, HT-07, HT-09). Git local y entorno se describen para HT-05, sin declarar entregado un flujo de publicación o CI no verificado.
 
 ### Orden recomendado de continuación
 
-1. Presentar este avance con sus modelos y ejemplos reales; confirmar rúbrica, formato de diagramas y el término Facelets.
-2. Resolver el fundamento del objetivo: Consultorio y aislamiento (HU-01/HU-05/HT-03), roles y permisos (HU-03), y completar autenticación (HU-02/HU-04). No exponer datos clínicos a nuevos roles mientras falte autorización.
-3. Completar registro/antecedentes y catálogo de alergias; después captura de consultas y agenda con sus modelos, rangos y pruebas.
-4. Avanzar en el orden del README con gráficas, adjuntos, reserva y cálculo; integrar terceros únicamente con configuración y autorización adecuadas.
+1. Cubrir los casos restantes de permisos, edición de usuarios y expiración de sesión.
+2. Validar el vínculo de Calendar (HU-16) con una cuenta autorizada. Continuar con recordatorios (HU-18) y confirmaciones según el README.
+3. Revisar las fórmulas antes de generar planes y actualizar el guion académico conforme se comprueben los flujos.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)
 

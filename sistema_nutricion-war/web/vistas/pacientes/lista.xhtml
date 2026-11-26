@@ -28,12 +28,25 @@
                 </div>
                 <p:dataTable id="tabla" value="#{pacienteBean.pacientes}" var="p" rows="10" paginator="true"
                              paginatorAlwaysVisible="false" emptyMessage="No hay pacientes.">
-                    <p:column headerText="Nombre" sortBy="#{p.nombre}">#{p.nombre}</p:column>
+                    <p:column headerText="Nombre" sortBy="#{p.nombre}">
+                        <h:link outcome="/vistas/pacientes/expediente" value="#{p.nombre}" styleClass="enlace-paciente"
+                                rendered="#{loginBean.puedeVerExpedientes}">
+                            <f:param name="id" value="#{p.id}" />
+                        </h:link>
+                        <h:outputText value="#{p.nombre}" rendered="#{not loginBean.puedeVerExpedientes}" />
+                    </p:column>
                     <p:column headerText="Edad" style="width:70px">#{p.edad}</p:column>
                     <p:column headerText="Correo">#{p.email}</p:column>
                     <p:column headerText="Teléfono">#{p.telefono}</p:column>
-                    <p:column headerText="Alergias">#{empty p.alergias ? '—' : p.alergias}</p:column>
-                    <p:column headerText="" style="width:96px">
+                    <p:column headerText="Código portal" style="width:110px">
+                        <code>#{empty p.codigoAcceso ? '—' : p.codigoAcceso}</code>
+                    </p:column>
+                    <p:column headerText="Alergias" rendered="#{loginBean.puedeVerExpedientes}">#{empty p.alergias ? '—' : p.alergias}</p:column>
+                    <p:column headerText="" style="width:140px">
+                        <p:button outcome="/vistas/pacientes/expediente" icon="ui-icon-folder-open" title="Expediente clínico"
+                                  styleClass="btn-primario" rendered="#{loginBean.puedeVerExpedientes}">
+                            <f:param name="id" value="#{p.id}" />
+                        </p:button>
                         <p:commandButton icon="ui-icon-pencil" title="Editar" action="#{pacienteBean.editar(p)}"
                                          process="@this" update=":frmDialogo" oncomplete="PF('dlgPaciente').show()"
                                          styleClass="btn-secundario">

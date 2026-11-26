@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import org.primefaces.context.RequestContext;
 
@@ -20,13 +21,16 @@ public class PacienteBean implements Serializable {
     @EJB
     private PacienteFacade pacienteFacade;
 
+    @Inject
+    private LoginBean loginBean;
+
     private List<Paciente> pacientes;
     private String filtro;
     private Paciente seleccionado = new Paciente();
 
     @PostConstruct
     public void cargar() {
-        pacientes = pacienteFacade.buscar(filtro);
+        pacientes = pacienteFacade.buscar(filtro, loginBean.getConsultorioActivo());
     }
 
     public void buscar() {
@@ -35,16 +39,17 @@ public class PacienteBean implements Serializable {
 
     public void nuevo() {
         seleccionado = new Paciente();
+        seleccionado.setConsultorio(loginBean.getConsultorioActivo());
     }
 
     public void editar(Paciente p) {
-        seleccionado = pacienteFacade.find(p.getId());
+        seleccionado = pacienteFacade.delConsultorio(p.getId(), loginBean.getConsultorioActivo());
     }
 
     public void guardar() {
         try {
             boolean nuevo = seleccionado.getId() == null;
-            pacienteFacade.guardar(seleccionado);
+            pacienteFacade.guardar(seleccionado, loginBean.getConsultorioActivo());
             Mensajes.info(nuevo ? "Paciente registrado." : "Paciente actualizado.");
             cargar();
             RequestContext.getCurrentInstance().execute("PF('dlgPaciente').hide()");
@@ -55,7 +60,7 @@ public class PacienteBean implements Serializable {
 
     public void eliminar(Paciente p) {
         try {
-            pacienteFacade.eliminar(p.getId());
+            pacienteFacade.eliminar(p.getId(), loginBean.getConsultorioActivo());
             Mensajes.info("Se eliminó a " + p.getNombre() + " junto con su historial.");
             cargar();
         } catch (Exception e) {

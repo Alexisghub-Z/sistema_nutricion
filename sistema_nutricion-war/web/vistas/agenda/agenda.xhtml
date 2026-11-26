@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Agenda</ui:define>
+
+    <ui:define name="content">
+        <h:panelGroup rendered="#{param.denegado eq '1'}" layout="block" styleClass="alerta-solo-lectura">
+            Tu cuenta de recepción tiene acceso a la agenda.
+        </h:panelGroup>
+        <h:form id="frmAgenda">
+            <div class="encabezado-pagina">
+                <h1>Agenda de consultas</h1>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <p:commandButton value="Actualizar agenda" action="#{agendaBean.cargarDia}" process="@this"
+                                     update="tablaDia" oncomplete="PF('miAgenda').update()"
+                                     icon="ui-icon-refresh" styleClass="btn-secundario js-actualizar-al-volver" />
+                    <p:button outcome="/vistas/agenda/configuracion" value="Horarios laborales" icon="ui-icon-gear"
+                              styleClass="btn-secundario" rendered="#{loginBean.puedeVerExpedientes}" />
+                    <p:commandButton value="Nueva cita" action="#{agendaBean.nuevaCita}" process="@this"
+                                     update=":frmDialogoCita" oncomplete="PF('dlgCita').show()"
+                                     icon="ui-icon-plus" styleClass="btn-primario">
+                        <p:resetInput target=":frmDialogoCita" />
+                    </p:commandButton>
+                </div>
+            </div>
+
+            <!-- Citas del día seleccionado -->
+            <div class="tarjeta">
+                <div class="encabezado-pagina" style="margin-bottom:12px;">
+                    <h2 style="margin:0;">Citas del día</h2>
+                    <div class="filtro-fechas">
+                        <p:calendar id="fechaAgenda" value="#{agendaBean.fechaSeleccionada}" pattern="dd/MM/yyyy" locale="es" size="10">
+                            <p:ajax event="dateSelect" listener="#{agendaBean.cargarDia}" update="tablaDia" />
+                            <p:ajax event="change" listener="#{agendaBean.cargarDia}" update="tablaDia" />
+                        </p:calendar>
+                        <p:selectOneMenu value="#{agendaBean.filtroEstado}">
+                            <f:selectItem itemLabel="Todos los estados" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{catalogosBean.estadosCita}" var="ec" itemLabel="#{ec.etiqueta}" itemValue="#{ec}" />
+                            <p:ajax listener="#{agendaBean.cargarDia}" update="tablaDia" />
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+
+                <p:dataTable id="tablaDia" value="#{agendaBean.citasDelDia}" var="c" emptyMessage="No hay citas para la fecha y filtro seleccionados.">
+                    <p:column headerText="Hora" style="width:80px">
+                        <h:outputText value="#{c.fechaHora}"><f:convertDateTime pattern="HH:mm" locale="es_MX" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Paciente">
+                        <h:link outcome="/vistas/pacientes/expediente" value="#{c.paciente.nombre}" styleClass="enlace-paciente"
+                                rendered="#{loginBean.puedeVerExpedientes}">
+                            <f:param name="id" value="#{c.paciente.id}" />
+                        </h:link>
+                        <h:outputText value="#{c.paciente.nombre}" rendered="#{not loginBean.puedeVerExpedientes}" />
+                    </p:column>
+                    <p:column headerText="Motivo">#{c.motivo}</p:column>
+                    <p:column headerText="Modalidad" style="width:110px">#{c.tipo.etiqueta}</p:column>
+                    <p:column headerText="Estado" style="width:120px">
+                        <span class="#{agendaBean.getBadgeEstado(c.estado)}">#{c.estado.etiqueta}</span>
+                    </p:column>
+                    <p:column headerText="Acciones" style="width:180px">
+                        <p:commandButton icon="ui-icon-check" title="Confirmar"
+                                         action="#{agendaBean.cambiarEstado(c, 'CONFIRMADA')}"
+                                         rendered="#{c.estado.name() eq 'PENDIENTE' or c.estado.name() eq 'APARTADA'}"
+                                         process="@this" update="tablaDia :growl" oncomplete="PF('miAgenda').update()" styleClass="btn-secundario" />
+                        <p:commandButton icon="ui-icon-pencil" title="Editar / Reprogramar"
+                                         action="#{agendaBean.editarCita(c)}"
+                                         rendered="#{c.consulta == null}"
+                                         process="@this" update=":frmDialogoCita" oncomplete="PF('dlgCita').show()"
+                                         styleClass="btn-secundario">
+                            <p:resetInput target=":frmDialogoCita" />
+                        </p:commandButton>
+                        <p:commandButton icon="ui-icon-close" title="Cancelar cita"
+                                         action="#{agendaBean.cambiarEstado(c, 'CANCELADA')}"
+                                         rendered="#{c.estado.name() ne 'COMPLETADA' and c.estado.name() ne 'CANCELADA'}"
+                                         process="@this" update="tablaDia :growl" oncomplete="PF('miAgenda').update()" styleClass="btn-peligro">
+                            <p:confirm header="Cancelar cita" message="¿Deseas cancelar la cita de #{c.paciente.nombre}?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <!-- Calendario interactivo (HU-17) -->
+            <div class="tarjeta">
+                <p:schedule id="calendario" value="#{agendaBean.scheduleModel}" locale="es"
+                            timeZone="America/Mexico_City" view="month" widgetVar="miAgenda" resizable="false">
+                    <p:ajax event="dateSelect" listener="#{agendaBean.onDateSelect}"
+                            update=":frmDialogoCita fechaAgenda tablaDia" oncomplete="PF('dlgCita').show()" />
+                    <p:ajax event="eventSelect" listener="#{agendaBean.onEventSelect}"
+                            update=":frmDialogoCita fechaAgenda tablaDia" oncomplete="if (args.abrirCita) PF('dlgCita').show()" />
+                    <p:ajax event="eventMove" listener="#{agendaBean.onEventMove}"
+                            update="fechaAgenda tablaDia :growl" oncomplete="PF('miAgenda').update()" />
+                </p:schedule>
+            </div>
+        </h:form>
+
+        <p:dialog header="Cita nutricional" widgetVar="dlgCita" modal="true" resizable="false" width="540">
+            <h:form id="frmDialogoCita">
+                <p:messages id="msgsCita" closable="true" />
+                <div class="rejilla">
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="selPaciente" value="Paciente" />
+                        <p:selectOneMenu id="selPaciente" value="#{agendaBean.pacienteIdSeleccionado}" required="true"
+                                         requiredMessage="Selecciona un paciente." filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Selecciona..." itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{agendaBean.pacientes}" var="pac" itemLabel="#{pac.nombre} (#{pac.telefono})" itemValue="#{pac.id}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="fechaCita" value="Fecha y hora" />
+                        <p:calendar id="fechaCita" value="#{agendaBean.citaActual.fechaHora}" pattern="dd/MM/yyyy HH:mm"
+                                    locale="es" showOn="button" required="true"
+                                    requiredMessage="Indica la fecha y hora." stepMinute="15" />
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="durCita" value="Duración (min)" />
+                        <p:selectOneMenu id="durCita" value="#{agendaBean.citaActual.duracionMinutos}">
+                            <f:selectItems value="#{catalogosBean.duraciones}" var="d" itemLabel="#{d} minutos" itemValue="#{d}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="tipoCita" value="Modalidad" />
+                        <p:selectOneMenu id="tipoCita" value="#{agendaBean.citaActual.tipo}">
+                            <f:selectItems value="#{catalogosBean.tiposCita}" var="t" itemLabel="#{t.etiqueta}" itemValue="#{t}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="estCita" value="Estado" />
+                        <p:selectOneMenu id="estCita" value="#{agendaBean.citaActual.estado}">
+                            <f:selectItems value="#{catalogosBean.estadosCita}" var="ec" itemLabel="#{ec.etiqueta}" itemValue="#{ec}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo campo-ancho">
+                        <p:outputLabel for="motCita" value="Motivo de la consulta" />
+                        <p:inputTextarea id="motCita" value="#{agendaBean.citaActual.motivo}" rows="2" maxlength="1000" autoResize="false"
+                                         required="true" requiredMessage="Escribe el motivo de la cita." />
+                    </div>
+                </div>
+                <div class="acciones-form">
+                    <p:commandButton value="Guardar cita" action="#{agendaBean.guardarCita}"
+                                     process="@form" update="@form :frmAgenda:fechaAgenda :frmAgenda:tablaDia :growl"
+                                     oncomplete="PF('miAgenda').update()"
+                                     icon="ui-icon-check" styleClass="btn-primario" />
+                    <p:commandButton value="Cerrar" type="button" onclick="PF('dlgCita').hide()" styleClass="btn-secundario" />
+                </div>
+            </h:form>
+        </p:dialog>
+        <h:outputScript name="js/actualizar-al-volver.js" target="body" />
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,31 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+    <h:form id="frmRecordatorios" rendered="#{loginBean.puedeVerExpedientes}">
+        <div role="status" aria-live="polite">
+            <h:panelGroup id="avisos" layout="block">
+                <h:panelGroup rendered="#{not empty recordatoriosBean.avisos}" layout="block"
+                              styleClass="tarjeta recordatorios">
+                    <h2 class="subtitulo-seccion">Recordatorios de consulta</h2>
+                    <ul>
+                        <ui:repeat value="#{recordatoriosBean.avisos}" var="aviso">
+                            <li>
+                                <strong>
+                                    <h:outputText value="#{aviso.fechaHora}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" locale="es_MX" />
+                                    </h:outputText>
+                                </strong>
+                                <h:outputText value=" · #{aviso.paciente.nombre}" />
+                                <div><h:outputText value="#{aviso.motivo}" /></div>
+                            </li>
+                        </ui:repeat>
+                    </ul>
+                </h:panelGroup>
+            </h:panelGroup>
+        </div>
+        <p:poll id="pollRecordatorios" interval="30" listener="#{recordatoriosBean.actualizar}"
+                process="@this" global="false" onstart="return !document.hidden;" />
+    </h:form>
+</ui:composition>

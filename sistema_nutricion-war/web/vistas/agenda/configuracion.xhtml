@@ -32,6 +32,13 @@
                         <p:outputLabel for="cfgAnt" value="Anticipación mínima (horas)" />
                         <p:inputText id="cfgAnt" value="#{configAgendaBean.configuracion.anticipacionMinimaHoras}" />
                     </div>
+                    <div class="campo">
+                        <p:outputLabel for="cfgAviso" value="Recordatorio de consulta (minutos antes)" />
+                        <p:inputText id="cfgAviso" value="#{configAgendaBean.configuracion.minutosRecordatorioNutriologo}"
+                                     label="Recordatorio de consulta" required="true" maxlength="4">
+                            <f:validateLongRange minimum="5" maximum="1440" />
+                        </p:inputText>
+                    </div>
                 </div>
             </div>
 

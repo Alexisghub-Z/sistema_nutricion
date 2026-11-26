@@ -22,6 +22,7 @@ public class LoginBean implements Serializable {
     public static final String ATRIBUTO_USUARIO = "usuarioConectado";
     public static final String ATRIBUTO_ROL = "rolConectado";
     public static final String ATRIBUTO_CONSULTORIO = "consultorioConectado";
+    public static final String ATRIBUTO_ULTIMA_ACTIVIDAD = "ultimaActividad";
 
     @EJB
     private UsuarioFacade usuarioFacade;
@@ -45,6 +46,7 @@ public class LoginBean implements Serializable {
             ec.getSessionMap().put(ATRIBUTO_USUARIO, u.getId());
             ec.getSessionMap().put(ATRIBUTO_ROL, u.getRol());
             ec.getSessionMap().put(ATRIBUTO_CONSULTORIO, u.getConsultorio().getId());
+            ec.getSessionMap().put(ATRIBUTO_ULTIMA_ACTIVIDAD, System.currentTimeMillis());
             return (isRecepcion() ? "/vistas/agenda/agenda" : "/vistas/dashboard") + "?faces-redirect=true";
         } catch (ReglaNegocioException e) {
             password = null;

@@ -8,6 +8,9 @@ import javax.persistence.*;
 public class ConfiguracionAgenda implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    public static final int MIN_RECORDATORIO = 5;
+    public static final int MAX_RECORDATORIO = 1440;
+    private static final int RECORDATORIO_PREDETERMINADO = 30;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +26,9 @@ public class ConfiguracionAgenda implements Serializable {
     @Column(name = "anticipacion_minima_horas", nullable = false)
     private int anticipacionMinimaHoras = 2;
 
+    @Column(name = "minutos_recordatorio_nutriologo")
+    private Integer minutosRecordatorioNutriologo;
+
     @Column(name = "minutos_expiracion_apartado", nullable = false)
     private int minutosExpiracionApartado = 15;
 
@@ -36,6 +42,10 @@ public class ConfiguracionAgenda implements Serializable {
     public void setDuracionConsultaMin(int duracionConsultaMin) { this.duracionConsultaMin = duracionConsultaMin; }
     public int getAnticipacionMinimaHoras() { return anticipacionMinimaHoras; }
     public void setAnticipacionMinimaHoras(int anticipacionMinimaHoras) { this.anticipacionMinimaHoras = anticipacionMinimaHoras; }
+    public int getMinutosRecordatorioNutriologo() {
+        return minutosRecordatorioNutriologo == null ? RECORDATORIO_PREDETERMINADO : minutosRecordatorioNutriologo;
+    }
+    public void setMinutosRecordatorioNutriologo(int minutos) { this.minutosRecordatorioNutriologo = minutos; }
     public int getMinutosExpiracionApartado() { return minutosExpiracionApartado; }
     public void setMinutosExpiracionApartado(int minutosExpiracionApartado) { this.minutosExpiracionApartado = minutosExpiracionApartado; }
     public int getDiasPacienteActivo() { return diasPacienteActivo; }

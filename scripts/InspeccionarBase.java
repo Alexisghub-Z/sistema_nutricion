@@ -41,7 +41,7 @@ public class InspeccionarBase {
             System.out.println("BASE " + db.getCatalog() + " MOTOR " + metadata.getDatabaseProductName() + " " + metadata.getDatabaseProductVersion());
             for (String table : new String[]{"consultorios", "usuarios", "pacientes", "alergias", "paciente_alergias",
                     "citas", "consultas", "horarios_laborales", "configuracion_agenda", "planes_tratamiento",
-                    "archivos_adjuntos", "vinculos_google_calendar", "bloqueos_calendario"}) {
+                    "archivos_adjuntos", "vinculos_google_calendar", "bloqueos_calendario", "recordatorios"}) {
                 System.out.println("TABLA " + table);
                 try (ResultSet columns = metadata.getColumns(db.getCatalog(), null, table, null)) {
                     while (columns.next()) System.out.println("  COLUMNA " + columns.getString("COLUMN_NAME") + " "

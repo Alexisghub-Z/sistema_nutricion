@@ -38,6 +38,12 @@ public class DisponibilidadService {
         if (cfg.getAnticipacionMinimaHoras() < 0 || cfg.getAnticipacionMinimaHoras() > 168) {
             throw new ReglaNegocioException("La anticipación mínima debe estar entre 0 y 168 horas.");
         }
+        int minutosRecordatorio = cfg.getMinutosRecordatorioNutriologo();
+        if (minutosRecordatorio < ConfiguracionAgenda.MIN_RECORDATORIO
+                || minutosRecordatorio > ConfiguracionAgenda.MAX_RECORDATORIO) {
+            throw new ReglaNegocioException("El aviso de consulta debe configurarse entre "
+                    + ConfiguracionAgenda.MIN_RECORDATORIO + " y " + ConfiguracionAgenda.MAX_RECORDATORIO + " minutos.");
+        }
         if (cfg.getDiasPacienteActivo() < 7 || cfg.getDiasPacienteActivo() > 365) {
             throw new ReglaNegocioException("Los días para paciente activo deben estar entre 7 y 365.");
         }
@@ -50,6 +56,7 @@ public class DisponibilidadService {
         ConfiguracionAgenda actual = obtenerConfiguracion(consultorio);
         actual.setDuracionConsultaMin(cfg.getDuracionConsultaMin());
         actual.setAnticipacionMinimaHoras(cfg.getAnticipacionMinimaHoras());
+        actual.setMinutosRecordatorioNutriologo(minutosRecordatorio);
         actual.setMinutosExpiracionApartado(cfg.getMinutosExpiracionApartado());
         actual.setDiasPacienteActivo(cfg.getDiasPacienteActivo());
         actual.setConsultorio(consultorio);

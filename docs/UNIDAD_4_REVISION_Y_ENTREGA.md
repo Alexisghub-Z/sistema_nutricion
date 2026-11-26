@@ -120,6 +120,8 @@ los archivos asociados en disco.
 
 MySQL mostró 13 tablas tras añadir Calendar. `vinculos_google_calendar` guarda un vínculo por consultorio con su identificador de eventos, el token cifrado y el resultado de sincronización. `bloqueos_calendario` guarda los intervalos ocupados con FK al consultorio e índice por consultorio, inicio y fin. La agenda y la reserva filtran las ocupaciones por consultorio y permiten un turno que empiece justo al terminar un bloqueo. Se verificó con dos consultorios ficticios.
 
+Con HU-18 se verificaron 14 tablas. `configuracion_agenda.minutos_recordatorio_nutriologo` admite un valor nulo en filas anteriores, que se lee como 30 minutos. `recordatorios` guarda la hora programada y el tipo con FK a `citas` y clave única `(cita_id, tipo)`. El temporizador toma citas pendientes o confirmadas dentro del margen de su consultorio. El panel comprueba la fecha y el estado vigentes antes de mostrar el aviso. La eliminación del paciente retira estos registros en la misma transacción.
+
 ## 4. Modelo de comportamiento implementado
 
 ### Actores y casos de uso del avance
@@ -306,10 +308,10 @@ Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documenta
 | Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
 | HU-01 | Probada en local | Dos consultorios ficticios creados desde administración con credenciales independientes. |
-| HU-02 | Parcial | Acceso, cierre de sesión, bloqueo al tercer intento fallido y desbloqueo desde Administración probados en Edge. Queda comprobar la expiración a los 30 min mediante espera real. |
+| HU-02 | Parcial | Acceso, cierre de sesión, bloqueo y desbloqueo probados en Edge. El filtro de sesión pasó cuatro pruebas con tiempo simulado para el sondeo de avisos. Queda comprobar la expiración mediante una espera real de 30 minutos. |
 | HU-03 | Parcial | Recepción entra a la agenda y puede reprogramar. Se verificaron restricciones a expediente, archivos, horarios y Administración, y revocación de su sesión al desactivar la cuenta. |
 | HU-04 | Pendiente | Recuperación de contraseña por correo. |
-| HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas y ocupaciones importadas mantienen el ámbito por consultorio. Correo y teléfono siguen siendo únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
+| HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas, ocupaciones y avisos de consulta mantienen el ámbito por consultorio. Correo y teléfono son únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
 | HU-06 | Parcial | CRUD probado en MySQL. Se verificó que editar el nombre y el teléfono conserva un antecedente guardado mientras estaba abierta la ficha. |
 | HU-07 | Parcial | La selección del catálogo y el texto libre persisten al recargar el expediente. Queda usar el catálogo en la validación de planes. |
 | HU-08 | Parcial | Captura de mediciones, recálculo de IMC y validación de rangos en JSF y Java. Pendiente recorrer todas las mediciones y sus límites. |
@@ -322,14 +324,14 @@ Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documenta
 | HU-15 | Probada en local | Duración, anticipación y un intervalo por día y consultorio. El guardado de parámetros y horario revierte juntos ante un error de validación. |
 | HU-16 | Parcial | Ejecución automática observada en Payara. Con un proveedor ficticio se verificó importar ocupaciones, publicar, reprogramar y cancelar citas. Los intervalos ocupados se verificaron en Edge contra MySQL. Queda conectar una cuenta de Google y verificar el ciclo externo de punta a punta. |
 | HU-17 | Parcial | Agenda con calendario y filtros, reprogramación por recepción y actualización de citas completadas. Tras editar un paciente, el selector vuelve a leer nombre y teléfono. |
-| HU-18 | Pendiente | Recordatorios antes de la consulta. |
+| HU-18 | Probada en local | Margen de 5 a 1440 minutos por consultorio. Un temporizador publica avisos con día, hora, paciente y motivo en las vistas de administración y nutrición. Se verificaron en Edge la actualización automática, la separación por rol y consultorio, la cancelación y la reprogramación. |
 | HU-19 | Parcial | El enlace público excluye citas activas y bloques importados de su consultorio. Se verificó rechazo al confirmar un turno abierto antes del bloqueo. Queda validar con la cuenta real. |
 | HU-20 | Probada en local | Dos reservas simultáneas del mismo turno y consultorio dejaron una cita. Un segundo consultorio pudo reservar esa misma hora. |
 | HU-21 | Pendiente | Envío de confirmaciones por correo o WhatsApp. La página muestra la fecha, el consultorio y el código de cita. |
 | HU-22 | Parcial | Se comprobó precarga de la última medición y persistencia de GEB y GET con la fórmula predeterminada. Queda contrastar todas las fórmulas y rangos con el nutriólogo. |
 | HU-23, HU-24 | Parciales | Meta y macros reaparecen en el plan guardado tras recargar. Queda recorrer los ajustes y límites de las distribuciones editables. |
 | HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
-| HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Sin canal WhatsApp, apartados, timers, derivación o avisos. |
+| HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Canal de WhatsApp, apartados, recordatorios de pacientes y derivación de conversaciones. |
 | HU-37 | Parcial | Panel con pacientes, próximas citas y contadores de citas por atender y completadas. Se refresca al volver a la vista o pulsar Actualizar panel. Queda implementar pacientes activos según el periodo configurable. |
 | HU-38 | Parcial | Suma importes PAGADO de consultas del mes; no entidad Pago ni comparación con mes anterior. |
 | HU-39, HU-40, HU-41 | Pendientes | Sin listado de pendientes, bandeja WhatsApp o adherencia. |
@@ -342,7 +344,7 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 ### Orden recomendado de continuación
 
 1. Cubrir los casos restantes de permisos, edición de usuarios y expiración de sesión.
-2. Validar el vínculo de Calendar (HU-16) con una cuenta autorizada. Continuar con recordatorios (HU-18) y confirmaciones según el README.
+2. Validar el vínculo de Calendar (HU-16) con una cuenta autorizada y continuar con confirmaciones de citas (HU-21).
 3. Revisar las fórmulas antes de generar planes y actualizar el guion académico conforme se comprueben los flujos.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)

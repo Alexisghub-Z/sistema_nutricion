@@ -22,6 +22,9 @@ public class PacienteFacade extends AbstractFacade<Paciente> {
     @EJB
     private ArchivoFacade archivoFacade;
 
+    @EJB
+    private RecordatorioFacade recordatorioFacade;
+
     public PacienteFacade() {
         super(Paciente.class);
     }
@@ -156,7 +159,12 @@ public class PacienteFacade extends AbstractFacade<Paciente> {
     }
 
     public void eliminar(Long id, Consultorio consultorio) {
+        if (consultorio == null
+                || em.find(Consultorio.class, consultorio.getId(), LockModeType.PESSIMISTIC_WRITE) == null) {
+            throw new ReglaNegocioException("Selecciona un consultorio.");
+        }
         Paciente p = pacienteParaEditar(id, consultorio);
+        recordatorioFacade.eliminarDelPaciente(p);
         archivoFacade.eliminarDelPaciente(p);
         em.remove(p);
     }

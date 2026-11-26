@@ -36,7 +36,10 @@ public class FiltroAcceso implements Filter {
         Long id = sesion == null ? null : (Long) sesion.getAttribute(LoginBean.ATRIBUTO_USUARIO);
         Rol rol = sesion == null ? null : (Rol) sesion.getAttribute(LoginBean.ATRIBUTO_ROL);
         Long consultorio = sesion == null ? null : (Long) sesion.getAttribute(LoginBean.ATRIBUTO_CONSULTORIO);
-        if (id == null || rol == null || consultorio == null || !usuarioFacade.sesionVigente(id, rol, consultorio)) {
+        Long ultimaActividad = sesion == null ? null : (Long) sesion.getAttribute(LoginBean.ATRIBUTO_ULTIMA_ACTIVIDAD);
+        long ahora = System.currentTimeMillis();
+        if (id == null || rol == null || consultorio == null || expiroPorInactividad(sesion, ultimaActividad, ahora)
+                || !usuarioFacade.sesionVigente(id, rol, consultorio)) {
             if (sesion != null && id != null) {
                 sesion.invalidate();
             }
@@ -54,9 +57,22 @@ public class FiltroAcceso implements Filter {
             redirigir(req, res, "/vistas/dashboard.xhtml?denegado=1");
             return;
         }
+        if (ultimaActividad == null || !esSondeoDeRecordatorios(req)) {
+            sesion.setAttribute(LoginBean.ATRIBUTO_ULTIMA_ACTIVIDAD, ahora);
+        }
         // Evita que el botón "atrás" muestre páginas privadas después de cerrar sesión.
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         chain.doFilter(request, response);
+    }
+
+    private boolean expiroPorInactividad(HttpSession sesion, Long ultimaActividad, long ahora) {
+        int limite = sesion.getMaxInactiveInterval();
+        return ultimaActividad != null && limite > 0 && ahora - ultimaActividad >= limite * 1000L;
+    }
+
+    private boolean esSondeoDeRecordatorios(HttpServletRequest req) {
+        return "partial/ajax".equals(req.getHeader("Faces-Request"))
+                && "frmRecordatorios:pollRecordatorios".equals(req.getParameter("javax.faces.source"));
     }
 
     private void redirigir(HttpServletRequest req, HttpServletResponse res, String destino) throws IOException {

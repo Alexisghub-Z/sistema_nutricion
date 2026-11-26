@@ -76,6 +76,13 @@ a { color: var(--verde); }
     background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio);
     padding: 20px; margin-bottom: 20px;
 }
+.recordatorios {
+    background: var(--verde-claro);
+    border-left: 4px solid var(--verde);
+    overflow-wrap: anywhere;
+}
+.recordatorios ul { margin: 0; padding-left: 22px; }
+.recordatorios li + li { margin-top: 8px; }
 .encabezado-pagina { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .encabezado-pagina h1 { margin: 0; }
 .buscador { margin-bottom: 14px; }

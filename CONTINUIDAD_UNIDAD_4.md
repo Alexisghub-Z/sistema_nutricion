@@ -35,6 +35,25 @@ Se limpiaron los registros ficticios de cada ejecución. La aplicación queda di
 
 Se recompiló y desplegó el EAR sobre la base `53ad585` en `.cache/despliegues/20261126-085842-885`. Payara 5.2022.3 respondió HTTP 200 y pasó el ping de `NutricionMySQLPool`. Volvieron a pasar las 22 pruebas Java de pacientes, las 15 de Calendar con proveedor ficticio y las 110 comprobaciones en Edge. Las pruebas crearon y limpiaron sus consultorios y pacientes ficticios. La evidencia de esta repetición está en `.cache/revision-continuacion/revision-git-despliegue.txt`, `revision-git-crud.txt`, `agenda-5705163907.txt`, `agenda-5705189135.txt`, `agenda-5705221107.txt`, `agenda-5705233588.txt` y `calendar-final-5705160321.txt`.
 
+Se publicó ese lote como `24cd4c9902329e9b13d336ff9ef9fc94a9eaf2e0` en `main` con la identidad Git configurada. GitHub devolvió el mismo SHA.
+
+### Recordatorios de consulta (HU-18)
+
+En **Agenda → Horarios laborales** se puede guardar el margen de 5 a 1440 minutos por consultorio. Las configuraciones nuevas y las filas anteriores con margen nulo usan 30 minutos. El temporizador de Payara activa cada minuto los avisos de citas pendientes y confirmadas. Las vistas clínicas visibles consultan las publicaciones cada 30 segundos y muestran fecha, hora, paciente y motivo a administración y nutrición del mismo consultorio.
+
+El aviso se oculta al cancelar, completar, vencer o mover la cita fuera del margen. Si la cita reprogramada vuelve a quedar dentro del margen, el temporizador actualiza la hora programada en la misma fila. La llave única de MySQL conserva una fila por cita y tipo. El filtro de acceso conserva el instante de la última actividad de la sesión cuando llegan sondeos automáticos.
+
+El EAR activo quedó en `.cache/despliegues/20261126-090802-016` con compilación Ant, HTTP 200 y ping correcto del pool. MySQL 8.0.41 mostró las 14 tablas, la nueva columna de configuración y la FK e índice único de `recordatorios`.
+
+| Verificación | Comprobaciones | Evidencia en `.cache/revision-continuacion/` |
+|---|---:|---|
+| Recordatorios en Edge y Payara con MySQL | 21 | `recordatorios-verificar-5706249175.txt`, `recordatorios-jdbc-5706249175.txt` y `recordatorios-390.png` |
+| Agenda, expediente, portal, adjuntos, contactos y bloqueos de Calendar | 93 | `agenda-5706090285.txt`, `agenda-5706122951.txt`, `agenda-5706155317.txt`, `agenda-5706167607.txt` y `calendar-final-5706086864.txt` |
+| CRUD de pacientes en Edge | 17 | `recordatorios-crud.txt` |
+| Validación Java de pacientes y filtro con tiempo simulado | 22 + 4 | `recordatorios-validaciones.txt` |
+
+También pasaron las 15 pruebas de Calendar con el proveedor ficticio. Se limpiaron los consultorios, usuarios, citas y pacientes de las pruebas. Quedan la autorización y sincronización real de Calendar (HU-16), la espera real de expiración de sesión y la impresión del portal. La siguiente historia de reserva pendiente es el envío de confirmaciones (HU-21). [Guion de recordatorios](README.md#probar-los-recordatorios-de-consulta-hu-18) y [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
+
 ## Continuación del 25 de noviembre de 2026
 
 Se ejecutó `git fetch --prune origin` y `git pull --ff-only`. `main` y `origin/main` están en `53ad585342762ca74131e5ee723d30e6a5e94c17`. Al retomar había 24 archivos modificados y 26 nuevos en el árbol local. Ese trabajo y las correcciones de esta sesión siguen en el árbol de trabajo.
@@ -203,8 +222,8 @@ Para inspeccionar la base, compilar `scripts/InspeccionarBase.java` **en `.cache
 
 ## Próximo paso académico
 
-Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el profesor y mantener trazabilidad real al ampliar funcionalidades. Antes de implementar módulos adicionales, retomar la matriz y el README; no confundir el avance básico demostrado con la totalidad del SaaS objetivo. Para completar el fundamento faltan primero consultorio/aislamiento y roles, seguidos por antecedentes, catálogos, consultas y agenda.
+Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el profesor y retomar los criterios pendientes de la matriz de historias antes de ampliar funcionalidades.
 
 ## Prompt listo para otro chat
 
-> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Retoma el Estado entregado del 26 de noviembre. Revalida main y origin/main sobre 53ad585342762ca74131e5ee723d30e6a5e94c17 y conserva los cambios locales. Usa el EAR raíz, Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El despliegue activo quedó en .cache/despliegues/20261126-083353-223, con HTTP 200 en http://localhost:8080/sistema_nutricion-war/. Se corrigieron las actualizaciones de pacientes, agenda, panel y portal. Calendar pasó la prueba con proveedor ficticio y la integración de bloqueos en Edge/MySQL. Pasaron 22 pruebas de pacientes, 15 de protocolo Calendar y 110 comprobaciones en Edge. Las pruebas usaron datos ficticios que se limpiaron. Usa scripts/probar-validaciones.ps1, scripts/probar-calendario-google.ps1 y scripts/desplegar-local.ps1. Falta verificar OAuth y sincronización con una cuenta autorizada de Google. HU-18 es el siguiente módulo pendiente.
+> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Retoma la publicación del 26 de noviembre y HU-18. Comprueba main, origin/main y los últimos commits. El lote de expediente, agenda y portal se publicó en 24cd4c9, antes del commit de recordatorios. Conserva los cambios locales y usa el EAR raíz con Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El EAR activo quedó en .cache/despliegues/20261126-090802-016 y respondió en http://localhost:8080/sistema_nutricion-war/. HU-18 muestra avisos de consulta por consultorio con un margen inicial de 30 minutos. Pasaron 21 comprobaciones de recordatorios y 110 de regresión en Edge, 22 pruebas de pacientes, cuatro de sesión con tiempo simulado y 15 de Calendar ficticio. Usa scripts/probar-validaciones.ps1, scripts/probar-calendario-google.ps1 y scripts/desplegar-local.ps1. Usa únicamente datos ficticios y limpia los de cada prueba. HU-16 requiere una cuenta de Google autorizada. Retoma HU-21 según la matriz para las confirmaciones de cita.

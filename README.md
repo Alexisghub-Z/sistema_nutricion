@@ -10,8 +10,10 @@
 - [Guía de cuestionario](docs/GUIA_CUESTIONARIO.md): 35 preguntas con respuestas y un ejercicio.
 
 El punto de partida de esa revisión fue el sitio público, el login, el panel y el CRUD de pacientes en MySQL.
-El [estado local del 25 de noviembre](CONTINUIDAD_UNIDAD_4.md#continuación-del-25-de-noviembre-de-2026)
-registra el avance de expediente, agenda, reservación, consultorios y portal. Para este equipo se dispone de
+La continuidad del proyecto registra el avance de expediente, agenda, reservación, consultorios,
+portal y recordatorios. [Continuidad del proyecto](CONTINUIDAD_UNIDAD_4.md).
+
+Para este equipo se dispone de
 `scripts/desplegar-local.ps1` (compilación y despliegue expandido), `scripts/probar-validaciones.ps1`
 y `tests/recorrido-pacientes.js`; sus alcances y evidencias se explican en el trabajo técnico.
 
@@ -166,7 +168,8 @@ SHOW TABLES;
 #### Avance de conexión con tablas
 
 La unidad `NutricionPU` registra los consultorios, usuarios y pacientes, el catálogo de alergias,
-las citas, consultas, planes de tratamiento, horarios, configuración de agenda y adjuntos.
+las citas, consultas, planes de tratamiento, horarios, configuración de agenda, adjuntos, vínculos y bloqueos
+de Calendar, y recordatorios de consulta.
 Las citas pertenecen a un paciente. Las consultas pertenecen a un paciente y pueden vincularse con una cita.
 Las pantallas acceden a los datos mediante las fachadas EJB.
 
@@ -214,6 +217,16 @@ La agenda puede usar el calendario principal de una cuenta de Google por consult
 3. Con una cuenta clínica, abre **Agenda → Horarios laborales → Vincular Google Calendar** y concede acceso al calendario principal. Después de un ciclo, consulta la hora de sincronización en la misma pantalla. **Desvincular** retira la autorización almacenada por NutriVida y los bloqueos importados.
 
 Se usa el alcance `calendar.events.owned`. El protocolo se puede probar en local sin cuenta con `scripts/probar-calendario-google.ps1`. La validación con una cuenta real está pendiente. [Alcances de Calendar](https://developers.google.com/workspace/calendar/api/auth) y [referencia de eventos](https://developers.google.com/workspace/calendar/api/v3/reference/events/list).
+
+#### Probar los recordatorios de consulta (HU-18)
+
+1. Inicia sesión con una cuenta de administración o nutrición. Abre **Agenda → Horarios laborales**. Ajusta **Recordatorio de consulta (minutos antes)** y guarda. El valor inicial es 30 y el rango es de 5 a 1440 minutos por consultorio. [NutriVida local](http://localhost:8080/sistema_nutricion-war/).
+2. Agenda una cita ficticia pendiente o confirmada con inicio dentro del margen. Deja abierta una vista del panel. **Recordatorios de consulta** muestra la fecha, la hora, el paciente y el motivo.
+3. Cancela la cita o muévela a una hora fuera del margen. Comprueba que el aviso deja de aparecer en la siguiente actualización.
+
+Payara ejecuta el temporizador EJB cada minuto. Las vistas clínicas visibles consultan los avisos cada 30 segundos. MySQL guarda una publicación por cita y tipo. Los avisos están disponibles dentro de NutriVida para administración y nutrición del mismo consultorio. Los mensajes para pacientes corresponden a HU-21 y HU-33. [Referencia de `@Schedule`](https://docs.oracle.com/javaee/7/api/javax/ejb/Schedule.html).
+
+`scripts/probar-validaciones.ps1` incluye pruebas del filtro de sesión que simulan los 30 minutos de inactividad mientras hay sondeos automáticos. Usa `-ServletApi` si el JAR de Servlet 4 de Payara está en otra ruta.
 
 ## Compilar sin el IDE (opcional)
 
@@ -292,8 +305,8 @@ Periodo: **31-ago-2026 al 4-dic-2026** (14 semanas, 640 h por residente).
 
 ## 3. Estado actual del código vs. objetivo
 
-El árbol de trabajo al 26 de noviembre incluye administración por consultorio, roles, bloqueo temporal,
-expediente clínico con adjuntos, agenda, reservación pública, cálculo dietético y portal.
+El avance local incluye administración por consultorio, roles, bloqueo temporal, expediente clínico con
+adjuntos, agenda, recordatorios, reservación pública, cálculo dietético y portal.
 Calendar cuenta con sincronización probada con un proveedor ficticio y bloqueos verificados en MySQL y Edge.
 La [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes)
 indica qué se probó y qué criterios siguen pendientes. Conserva los requisitos de las siguientes secciones
@@ -325,7 +338,7 @@ Entidades nuevas o modificadas. Las marcadas con 🏢 llevan `@ManyToOne Consult
 | `TiempoComida` / `PorcionPlan` | tiempo (desayuno, colación, comida, colación, cena) → porciones en equivalentes SMAE y alimentos sugeridos | HU-25 |
 | `ConversacionWhatsapp` 🏢 | paciente (o teléfono si aún no existe), estado (`BOT`, `REQUIERE_HUMANO`, `ATENDIDA`), motivoDerivacion, fechas del último mensaje entrante/saliente | HU-30 – HU-36, HU-40 |
 | `MensajeWhatsapp` | conversación, dirección (ENTRANTE / SALIENTE), texto, fecha, waMessageId | HU-30 |
-| `Recordatorio` | cita, tipo (`H24`, `H1`, `NUTRIOLOGO`), programadoPara, enviado | HU-18, HU-33 |
+| `Recordatorio` | cita, tipo y programadoPara. La fila `NUTRIOLOGO` registra un aviso publicado. `H24`, `H1` y el estado de envío corresponden a HU-33. | HU-18, HU-33 |
 
 ## 5. Componentes por épica (cómo implementarlo en este stack)
 
@@ -334,7 +347,7 @@ Entidades nuevas o modificadas. Las marcadas con 🏢 llevan `@ManyToOne Consult
 | E1 Autenticación y multiconsultorio | `ConsultorioFacade`, `UsuarioFacade` (bloqueo, recuperación); las fachadas reciben el consultorio de la sesión y filtran por él | `registro.xhtml` (público), `recuperar.xhtml`, `vistas/usuarios/*.xhtml`; `FiltroAcceso` valida rol por ruta; `<session-timeout>` en `web.xml` |
 | E2 Expediente | `PacienteFacade`, `ConsultaFacade`, `AlergiaFacade`; `CalculosNutricion` (IMC, rangos fisiológicos) | `vistas/pacientes/expediente.xhtml` (`p:tabView`: datos, antecedentes, alergias, consultas, gráficas), `vistas/consultas/captura.xhtml` |
 | E3 Adjuntos | `ArchivoFacade`, `AlmacenArchivos` (ruta en disco configurable) | Pestaña "Archivos" con `p:fileUpload` (PDF/JPG/PNG, tamaño máximo), filtro por categoría, línea de tiempo de fotos y comparación lado a lado; servlet `/archivo` que valida consultorio antes de servir |
-| E4 Agenda + Google Calendar | `DisponibilidadService` (huecos = horario laboral − citas − bloqueos − anticipación), `GoogleCalendarClient` (JAX-RS + OAuth2), `SincronizadorCalendario` (`@Singleton` + `@Schedule` cada 5 min) | `vistas/agenda/agenda.xhtml` con `p:schedule`, `vistas/agenda/configuracion.xhtml`; callback OAuth `/api/google/callback` |
+| E4 Agenda + Google Calendar | `DisponibilidadService` (horarios y huecos), `GoogleCalendarClient` (JAX-RS + OAuth2), `SincronizadorCalendario` (cada 5 min), `ProgramadorRecordatorios` (cada minuto) y `RecordatorioFacade` | `vistas/agenda/agenda.xhtml` con `p:schedule`, margen en `vistas/agenda/configuracion.xhtml`, avisos en el panel clínico y callback OAuth `/api/google/callback` |
 | E5 Reservación en línea | Reutiliza `DisponibilidadService`; `ReservaService` (bloqueo inmediato verificando disponibilidad dentro de la misma transacción, `@Version` en `Cita`); `NotificacionService` (JavaMail / WhatsApp) | `reservar.xhtml` público sin cuenta, por consultorio: `/reservar.xhtml?c=<slug>` |
 | E6 Cálculo dietético | `CalculosNutricion`: 5 fórmulas, factor de actividad, ajuste por objetivo, distribución de macros; `PlanTratamientoFacade` | `vistas/pacientes/calculo.xhtml`; resultados inmediatos con `p:ajax` |
 | E7 Planes con IA (SMAE) | `CatalogoSmae` (carga inicial en `InicioDatos`), `IaClient` (JAX-RS al proveedor de LLM configurado), `GeneradorPlanes` (arma el prompt con meta kcal, macros, equivalentes, alergias y preferencia regional; **valida** la respuesta contra SMAE y alergias antes de mostrarla) | `vistas/planes/editor.xhtml`: generar, caja de "ajuste en lenguaje natural", aprobar |

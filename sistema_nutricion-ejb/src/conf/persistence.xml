@@ -11,6 +11,7 @@
         <class>com.nutricion.entidades.ArchivoAdjunto</class>
         <class>com.nutricion.entidades.Alergia</class>
         <class>com.nutricion.entidades.Cita</class>
+        <class>com.nutricion.entidades.Recordatorio</class>
         <class>com.nutricion.entidades.Consulta</class>
         <class>com.nutricion.entidades.PlanTratamiento</class>
         <class>com.nutricion.entidades.HorarioLaboral</class>

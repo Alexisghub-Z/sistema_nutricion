@@ -10,6 +10,25 @@
     <ui:define name="titulo">Portal del paciente · NutriVida</ui:define>
 
     <ui:define name="content">
+        <style>
+            @media print {
+                @page { margin: 12mm; }
+                body.publico { background: white; }
+                #top, #bottom, #growl_container, #frmPortal .portal-acciones { display: none !important; }
+                #content { width: auto; max-width: none; margin: 0; padding: 0; }
+                #frmPortal .tarjeta { padding: 12px; margin-bottom: 10px; box-shadow: none; }
+                #frmPortal .perfil-cabecera { break-inside: avoid; }
+                #frmPortal .indicadores {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                    gap: 8px;
+                    margin-bottom: 10px;
+                    break-inside: avoid;
+                }
+                #frmPortal .indicador { padding: 10px; box-shadow: none; }
+                #frmPortal .graficas-grid { display: block; }
+                #frmPortal .graficas-grid > div { break-inside: avoid; }
+            }
+        </style>
         <h:form id="frmPortal">
             <!-- Acceso con código único (HU-42) -->
             <h:panelGroup rendered="#{portalPacienteBean.paciente == null}" layout="block" styleClass="acceso">
@@ -45,7 +64,7 @@
                             </div>
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="portal-acciones" style="display:flex; gap:10px; flex-wrap:wrap;">
                         <p:commandButton value="Actualizar portal" action="#{portalPacienteBean.actualizar}"
                                          process="@this" update="@form :growl" icon="ui-icon-refresh"
                                          styleClass="btn-secundario js-actualizar-al-volver" />
@@ -60,7 +79,7 @@
                     <h2>Próxima cita</h2>
                     <h:panelGroup rendered="#{portalPacienteBean.siguienteCita == null}" layout="block">
                         <p>No tienes una cita próxima.</p>
-                        <h:link outcome="/reservar" value="Consultar horarios">
+                        <h:link outcome="/reservar" value="Consultar horarios" styleClass="portal-acciones">
                             <f:param name="c" value="#{portalPacienteBean.paciente.consultorio.slug}" />
                         </h:link>
                     </h:panelGroup>
@@ -85,7 +104,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="acciones-form">
+                        <div class="acciones-form portal-acciones">
                             <p:commandButton value="Confirmar cita" action="#{portalPacienteBean.actualizarCita('CONFIRMADA')}"
                                              rendered="#{ci.estado.name() eq 'PENDIENTE'}"
                                              process="@this" update="@form :growl" styleClass="btn-primario" />
@@ -138,14 +157,17 @@
         </h:form>
         <h:outputScript name="js/actualizar-al-volver.js" target="body" />
         <h:outputScript target="body">
-            window.addEventListener('resize', function () {
+            function ajustarGraficasPortal() {
                 ['portalPeso', 'portalImc'].forEach(function (nombre) {
                     var grafica = PrimeFaces.widgets[nombre];
                     if (grafica &amp;&amp; grafica.plot &amp;&amp; grafica.jq.is(':visible')) {
                         grafica.plot.replot();
                     }
                 });
-            });
+            }
+            window.addEventListener('resize', ajustarGraficasPortal);
+            window.addEventListener('beforeprint', ajustarGraficasPortal);
+            window.addEventListener('afterprint', ajustarGraficasPortal);
         </h:outputScript>
     </ui:define>
 

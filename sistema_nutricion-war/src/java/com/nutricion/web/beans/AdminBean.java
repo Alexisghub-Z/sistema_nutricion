@@ -34,6 +34,7 @@ public class AdminBean implements Serializable {
     private LoginBean loginBean;
 
     private List<Consultorio> consultorios;
+    private List<Consultorio> consultoriosPublicos;
     private List<Usuario> usuarios;
 
     private Consultorio consultorioForm = new Consultorio();
@@ -47,6 +48,11 @@ public class AdminBean implements Serializable {
         Consultorio consultorio = consultorioFacade.find(loginBean.getConsultorioActivo().getId());
         consultorios = Collections.singletonList(consultorio);
         usuarios = usuarioFacade.porConsultorio(consultorio);
+        actualizarConsultoriosPublicos();
+    }
+
+    public void actualizarConsultoriosPublicos() {
+        consultoriosPublicos = consultorioFacade.activos();
     }
 
     public void nuevoConsultorio() {
@@ -121,6 +127,7 @@ public class AdminBean implements Serializable {
     }
 
     public List<Consultorio> getConsultorios() { return consultorios; }
+    public List<Consultorio> getConsultoriosPublicos() { return consultoriosPublicos; }
     public List<Usuario> getUsuarios() { return usuarios; }
     public Consultorio getConsultorioForm() { return consultorioForm; }
     public void setConsultorioForm(Consultorio consultorioForm) { this.consultorioForm = consultorioForm; }

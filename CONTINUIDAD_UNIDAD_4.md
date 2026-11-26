@@ -1,6 +1,24 @@
 # Continuidad de sistema_nutricion / Unidad 4
 
+## Informe de Word para futuras sesiones
+
+El informe detallado y su resumen de exposición están en `C:\Users\yaxti_cm5rg3t\Downloads\NutriVida - Avance y resumen.docx`. Después de cada avance, actualizar ese mismo archivo con la fecha, el cambio y sus pruebas antes de «Resumen para exponer». Mantener el resumen al final con el estado vigente.
+
 ## Continuación del 26 de noviembre de 2026
+
+### Confirmaciones de reserva, impresión y administración
+
+- **HU-21.** Después de guardar una reserva, NutriVida intenta confirmar por correo con JavaMail. WhatsApp está disponible si se configura una plantilla y el paciente elige recibirla en su teléfono internacional. Los avisos contienen fecha, hora, ubicación y código de cita. En Edge se comprobó que ante un rechazo SMTP la cita conserva el código y se puede consultar. Dos solicitudes simultáneas produjeron una cita y un correo capturado por el servidor ficticio.
+- **HU-44.** El primer PDF partía la gráfica de IMC entre páginas. El portal ya aplica un formato de impresión que oculta controles y navegación. Edge produjo un PDF de una página con las mediciones y las dos gráficas. Se verificaron tanto el contenido como la imagen del PDF.
+- **HU-01 y HU-05.** El listado de edición en Administración usaba solo el consultorio de la sesión. Se añadió **Administración → Consultorio → Consultorios con reservación pública**, con los nombres y enlaces que corresponden a las sedes activas. La lista se actualiza al guardar y con **Actualizar lista**. El acceso a edición y usuarios sigue ligado a la sede de la cuenta.
+
+La prueba de Administración reprodujo la omisión en la versión anterior. La versión corregida pasó 10 comprobaciones en Edge con dos sedes ficticias, incluida la recarga de la página con HTTP 200. En el redespliegue controlado apareció HTTP 404 entre las 10:31:14 y las 10:31:19. Una vez cargado el EAR, el recorrido de alta y recarga quedó sin 404 ni 500. La captura del usuario corresponde a un 404 de Payara y su causa exacta no se pudo confirmar a partir de la imagen.
+
+El EAR activo está en `.cache/despliegues/20261126-103113-060`. Ant compiló y Payara sirvió HTTP 200. El ping JDBC y el esquema de 14 tablas de MySQL 8.0.41 fueron verificados en este avance. Las modificaciones siguen locales sobre `main` en `e5a4b45475837660afad9f28ab9e150f5ea08370`, que también es el SHA de GitHub.
+
+Pasaron 9 comprobaciones de confirmaciones en Java, 11 del flujo SMTP en Edge y 40 del recorrido de agenda, expediente y portal. También pasaron 22 de pacientes, 4 de sesión con tiempo simulado y 15 de Calendar con proveedor ficticio. La evidencia está en `.cache/revision-continuacion/hu21-5709482589`, incluidos `edge-confirmaciones.txt`, `verificacion-smtp.txt`, `portal-regresion-final.txt`, `portal-impresion-visual.png`, `admin-5710610342.txt`, `admin-5710704599.txt` y `http-durante-despliegue.txt`. Se retiró el SMTP temporal y se limpiaron los consultorios ficticios de cada prueba.
+
+El estado de las 44 HU es **11 probadas en local, 17 parciales y 16 pendientes**. Quedan las pruebas con cuentas autorizadas de Calendar y confirmaciones de reserva, la expiración de sesión después de 30 minutos reales y los demás criterios parciales de la matriz.
 
 Se reprodujeron cuatro problemas de actualización en el despliegue del 25 de noviembre. Si se guardaba una ficha de paciente abierta antes de escribir un antecedente, el antecedente podía desaparecer. La agenda retenía el nombre y teléfono anteriores en el selector. El panel y el portal abiertos podían seguir mostrando una cita después de completarla. Al cerrar una consulta, la cabecera del expediente conservaba el peso anterior. Evidencia en `.cache/revision-continuacion/agenda-5670239286.txt`.
 
@@ -53,6 +71,12 @@ El EAR activo quedó en `.cache/despliegues/20261126-090802-016` con compilació
 | Validación Java de pacientes y filtro con tiempo simulado | 22 + 4 | `recordatorios-validaciones.txt` |
 
 También pasaron las 15 pruebas de Calendar con el proveedor ficticio. Se limpiaron los consultorios, usuarios, citas y pacientes de las pruebas. Quedan la autorización y sincronización real de Calendar (HU-16), la espera real de expiración de sesión y la impresión del portal. La siguiente historia de reserva pendiente es el envío de confirmaciones (HU-21). [Guion de recordatorios](README.md#probar-los-recordatorios-de-consulta-hu-18) y [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
+
+### Estado comprobado para la exposición
+
+`main`, `origin/main` y `main` en GitHub coinciden en `e5a4b45475837660afad9f28ab9e150f5ea08370`, que incluye HU-18. Payara 5.2022.3 sigue sirviendo `.cache/despliegues/20261126-090802-016` con JDK 17. La portada, el acceso, la reserva y `portal.xhtml` respondieron HTTP 200. Sin sesión, las vistas privadas redirigieron al acceso. `NutricionMySQLPool` pasó el ping y una consulta de metadatos confirmó las 14 tablas esperadas de MySQL 8.0.41.
+
+Se repitieron 22 pruebas de pacientes, cuatro de sesión con tiempo simulado y 15 de Calendar con proveedor ficticio. Las 131 comprobaciones en Edge corresponden a los recorridos registrados en la sección de HU-18. La matriz cuenta 10 historias probadas en local, 17 parciales y 17 pendientes. El diagrama de cuatro tablas y el guion de CRUD del documento de entrega corresponden al primer avance de noviembre.
 
 ## Continuación del 25 de noviembre de 2026
 
@@ -226,4 +250,8 @@ Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el pr
 
 ## Prompt listo para otro chat
 
-> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Retoma la publicación del 26 de noviembre y HU-18. Comprueba main, origin/main y los últimos commits. El lote de expediente, agenda y portal se publicó en 24cd4c9, antes del commit de recordatorios. Conserva los cambios locales y usa el EAR raíz con Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El EAR activo quedó en .cache/despliegues/20261126-090802-016 y respondió en http://localhost:8080/sistema_nutricion-war/. HU-18 muestra avisos de consulta por consultorio con un margen inicial de 30 minutos. Pasaron 21 comprobaciones de recordatorios y 110 de regresión en Edge, 22 pruebas de pacientes, cuatro de sesión con tiempo simulado y 15 de Calendar ficticio. Usa scripts/probar-validaciones.ps1, scripts/probar-calendario-google.ps1 y scripts/desplegar-local.ps1. Usa únicamente datos ficticios y limpia los de cada prueba. HU-16 requiere una cuenta de Google autorizada. Retoma HU-21 según la matriz para las confirmaciones de cita.
+> Continúa sistema_nutricion en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y la matriz de historias. Comprueba main, GitHub, los cambios locales y el despliegue. El código publicado está en e5a4b45. Sobre esa base quedaron locales HU-21, el formato de impresión del portal y el listado de sedes activas en Administración.
+>
+> Mantén el EAR raíz con Java EE 8 javax.*, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3, PrimeFaces 5.0 y MySQL. El EAR activo quedó en .cache/despliegues/20261126-103113-060 y respondió en http://localhost:8080/sistema_nutricion-war/. Se verificaron las 14 tablas, el ping JDBC, 10 comprobaciones de administración, 11 de reservas con SMTP ficticio y 40 de agenda, expediente y portal. Usa únicamente datos ficticios y limpia los de cada prueba.
+>
+> Queda verificar las confirmaciones con proveedores reales autorizados, vincular Calendar con una cuenta autorizada y observar los 30 minutos reales de inactividad. Retoma también los criterios parciales de la matriz. Actualiza el mismo Word de Descargas con los nuevos cambios y pruebas antes de «Resumen para exponer» y actualiza el resumen final.

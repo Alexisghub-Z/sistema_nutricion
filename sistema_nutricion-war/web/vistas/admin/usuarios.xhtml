@@ -105,6 +105,23 @@
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>
+                    <div class="encabezado-pagina" style="margin-top:22px;">
+                        <h2>Consultorios con reservación pública</h2>
+                        <p:commandButton value="Actualizar lista" action="#{adminBean.actualizarConsultoriosPublicos}"
+                                         process="@this" update="tablaConsultoriosPublicos"
+                                         icon="ui-icon-refresh" styleClass="btn-secundario" />
+                    </div>
+                    <p:dataTable id="tablaConsultoriosPublicos" value="#{adminBean.consultoriosPublicos}" var="publico"
+                                 emptyMessage="No hay consultorios con reservación pública.">
+                        <p:column headerText="Nombre">
+                            <h:outputText value="#{publico.nombre}" />
+                        </p:column>
+                        <p:column headerText="Reservación">
+                            <h:link outcome="/reservar" value="Ver reservación" target="_blank">
+                                <f:param name="c" value="#{publico.slug}" />
+                            </h:link>
+                        </p:column>
+                    </p:dataTable>
                 </h:form>
             </p:tab>
         </p:tabView>
@@ -199,7 +216,7 @@
                 </h:panelGroup>
                 <div class="acciones-form">
                     <p:commandButton value="Guardar" action="#{adminBean.guardarConsultorio}"
-                                     update="@form :tabsAdmin:frmConsultorios:tablaConsultorios :tabsAdmin:frmUsuarios :growl"
+                                     update="@form :tabsAdmin:frmConsultorios :tabsAdmin:frmUsuarios :growl"
                                      icon="ui-icon-check" styleClass="btn-primario" />
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgConsultorio').hide()" styleClass="btn-secundario" />
                 </div>

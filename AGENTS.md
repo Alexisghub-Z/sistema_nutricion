@@ -13,5 +13,6 @@
 - Ejecutar la aplicación empresarial raíz `sistema_nutricion` (EAR), que integra los módulos EJB y WAR. Las entradas bajo Java EE Modules y los proyectos abiertos separados representan los mismos módulos.
 - Mantener alineadas historias, modelos, validadores, código y pruebas. Diferenciar el avance básico probado de las historias completas pendientes.
 - Actualizar la documentación de continuidad cuando cambie el estado del proyecto o aparezca evidencia relevante. No registrar secretos ni datos clínicos personales.
+- Actualizar el mismo informe de Word en Descargas después de cada avance del proyecto. Consultar su ruta en CONTINUIDAD_UNIDAD_4.md, añadir el cambio fechado con sus pruebas antes de «Resumen para exponer» y actualizar ese resumen al final.
 - Para QA, usar únicamente registros ficticios identificables y limpiar solo los creados por la prueba. No borrar muestras existentes, dominio, configuración JDBC ni despliegues activos para repetir una demostración.
 - Separar compilación, despliegue, conexión JDBC y recorrido funcional en navegador: cada comprobación aporta evidencia distinta.

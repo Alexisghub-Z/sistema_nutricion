@@ -11,7 +11,7 @@
 
 El punto de partida de esa revisión fue el sitio público, el login, el panel y el CRUD de pacientes en MySQL.
 La continuidad del proyecto registra el avance de expediente, agenda, reservación, consultorios,
-portal y recordatorios. [Continuidad del proyecto](CONTINUIDAD_UNIDAD_4.md).
+portal, recordatorios y confirmaciones de reserva. [Continuidad del proyecto](CONTINUIDAD_UNIDAD_4.md).
 
 Para este equipo se dispone de
 `scripts/desplegar-local.ps1` (compilación y despliegue expandido), `scripts/probar-validaciones.ps1`
@@ -208,6 +208,10 @@ del WAR. La carga y la descarga están disponibles a administración y nutrició
 
 El botón **Actualizar datos** del expediente vuelve a leer la ficha y recalcula los resultados dietéticos que dependen de ella. Los campos de los formularios clínicos conservan lo que estás capturando.
 
+#### Ver consultorios con reservación pública
+
+Abre **Administración → Consultorio**. La sección **Consultorios con reservación pública** muestra las sedes activas y sus enlaces de reserva, incluidas las que se dieron de alta antes. Tras crear una sede activa, aparece en la lista. **Actualizar lista** consulta las sedes sin recargar la página. La tabla de edición y las cuentas de usuario quedan ligadas al consultorio de la sesión.
+
 #### Vincular Google Calendar
 
 La agenda puede usar el calendario principal de una cuenta de Google por consultorio. El ciclo cada cinco minutos toma los próximos 90 días. Los eventos ocupados aparecen como bloques en la agenda y restan disponibilidad en la reservación. Las citas próximas se publican con el título **Consulta NutriVida** y sin los datos del paciente. NutriVida conserva el último conjunto de bloqueos cuando falla la lectura.
@@ -227,6 +231,15 @@ Se usa el alcance `calendar.events.owned`. El protocolo se puede probar en local
 Payara ejecuta el temporizador EJB cada minuto. Las vistas clínicas visibles consultan los avisos cada 30 segundos. MySQL guarda una publicación por cita y tipo. Los avisos están disponibles dentro de NutriVida para administración y nutrición del mismo consultorio. Los mensajes para pacientes corresponden a HU-21 y HU-33. [Referencia de `@Schedule`](https://docs.oracle.com/javaee/7/api/javax/ejb/Schedule.html).
 
 `scripts/probar-validaciones.ps1` incluye pruebas del filtro de sesión que simulan los 30 minutos de inactividad mientras hay sondeos automáticos. Usa `-ServletApi` si el JAR de Servlet 4 de Payara está en otra ruta.
+
+#### Confirmaciones de reserva (HU-21)
+
+Al reservar desde el sitio público, la confirmación se intenta después de guardar la cita. Incluye fecha, hora, nombre y dirección del consultorio y código de cita. La pantalla conserva el código aunque el canal no esté configurado, falte la dirección del consultorio o el proveedor rechace el envío.
+
+- **Correo electrónico.** Configura en Payara una sesión JavaMail con el nombre JNDI `mail/nutricion`, remitente y host SMTP. Usa los parámetros de autenticación y TLS de tu proveedor y configura tiempos de conexión, lectura y escritura acordes con el entorno. La reserva toma el correo de la ficha asociada a los datos ingresados. [JavaMail en Payara 5](https://docs.payara.fish/community/docs/5.181/documentation/payara-server/javamail.html).
+- **WhatsApp.** La opción aparece si el dominio de Payara tiene las propiedades privadas `nutricion.whatsapp.version`, `nutricion.whatsapp.numeroId`, `nutricion.whatsapp.token`, `nutricion.whatsapp.plantilla` y `nutricion.whatsapp.idioma`. Usa una plantilla aprobada con cuatro parámetros de texto en este orden: fecha, hora, ubicación y código de cita. El paciente elige este canal en la reserva y escribe un teléfono con `+` y código de país. [WhatsApp Cloud API](https://developers.facebook.com/documentation/business-messaging/whatsapp/overview/).
+
+`scripts/probar-confirmaciones.ps1` comprueba el contenido del correo, el número internacional, el cuerpo de la plantilla y las respuestas de un proveedor de WhatsApp ficticio. La configuración real de ambos canales se valida con cuentas autorizadas. Los secretos quedan en el dominio de Payara.
 
 ## Compilar sin el IDE (opcional)
 
@@ -264,7 +277,7 @@ Genera `dist/sistema_nutricion.ear`.
 | Tareas programadas | Recordatorios, liberación de horarios apartados y sincronización con Google Calendar usan **EJB Timer Service** (`@Schedule` en un `@Singleton`). |
 | Servicios REST externos | **Cliente JAX-RS** (`javax.ws.rs.client.ClientBuilder`) + **JSON-B / JSON-P** (incluidos en Payara). Evitar SDKs pesados si basta HTTP. |
 | Webhooks entrantes | Endpoints **JAX-RS** (`@Path`, `@ApplicationPath("api")`) en el WAR, p. ej. `/api/whatsapp/webhook`. |
-| Correo | **JavaMail** con un recurso `mail/nutricion` configurado en Payara (`@Resource(lookup = "mail/nutricion")`). |
+| Correo | **JavaMail** con un recurso `mail/nutricion` configurado en Payara. Las confirmaciones consultan el recurso al enviar para que la reserva siga disponible en dominios sin SMTP. |
 | Archivos | Upload con `p:fileUpload` de PrimeFaces; guardar en disco bajo una ruta configurable (fuera del WAR) y la metadata en BD. |
 | Gráficas | Gráficas de **PrimeFaces 5.0** (`p:chart` con `LineChartModel`). Sin librerías JS externas. |
 | Configuración / secretos | Claves de API (IA, WhatsApp, Google) **no** se versionan: van como *System Properties* / *JNDI custom resources* de Payara o variables de entorno, leídas por un bean `Configuracion`. |
@@ -306,7 +319,7 @@ Periodo: **31-ago-2026 al 4-dic-2026** (14 semanas, 640 h por residente).
 ## 3. Estado actual del código vs. objetivo
 
 El avance local incluye administración por consultorio, roles, bloqueo temporal, expediente clínico con
-adjuntos, agenda, recordatorios, reservación pública, cálculo dietético y portal.
+adjuntos, agenda, recordatorios, reservación pública con confirmación configurable, cálculo dietético y portal.
 Calendar cuenta con sincronización probada con un proveedor ficticio y bloqueos verificados en MySQL y Edge.
 La [matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes)
 indica qué se probó y qué criterios siguen pendientes. Conserva los requisitos de las siguientes secciones

@@ -8,6 +8,7 @@ import com.nutricion.servicios.CitaFacade;
 import com.nutricion.servicios.ConsultorioFacade;
 import com.nutricion.servicios.DisponibilidadService;
 import com.nutricion.servicios.Fechas;
+import com.nutricion.servicios.NotificacionService;
 import com.nutricion.web.util.Mensajes;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -17,11 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-/** Flujo público de consulta de disponibilidad y reserva en línea (HU-19, HU-20). */
+/** Flujo público de disponibilidad, reserva y confirmación (HU-19 a HU-21). */
 @Named
 @ViewScoped
 public class ReservaPublicaBean implements Serializable {
@@ -36,6 +38,8 @@ public class ReservaPublicaBean implements Serializable {
 
     @EJB
     private CitaFacade citaFacade;
+    @EJB
+    private NotificacionService notificacionService;
 
     private List<Consultorio> consultorios = new ArrayList<>();
     private Long consultorioId;
@@ -46,6 +50,8 @@ public class ReservaPublicaBean implements Serializable {
     private Paciente paciente = new Paciente();
     private Cita cita = new Cita();
     private Cita citaConfirmada;
+    private boolean confirmacionWhatsapp;
+    private boolean confirmacionEnviada;
 
     private String codigoBusqueda;
     private Cita citaEncontrada;
@@ -86,6 +92,13 @@ public class ReservaPublicaBean implements Serializable {
     }
 
     public void reservar() {
+        if (citaConfirmada != null) {
+            return;
+        }
+        if (confirmacionWhatsapp && !notificacionService.telefonoWhatsappValido(paciente.getTelefono())) {
+            Mensajes.error("Para WhatsApp, escribe el teléfono con + y código de país.");
+            return;
+        }
         try {
             if (slotSeleccionadoMs == null) {
                 Mensajes.error("Selecciona un horario disponible.");
@@ -94,6 +107,11 @@ public class ReservaPublicaBean implements Serializable {
             Consultorio c = consultorioSeleccionado();
             cita.setFechaHora(new Date(slotSeleccionadoMs));
             citaConfirmada = citaFacade.agendarPublica(paciente, cita, c);
+            try {
+                confirmacionEnviada = notificacionService.enviarConfirmacion(citaConfirmada, confirmacionWhatsapp);
+            } catch (EJBException e) {
+                confirmacionEnviada = false;
+            }
             Mensajes.info("Tu cita quedó agendada con código " + citaConfirmada.getCodigo() + ".");
             paciente = new Paciente();
             cita = new Cita();
@@ -107,7 +125,28 @@ public class ReservaPublicaBean implements Serializable {
 
     public void nuevaReserva() {
         citaConfirmada = null;
+        confirmacionWhatsapp = false;
+        confirmacionEnviada = false;
         cargarHorarios();
+    }
+
+    public boolean isWhatsappDisponible() {
+        return notificacionService.whatsappDisponible();
+    }
+
+    public boolean isConfirmacionWhatsapp() {
+        return confirmacionWhatsapp;
+    }
+
+    public void setConfirmacionWhatsapp(boolean confirmacionWhatsapp) {
+        this.confirmacionWhatsapp = confirmacionWhatsapp;
+    }
+
+    public String getMensajeConfirmacion() {
+        if (!confirmacionEnviada) {
+            return "El envío de la confirmación no está disponible. Usa tu código para consultar la cita.";
+        }
+        return confirmacionWhatsapp ? "Confirmación enviada por WhatsApp." : "Confirmación enviada por correo.";
     }
 
     public void consultarPorCodigo() {

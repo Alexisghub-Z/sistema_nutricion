@@ -307,7 +307,7 @@ Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documenta
 
 | Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
-| HU-01 | Probada en local | Dos consultorios ficticios creados desde administración con credenciales independientes. |
+| HU-01 | Probada en local | Dos consultorios ficticios creados con credenciales independientes. Se verificó que la lista de sedes con reservación pública muestra ambas al guardar y tras recargar Administración. |
 | HU-02 | Parcial | Acceso, cierre de sesión, bloqueo y desbloqueo probados en Edge. El filtro de sesión pasó cuatro pruebas con tiempo simulado para el sondeo de avisos. Queda comprobar la expiración mediante una espera real de 30 minutos. |
 | HU-03 | Parcial | Recepción entra a la agenda y puede reprogramar. Se verificaron restricciones a expediente, archivos, horarios y Administración, y revocación de su sesión al desactivar la cuenta. |
 | HU-04 | Pendiente | Recuperación de contraseña por correo. |
@@ -327,7 +327,7 @@ Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documenta
 | HU-18 | Probada en local | Margen de 5 a 1440 minutos por consultorio. Un temporizador publica avisos con día, hora, paciente y motivo en las vistas de administración y nutrición. Se verificaron en Edge la actualización automática, la separación por rol y consultorio, la cancelación y la reprogramación. |
 | HU-19 | Parcial | El enlace público excluye citas activas y bloques importados de su consultorio. Se verificó rechazo al confirmar un turno abierto antes del bloqueo. Queda validar con la cuenta real. |
 | HU-20 | Probada en local | Dos reservas simultáneas del mismo turno y consultorio dejaron una cita. Un segundo consultorio pudo reservar esa misma hora. |
-| HU-21 | Pendiente | Envío de confirmaciones por correo o WhatsApp. La página muestra la fecha, el consultorio y el código de cita. |
+| HU-21 | Parcial | Aviso con fecha, hora, ubicación y código de cita. En Edge se comprobó aceptación y rechazo con SMTP ficticio y la reserva conservó su código en ambos casos. El cliente de WhatsApp pasó las pruebas con HTTP ficticio. Falta verificar la entrega con cuentas reales autorizadas. |
 | HU-22 | Parcial | Se comprobó precarga de la última medición y persistencia de GEB y GET con la fórmula predeterminada. Queda contrastar todas las fórmulas y rangos con el nutriólogo. |
 | HU-23, HU-24 | Parciales | Meta y macros reaparecen en el plan guardado tras recargar. Queda recorrer los ajustes y límites de las distribuciones editables. |
 | HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
@@ -337,14 +337,14 @@ Matriz actualizada el 26-11-2026. Las secciones de modelo y guion base documenta
 | HU-39, HU-40, HU-41 | Pendientes | Sin listado de pendientes, bandeja WhatsApp o adherencia. |
 | HU-42 | Probada en local | Código de portal propio en el expediente. La confirmación pública entrega el código de la cita. |
 | HU-43 | Probada en local | Próxima cita con ubicación, confirmación y cancelación visibles desde agenda. El portal abierto vuelve a consultar su estado con Actualizar portal. |
-| HU-44 | Parcial | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px. Borradores, notas y planes internos quedan reservados al expediente. Pendiente verificar la impresión del resumen. |
+| HU-44 | Probada en local | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px y en el PDF de impresión de una página. Borradores, notas y planes internos quedan reservados al expediente. |
 
 Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo básico, pantallas y documentación, pero faltan sus criterios completos. Esta revisión no prueba entrevistas, validación del asesor/nutriólogo, capacitación o producción (HT-01, HT-02, HT-06, HT-07, HT-09). Git local y entorno se describen para HT-05, sin declarar entregado un flujo de publicación o CI no verificado.
 
 ### Orden recomendado de continuación
 
 1. Cubrir los casos restantes de permisos, edición de usuarios y expiración de sesión.
-2. Validar el vínculo de Calendar (HU-16) con una cuenta autorizada y continuar con confirmaciones de citas (HU-21).
+2. Validar el vínculo de Calendar (HU-16) y la entrega de confirmaciones (HU-21) con cuentas autorizadas.
 3. Revisar las fórmulas antes de generar planes y actualizar el guion académico conforme se comprueben los flujos.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)

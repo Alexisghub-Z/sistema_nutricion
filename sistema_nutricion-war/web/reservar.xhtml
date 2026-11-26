@@ -26,6 +26,8 @@
                 <span class="badge badge-alerta">Pendiente de confirmar</span>
                 <h2 style="margin-top:10px;">Tu horario quedó reservado</h2>
                 <p>Guarda el código de la cita para consultarla o cancelarla. Tu nutriólogo te dará el acceso al portal.</p>
+                <h:outputText id="estadoEnvioConfirmacion" value="#{reservaPublicaBean.mensajeConfirmacion}"
+                              styleClass="texto-ayuda" />
                 <div class="comparativo-grid cita-resumen">
                     <div class="comparativo-card">
                         <span class="comparativo-etiqueta">Código de cita</span>
@@ -137,6 +139,11 @@
                                          required="true" requiredMessage="Cuéntanos brevemente el motivo de tu consulta."
                                          maxlength="300" />
                     </div>
+                    <h:panelGroup rendered="#{reservaPublicaBean.whatsappDisponible}" layout="block" styleClass="campo">
+                        <p:selectBooleanCheckbox id="porWhatsapp" value="#{reservaPublicaBean.confirmacionWhatsapp}"
+                                                 itemLabel="Recibir confirmación por WhatsApp" />
+                        <p class="texto-ayuda">Para usar WhatsApp, escribe el teléfono con + y código de país.</p>
+                    </h:panelGroup>
                     <p:commandButton value="Confirmar reservación" action="#{reservaPublicaBean.reservar}"
                                      update="@form :growl" icon="ui-icon-check" styleClass="btn-primario btn-bloque" />
                 </div>

@@ -36,7 +36,7 @@
                     <h:graphicImage name="img/logo.svg" alt="" styleClass="acceso-logo" />
                     <h1>Portal del paciente</h1>
                     <p class="texto-ayuda" style="text-align:center;">
-                        Escribe el código que te dio tu nutriólogo para consultar tu próxima cita y tus mediciones.
+                        Escribe el código que te dio tu nutriólogo para consultar tu próxima cita, tus mediciones y tu plan alimenticio.
                     </p>
                     <p:messages id="msgsPortal" closable="true" />
                     <div class="campo">
@@ -114,6 +114,16 @@
                         </div>
                     </h:panelGroup>
                 </section>
+
+                <h:panelGroup id="planEntregado" rendered="#{portalPacienteBean.planAlimenticio != null}"
+                              layout="block" styleClass="tarjeta">
+                    <h2>Tu plan alimenticio</h2>
+                    <ui:include src="/WEB-INF/fragmentos/resumen-plan-alimenticio.xhtml">
+                        <ui:param name="plan" value="#{portalPacienteBean.planAlimenticio}" />
+                        <ui:param name="tiempos" value="#{portalPacienteBean.tiemposComida}" />
+                        <ui:param name="mostrarMeta" value="#{false}" />
+                    </ui:include>
+                </h:panelGroup>
 
                 <!-- Últimas mediciones (HU-43) -->
                 <h:panelGroup rendered="#{portalPacienteBean.ultimaConsulta != null}" layout="block" styleClass="indicadores">

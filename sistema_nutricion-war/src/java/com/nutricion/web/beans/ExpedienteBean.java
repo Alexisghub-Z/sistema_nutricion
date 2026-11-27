@@ -8,12 +8,15 @@ import com.nutricion.entidades.FactorActividad;
 import com.nutricion.entidades.FormulaEnergetica;
 import com.nutricion.entidades.ObjetivoTratamiento;
 import com.nutricion.entidades.Paciente;
+import com.nutricion.entidades.PlanAlimenticio;
 import com.nutricion.entidades.PlanTratamiento;
 import com.nutricion.entidades.Sexo;
+import com.nutricion.entidades.TiempoComida;
 import com.nutricion.servicios.AlergiaFacade;
 import com.nutricion.servicios.ArchivoFacade;
 import com.nutricion.servicios.ConsultaFacade;
 import com.nutricion.servicios.PacienteFacade;
+import com.nutricion.servicios.PlanAlimenticioFacade;
 import com.nutricion.servicios.PlanTratamientoFacade;
 import com.nutricion.util.CalculosNutricion;
 import com.nutricion.util.ReglaNegocioException;
@@ -63,6 +66,9 @@ public class ExpedienteBean implements Serializable {
     private PlanTratamientoFacade planTratamientoFacade;
 
     @EJB
+    private PlanAlimenticioFacade planAlimenticioFacade;
+
+    @EJB
     private ArchivoFacade archivoFacade;
 
     @Inject
@@ -89,6 +95,9 @@ public class ExpedienteBean implements Serializable {
     // Cálculo dietético (HU-22, HU-23, HU-24)
     private PlanTratamiento planActual = new PlanTratamiento();
     private List<PlanTratamiento> planesGuardados = new ArrayList<>();
+    private PlanAlimenticio borradorAlimenticio;
+    private PlanAlimenticio planAlimenticioAprobado;
+    private boolean revisionAlimenticiaConfirmada;
 
     private List<ArchivoAdjunto> adjuntos = Collections.emptyList();
     private CategoriaArchivo categoriaAdjunto;
@@ -141,6 +150,7 @@ public class ExpedienteBean implements Serializable {
                 }
             }
             planesGuardados = planTratamientoFacade.porPaciente(paciente);
+            planAlimenticioAprobado = planAlimenticioFacade.ultimoAprobado(pacienteId, usuarioClinicoId());
             prepararComparativo();
             actualizarGraficas();
             prepararCalculoDietetico();
@@ -160,6 +170,8 @@ public class ExpedienteBean implements Serializable {
             return "/vistas/pacientes/lista?faces-redirect=true";
         }
         recalcularPlan();
+        planesGuardados = planTratamientoFacade.porPaciente(paciente);
+        planAlimenticioAprobado = planAlimenticioFacade.ultimoAprobado(pacienteId, usuarioClinicoId());
         return null;
     }
 
@@ -292,6 +304,49 @@ public class ExpedienteBean implements Serializable {
         } catch (Exception e) {
             Mensajes.error(e);
         }
+    }
+
+    public void generarPlanAlimenticio() {
+        descartarBorradorAlimenticio();
+        try {
+            borradorAlimenticio = planAlimenticioFacade.generar(pacienteId, usuarioClinicoId());
+        } catch (Exception e) {
+            Mensajes.error(e);
+        }
+    }
+
+    public void descartarBorradorAlimenticio() {
+        borradorAlimenticio = null;
+        revisionAlimenticiaConfirmada = false;
+    }
+
+    public void aprobarPlanAlimenticio() {
+        try {
+            planAlimenticioAprobado = planAlimenticioFacade.aprobar(pacienteId, usuarioClinicoId(),
+                    borradorAlimenticio, revisionAlimenticiaConfirmada);
+            descartarBorradorAlimenticio();
+            Mensajes.info("Plan alimenticio aprobado. Puedes entregarlo al portal.");
+        } catch (Exception e) {
+            revisionAlimenticiaConfirmada = false;
+            Mensajes.error(e);
+        }
+    }
+
+    public void entregarPlanAlimenticio() {
+        try {
+            Long planId = planAlimenticioAprobado == null ? null : planAlimenticioAprobado.getId();
+            planAlimenticioAprobado = planAlimenticioFacade.entregar(pacienteId, usuarioClinicoId(), planId);
+            Mensajes.info("Plan alimenticio entregado en el portal del paciente.");
+        } catch (Exception e) {
+            Mensajes.error(e);
+        }
+    }
+
+    private Long usuarioClinicoId() {
+        if (!loginBean.isPuedeVerExpedientes()) {
+            throw new ReglaNegocioException("El expediente no está disponible.");
+        }
+        return loginBean.getUsuario().getId();
     }
 
     public boolean isFormulaFaltaGrasa() {
@@ -538,4 +593,9 @@ public class ExpedienteBean implements Serializable {
     public PlanTratamiento getPlanActual() { return planActual; }
     public void setPlanActual(PlanTratamiento planActual) { this.planActual = planActual; }
     public List<PlanTratamiento> getPlanesGuardados() { return planesGuardados; }
+    public PlanAlimenticio getBorradorAlimenticio() { return borradorAlimenticio; }
+    public PlanAlimenticio getPlanAlimenticioAprobado() { return planAlimenticioAprobado; }
+    public boolean isRevisionAlimenticiaConfirmada() { return revisionAlimenticiaConfirmada; }
+    public void setRevisionAlimenticiaConfirmada(boolean confirmada) { revisionAlimenticiaConfirmada = confirmada; }
+    public TiempoComida[] getTiemposComida() { return TiempoComida.values(); }
 }

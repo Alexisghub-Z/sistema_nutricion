@@ -226,6 +226,14 @@ a { color: var(--verde); }
 
 /* ---------- evolución, comparativo y cálculo dietético ---------- */
 .comparativo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.plan-smae-tiempos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin: 16px 0; }
+.plan-smae-tiempos h3 { margin: 0 0 8px; font-size: 16px; }
+.plan-smae-tiempos ul { margin: 0; padding-inline-start: 20px; }
+.plan-smae-tiempos li + li { margin-top: 6px; }
+.plan-smae-meta dt { font-weight: 600; }
+.plan-smae-meta dd { margin: 2px 0 8px; }
+.plan-smae-revision { display: flex; align-items: flex-start; gap: 8px; }
+.plan-smae-revision input { margin: 3px 0 0; }
 .cita-resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-block: 16px; }
 .cita-resumen .texto-ayuda { display: block; margin-top: 4px; }
 .comparativo-card {

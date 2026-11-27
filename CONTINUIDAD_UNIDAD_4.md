@@ -6,6 +6,25 @@ El informe detallado y su resumen de exposición están en `C:\Users\yaxti_cm5rg
 
 ## Continuación del 26 de noviembre de 2026
 
+### Primer flujo de plan alimenticio SMAE
+
+- **HU-07, HU-25, HU-26 y HU-28.** En **Pacientes → Expediente → Plan alimenticio**, nutrición genera un borrador de cinco tiempos con la última meta y los macros guardados. El catálogo inicial contiene 16 alimentos de ocho grupos. La pantalla muestra las medidas caseras, los equivalentes y el aporte estimado frente a la meta.
+- La generación excluye alimentos identificados en las alergias de catálogo y los campos de texto. Avisa cuando falta una combinación compatible o no puede verificar una restricción. El borrador se pierde al recargar o descartar. La aprobación exige confirmar la revisión. Aprobar y entregar vuelven a comprobar el cálculo y las alergias vigentes.
+- MySQL conservó dos planes aprobados del paciente ficticio, con cinco tiempos en cada uno. Solo el segundo tuvo fecha de entrega. El portal mostró los alimentos y las cantidades al paciente correcto y retiró el plan al registrar una alergia incompatible. Recepción y otra sede quedaron fuera del expediente. Al eliminar el paciente ficticio desde la lista se retiraron sus planes.
+
+Ant compiló el EAR raíz con JDK 17. Payara 5.2022.3 sirve `.cache/despliegues/20261126-203140-371`. La portada respondió HTTP 200 y `NutricionMySQLPool` pasó el ping. MySQL 8.0.41 presentó 16 tablas con `planes_alimenticios` y `porciones_plan`. [NutriVida local](http://localhost:8080/sistema_nutricion-war/).
+
+Pasaron 30 comprobaciones del flujo nuevo, 28 de cálculo y 40 de agenda, expediente y portal en Edge. El mayor tiempo de generación observado fue de 2,14 segundos. Pasaron 47 comprobaciones Java, incluidas 14 del generador y las restricciones. Se limpiaron las sedes y los datos ficticios de las pruebas.
+
+| Comprobación | Evidencia en `.cache/revision-continuacion/plan-alimenticio-20261126/` |
+|---|---|
+| Generación, aprobación, entrega y vista a 390 px | `5746701020/recorrido.txt`, `5746701020/borrador-390.png` y `5746701020/portal-390.png` |
+| Persistencia y eliminación del paciente | `5746701020/persistencia.txt`, `5746701020/eliminacion-edge.txt` y `5746701020/persistencia-tras-eliminar.txt` |
+| Regresiones Edge | `calculo-criterios-limite-superior-5746701022.txt` y `regresion-portal-5746701021.txt` |
+| Build, MySQL, JDBC y pruebas Java | `despliegue-final.txt`, `mysql.txt`, `ping-jdbc-final.txt` y `java-final.txt` |
+
+La matriz de 44 historias registra **26 probadas en local, 8 parciales y 10 pendientes**. HU-25 y HU-26 quedan parciales hasta revisar el catálogo, las tolerancias y la cobertura con el consultorio. Siguen pendientes el proveedor de IA, los ajustes en lenguaje natural y el repertorio oaxaqueño. El corte parte de `8a3c092`. [Matriz de historias](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
+
 ### Panel, pagos, comparativo y recuperación de contraseña
 
 - **HU-37 y HU-41.** Inicio muestra las citas de hoy y cuenta pacientes distintos con consulta atendida en el periodo configurado en **Horarios**. Los indicadores y citas se actualizan cada 20 segundos mientras se ve el panel. El sondeo conserva la última actividad de sesión. La asistencia se calcula con citas pasadas completadas y ausencias registradas. El panel resalta los porcentajes inferiores a 80.
@@ -302,8 +321,8 @@ Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el pr
 
 ## Prompt listo para otro chat
 
-> Continúa NutriVida en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y docs/UNIDAD_4_REVISION_Y_ENTREGA.md. Comprueba HEAD de main, SHA en GitHub, cambios locales, Payara y MySQL. El cierre del 26 de noviembre añadió HU-04, HU-11, HU-37, HU-38, HU-39 y HU-41 sobre `28e8baf`.
+> Continúa NutriVida en este repositorio de Windows. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y docs/UNIDAD_4_REVISION_Y_ENTREGA.md. Comprueba HEAD, cambios locales, Payara y MySQL. El último corte parte de `8a3c092` e incorpora el primer flujo de Plan alimenticio en el expediente, con generación SMAE desde el cálculo guardado, restricciones y aprobación previa a la entrega en el portal.
 >
-> Mantén el EAR raíz con Java EE 8 `javax.*`, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3 y PrimeFaces 5.0. El EAR activo quedó en `.cache/despliegues/20261126-195010-351` con HTTP 200, ping de `NutricionMySQLPool` y 14 tablas en MySQL 8.0.41. Pasaron 27 comprobaciones de panel, pagos y comparativo, 15 de recuperación con SMTP ficticio y 40 de regresión. Usa datos ficticios y limpia solo los registros de cada prueba.
+> Mantén el EAR raíz con Java EE 8 `javax.*`, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3 y PrimeFaces 5.0. Al cierre, el EAR de `.cache/despliegues/20261126-203140-371` devolvió HTTP 200. `NutricionMySQLPool` pasó el ping y MySQL 8.0.41 mostró 16 tablas. Pasaron 30 comprobaciones del plan, 28 de cálculo y 40 de agenda, expediente y portal en Edge, y 47 Java. Usa datos ficticios y limpia solo los registros de cada prueba.
 >
-> La matriz registra 24 historias probadas en local, 7 parciales y 13 pendientes. Confirma los apartados de HU-10 y revisa las fórmulas de HU-22 con el consultorio. Retoma planes con el catálogo SMAE autorizado. Calendar, correo y WhatsApp requieren cuentas autorizadas para las pruebas reales. Actualiza el mismo Word de Descargas y deja «Resumen para exponer» al final.
+> La matriz registra 26 historias probadas en local, 8 parciales y 10 pendientes. Revisa con el consultorio el catálogo, la cobertura de alérgenos y las tolerancias de HU-25 y HU-26. Quedan los ajustes en lenguaje natural y el repertorio regional. Conserva el mismo Word de Descargas con el avance fechado antes de «Resumen para exponer» y el resumen al final.

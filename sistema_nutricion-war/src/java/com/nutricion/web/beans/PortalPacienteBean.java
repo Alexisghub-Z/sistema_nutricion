@@ -4,9 +4,12 @@ import com.nutricion.entidades.Cita;
 import com.nutricion.entidades.Consulta;
 import com.nutricion.entidades.EstadoCita;
 import com.nutricion.entidades.Paciente;
+import com.nutricion.entidades.PlanAlimenticio;
+import com.nutricion.entidades.TiempoComida;
 import com.nutricion.servicios.CitaFacade;
 import com.nutricion.servicios.ConsultaFacade;
 import com.nutricion.servicios.PacienteFacade;
+import com.nutricion.servicios.PlanAlimenticioFacade;
 import com.nutricion.web.util.Mensajes;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -40,10 +43,14 @@ public class PortalPacienteBean implements Serializable {
     @EJB
     private CitaFacade citaFacade;
 
+    @EJB
+    private PlanAlimenticioFacade planAlimenticioFacade;
+
     private String codigoAcceso;
     private Paciente paciente;
     private List<Consulta> consultas = new ArrayList<>();
     private Cita siguienteCita;
+    private PlanAlimenticio planAlimenticio;
     private LineChartModel graficaPeso;
     private LineChartModel graficaImc;
 
@@ -80,6 +87,7 @@ public class PortalPacienteBean implements Serializable {
         paciente = actual;
         consultas = consultaFacade.medicionesParaPortal(paciente);
         siguienteCita = citaFacade.siguienteDePaciente(paciente);
+        planAlimenticio = planAlimenticioFacade.entregadoParaCodigo(paciente.getCodigoAcceso());
         construirGraficas();
     }
 
@@ -88,6 +96,7 @@ public class PortalPacienteBean implements Serializable {
         codigoAcceso = null;
         consultas.clear();
         siguienteCita = null;
+        planAlimenticio = null;
         graficaPeso = null;
         graficaImc = null;
     }
@@ -155,6 +164,8 @@ public class PortalPacienteBean implements Serializable {
     public Paciente getPaciente() { return paciente; }
     public List<Consulta> getConsultas() { return consultas; }
     public Cita getSiguienteCita() { return siguienteCita; }
+    public PlanAlimenticio getPlanAlimenticio() { return planAlimenticio; }
+    public TiempoComida[] getTiemposComida() { return TiempoComida.values(); }
     public LineChartModel getGraficaPeso() { return graficaPeso; }
     public LineChartModel getGraficaImc() { return graficaImc; }
 }

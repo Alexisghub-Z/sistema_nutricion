@@ -168,8 +168,8 @@ SHOW TABLES;
 #### Avance de conexión con tablas
 
 La unidad `NutricionPU` registra los consultorios, usuarios y pacientes, el catálogo de alergias,
-las citas, consultas, planes de tratamiento, horarios, configuración de agenda, adjuntos, vínculos y bloqueos
-de Calendar, y recordatorios de consulta.
+las citas, consultas, planes de tratamiento y alimenticios, horarios, configuración de agenda, adjuntos,
+vínculos y bloqueos de Calendar, y recordatorios de consulta.
 Las citas pertenecen a un paciente. Las consultas pertenecen a un paciente y pueden vincularse con una cita.
 Las pantallas acceden a los datos mediante las fachadas EJB.
 
@@ -228,6 +228,15 @@ Configura `nutricion.recuperacion.urlBase` con la URL de NutriVida, incluido su 
 1. En un expediente ficticio, abre **Cálculo dietético** con una consulta cerrada que tenga peso, talla y porcentaje de grasa.
 2. Cambia el objetivo y el ajuste calórico. La meta y los gramos se recalculan con la distribución que se muestra en el formulario.
 3. Escribe o pega los porcentajes de proteínas, lípidos y carbohidratos. Cada campo requiere un entero de 0 a 100 y los tres deben sumar 100. Al salir del campo se actualizan los resultados. Guarda un plan válido y recarga el expediente para recuperar la meta y los gramos.
+
+#### Probar el primer plan alimenticio SMAE
+
+1. Inicia sesión como nutrición o como administrador del consultorio. Abre un expediente ficticio en **Pacientes** y guarda la meta y los macros en **Cálculo dietético**. En **Alergias e intolerancias**, guarda las restricciones que apliquen al ejemplo.
+2. Abre **Plan alimenticio** y pulsa **Generar borrador SMAE**. Compara la meta guardada con el aporte diario y revisa los alimentos, cantidades y equivalentes de cada tiempo de comida. Si el catálogo inicial no puede verificar una restricción o generar una combinación compatible, la pantalla muestra el motivo.
+3. Confirma la revisión y pulsa **Aprobar plan**. Para compartirlo, pulsa **Entregar al portal**. Ambos pasos vuelven a leer el cálculo y las alergias. Si el cálculo cambió o una restricción impide usar una porción, genera otro borrador.
+4. Abre el **Portal del paciente** con el código de ese expediente. **Tu plan alimenticio** muestra los alimentos y cantidades del plan entregado. Si guardas una restricción incompatible, la sección desaparece al pulsar **Actualizar portal** o al volver a entrar.
+
+El borrador propone un día en cinco tiempos con medios equivalentes. Este primer cálculo usa 16 alimentos de ocho grupos y admite un desvío de hasta ±5% en energía y ±10% en cada macro, con un margen mínimo de 2 g para metas positivas. Una meta de 0 g exige 0 g. La revisión clínica cubre las porciones, el etiquetado y el contacto cruzado. Queda validar el alcance del catálogo y las tolerancias con el consultorio. [Aportes por equivalente del IMSS](https://www.imss.gob.mx/sites/all/statics/guiasclinicas/225GRR.pdf#page=9) · [Medidas caseras del IMSS](https://www.imss.gob.mx/sites/all/statics/salud/guias_salud/CARTERA_ALIMENTACION_2024_DIGITAL.pdf#page=9).
 
 `scripts/probar-validaciones.ps1` comprueba el rechazo de porcentajes negativos, mayores de 100 u omitidos, y de una suma distinta de 100. También verifica que la fachada guarde los valores válidos de los extremos del rango.
 
@@ -370,7 +379,7 @@ Entidades nuevas o modificadas. Las marcadas con 🏢 llevan `@ManyToOne Consult
 | `Pago` 🏢 | paciente, consulta, monto, método, estado, fecha (complementa los campos de pago de `Consulta`) | HU-38, HU-39 |
 | `PlanTratamiento` | paciente, objetivo (`PERDIDA`, `MANTENIMIENTO`, `GANANCIA`), fórmula, factorActividad, GEB, GET, metaKcal, % y gramos de proteínas / lípidos / HC, fecha | HU-22 – HU-24 |
 | `GrupoEquivalente` / `AlimentoSmae` | catálogo **SMAE**: grupo (verduras, frutas, cereales sin/con grasa, leguminosas, AOA muy bajo/bajo/moderado/alto aporte de grasa, leche, aceites y grasas, azúcares…), kcal/prot/líp/HC por equivalente, alimento, porción, unidad, `regionalOaxaca`, alérgenos | HU-25, HU-26, HU-29 |
-| `PlanAlimenticio` | paciente, planTratamiento, estado (`BORRADOR`, `APROBADO`), fechaAprobacion | HU-25 – HU-28 |
+| `PlanAlimenticio` | plan de tratamiento y consultorio por el paciente, metas y totales aprobados, responsable, fecha de aprobación y fecha de entrega al portal. El borrador vive en la vista del expediente. | HU-25 – HU-28 |
 | `TiempoComida` / `PorcionPlan` | tiempo (desayuno, colación, comida, colación, cena) → porciones en equivalentes SMAE y alimentos sugeridos | HU-25 |
 | `ConversacionWhatsapp` 🏢 | paciente (o teléfono si aún no existe), estado (`BOT`, `REQUIERE_HUMANO`, `ATENDIDA`), motivoDerivacion, fechas del último mensaje entrante/saliente | HU-30 – HU-36, HU-40 |
 | `MensajeWhatsapp` | conversación, dirección (ENTRANTE / SALIENTE), texto, fecha, waMessageId | HU-30 |

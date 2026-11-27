@@ -2,7 +2,9 @@ package com.nutricion.entidades;
 
 import com.nutricion.util.CalculosNutricion;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.*;
 
 @Entity
@@ -78,6 +80,9 @@ public class PlanTratamiento implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date fecha;
+
+    @OneToMany(mappedBy = "tratamiento", cascade = CascadeType.REMOVE)
+    private List<PlanAlimenticio> planesAlimenticios = new ArrayList<>();
 
     @PrePersist
     void alCrear() {

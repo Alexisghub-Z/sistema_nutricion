@@ -122,6 +122,8 @@ MySQL mostró 13 tablas tras añadir Calendar. `vinculos_google_calendar` guarda
 
 Con HU-18 se verificaron 14 tablas. `configuracion_agenda.minutos_recordatorio_nutriologo` admite un valor nulo en filas anteriores, que se lee como 30 minutos. `recordatorios` guarda la hora programada y el tipo con FK a `citas` y clave única `(cita_id, tipo)`. El temporizador toma citas pendientes o confirmadas dentro del margen de su consultorio. El panel comprueba la fecha y el estado vigentes antes de mostrar el aviso. La eliminación del paciente retira estos registros en la misma transacción.
 
+Con el primer flujo SMAE se verificaron 16 tablas. `planes_alimenticios` referencia el cálculo guardado en `planes_tratamiento`, asociado al paciente de su consultorio, y al usuario que aprobó. Conserva una copia de la meta y los totales, la fecha de aprobación y, cuando se comparte, la fecha de entrega. `porciones_plan` referencia el plan y registra la posición, el tiempo de comida, el alimento, su grupo, la cantidad medida y el número de medios equivalentes. El borrador se mantiene en la vista JSF hasta su aprobación o descarte.
+
 ## 4. Modelo de comportamiento implementado
 
 ### Actores y casos de uso del avance
@@ -303,7 +305,7 @@ En servicios también hay reglas de citas (9:00-19:00, no domingo, duración 15-
 
 ## 7. Trazabilidad de historias y pendientes
 
-Matriz actualizada el 26-11-2026. De las 44 historias, **24 están probadas en local, 7 parciales y 13 pendientes**. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. El README conserva los criterios de aceptación.
+Matriz actualizada el 26-11-2026. De las 44 historias, **26 están probadas en local, 8 parciales y 10 pendientes**. El README conserva los criterios de aceptación.
 
 | Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
@@ -311,9 +313,9 @@ Matriz actualizada el 26-11-2026. De las 44 historias, **24 están probadas en l
 | HU-02 | Probada en local | Edge comprobó acceso, cierre de sesión, bloqueo y desbloqueo. En la espera real se aceptaron 59 sondeos automáticos y Edge volvió a `/acceso.xhtml` a los 1800,20 segundos. La vista privada respondió HTTP 302 y la misma cuenta pudo iniciar sesión de nuevo. |
 | HU-03 | Probada en local | Administración creó, editó y desactivó una cuenta ficticia de recepción. El correo editado funcionó con la contraseña anterior. Recepción pudo operar la agenda y recibió una redirección al intentar abrir el expediente y el cálculo dietético. La desactivación revocó la sesión abierta y bloqueó el nuevo acceso. |
 | HU-04 | Probada en local | Edge y un buzón SMTP ficticio verificaron el enlace de 30 minutos, el rechazo al vencer y al repetir su uso, la longitud mínima, la confirmación, la revocación de la sesión anterior y la entrada con la nueva contraseña. La entrega externa requiere configurar correo y URL de la instancia. |
-| HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas, ocupaciones y avisos de consulta mantienen el ámbito por consultorio. Correo y teléfono son únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
+| HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas, ocupaciones, avisos y planes alimenticios mantienen el ámbito por consultorio. Correo y teléfono son únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
 | HU-06 | Probada en local | Nutrición creó un expediente. Se rechazó el alta sin nombre, nacimiento, correo y teléfono. Los antecedentes heredofamiliares y los personales patológicos y no patológicos persistieron al iniciar una nueva sesión. La edición de nombre y teléfono conserva los antecedentes guardados. |
-| HU-07 | Parcial | La selección del catálogo y el texto libre persisten al recargar el expediente. Queda usar el catálogo en la validación de planes. |
+| HU-07 | Probada en local | Las restricciones del catálogo y del texto libre persisten y se consultan en Plan alimenticio. Edge comprobó la exclusión por lactosa, el bloqueo por una restricción nueva y el aviso para texto que el catálogo inicial no puede verificar. |
 | HU-08 | Probada en local | El IMC se recalculó en pantalla al cambiar el peso. Se rechazaron entradas por debajo y por encima del rango configurado para peso, talla, grasa, masa muscular, grasa visceral y agua. Una nueva sesión confirmó que los intentos inválidos dejaron el historial vacío. Las seis mediciones válidas y el IMC se recuperaron en la consulta fechada. |
 | HU-09 | Probada en local | Cuatro gráficas visibles, dos consultas del mismo día representadas y filtro por fechas aplicado y limpiado en Edge. |
 | HU-10 | Parcial | Se guardó un texto distinto en cada uno de los siete apartados. Los siete reaparecieron al abrir el borrador y quedaron en solo lectura al reabrir la consulta cerrada. Queda confirmar con el consultorio el contenido de los apartados. |
@@ -331,7 +333,11 @@ Matriz actualizada el 26-11-2026. De las 44 historias, **24 están probadas en l
 | HU-22 | Parcial | Se comprobaron la precarga de peso, talla y grasa, el GEB y GET de las cinco fórmulas con un paciente ficticio y el recálculo al cambiar el factor de actividad. Katch-McArdle y Cunningham muestran un aviso cuando falta la grasa e impiden guardar. Queda validar los coeficientes, factores y rangos con el nutriólogo. |
 | HU-23 | Probada en local | Se verificó el ajuste sugerido para pérdida, mantenimiento y ganancia. Al editarlo se actualizó la meta y, tras guardar, el objetivo y la meta se recuperaron al recargar. |
 | HU-24 | Probada en local | Edge verificó los porcentajes y gramos para los tres objetivos, el recálculo al pegar valores y salir del campo, y la persistencia tras recargar. El formulario y la fachada rechazan campos omitidos, porcentajes fuera de 0 a 100 y distribuciones que no suman 100. En Edge los intentos inválidos dejaron intacto el plan válido. |
-| HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
+| HU-25 | Parcial | El generador local toma la meta y los gramos del cálculo guardado. Propone cinco tiempos en medios equivalentes y valida el aporte estimado de energía y macros en Java. Se probó que genera en menos de un minuto. Quedan el catálogo autorizado, la calibración de tolerancias y la integración con el proveedor de IA. |
+| HU-26 | Parcial | Se comprobó la exclusión de alimentos restringidos, los avisos cuando faltan alternativas o hay restricciones no verificables y la revalidación al aprobar y entregar. Si el plan entregado pierde compatibilidad, el portal lo oculta al actualizar. Queda validar la cobertura del catálogo y los alérgenos con el consultorio. |
+| HU-27 | Pendiente | Ajustes en lenguaje natural sobre el mismo borrador. |
+| HU-28 | Probada en local | Nutrición confirmó la revisión y aprobó un borrador que persistió al recargar. El portal mostró el plan tras la acción de entrega y para el código del paciente correspondiente. Descartar o recargar retiró los borradores de la vista. |
+| HU-29 | Pendiente | Repertorio de preparaciones oaxaqueñas y preferencia regional al generar. |
 | HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Canal de WhatsApp, apartados, recordatorios de pacientes y derivación de conversaciones. |
 | HU-37 | Probada en local | Panel de citas de hoy y pacientes distintos con consulta atendida en el periodo configurable. Edge comprobó el cambio de 60 a 7 días, la persistencia tras recargar y el sondeo de la vista visible. |
 | HU-38 | Probada en local | Ingresos por consultorio con comparación porcentual del mes anterior. Una consulta previa liquidada durante la prueba se sumó al mes de liquidación. Los registros históricos sin esa fecha conservan la del servicio. |
@@ -340,20 +346,21 @@ Matriz actualizada el 26-11-2026. De las 44 historias, **24 están probadas en l
 | HU-41 | Probada en local | El panel estima la asistencia por paciente a partir de citas pasadas completadas y ausencias registradas durante el periodo configurado. Edge comprobó 50% resaltado, exclusión de cancelaciones y estado vacío en otra sede. |
 | HU-42 | Probada en local | Código de portal propio en el expediente. La confirmación pública entrega el código de la cita. |
 | HU-43 | Probada en local | Próxima cita con ubicación, confirmación y cancelación visibles desde agenda. El portal abierto vuelve a consultar su estado con Actualizar portal. |
-| HU-44 | Probada en local | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px y en el PDF de impresión de una página. Borradores, notas y planes internos quedan reservados al expediente. |
+| HU-44 | Probada en local | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px y en el PDF de impresión de una página. El portal muestra alimentos y cantidades del plan entregado. Las notas, las metas clínicas y los borradores quedan en el expediente. |
 
 Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo básico, pantallas y documentación, pero faltan sus criterios completos. Esta revisión no prueba entrevistas, validación del asesor/nutriólogo, capacitación o producción (HT-01, HT-02, HT-06, HT-07, HT-09). Git local y entorno se describen para HT-05, sin declarar entregado un flujo de publicación o CI no verificado.
 
 ### Orden recomendado de continuación
 
 1. Confirmar los siete apartados de la nota con el consultorio (HU-10) y revisar con el nutriólogo los coeficientes, factores y rangos del cálculo (HU-22).
-2. Incorporar el catálogo SMAE autorizado por el consultorio y probar el borrador, las restricciones y la aprobación (HU-07 y HU-25 a HU-29).
+2. Validar con el consultorio el catálogo SMAE inicial, la cobertura de alérgenos y las tolerancias. Continuar con el catálogo autorizado, los ajustes en lenguaje natural y el repertorio regional (HU-25 a HU-27 y HU-29).
 3. Validar Calendar y correo o WhatsApp con cuentas autorizadas. Verificar la atención y la bandeja de conversaciones al incorporar el asistente (HU-16, HU-19, HU-21, HU-30 a HU-36 y HU-40).
 
 ### Revisión con el consultorio
 
 - **HU-10.** Abrir una nota ficticia y revisar el nombre, orden y contenido esperado de cada apartado. Registrar qué campos considera obligatorios el consultorio y confirmar la nota cerrada de solo lectura.
 - **HU-22.** Revisar con el nutriólogo la referencia de las cinco fórmulas, sus coeficientes, las poblaciones aplicables y los factores de actividad del README. Acordar cómo tratar las mediciones faltantes y validar los resultados con casos ficticios aprobados por el consultorio.
+- **HU-25 y HU-26.** Revisar las cantidades y los grupos de alimentos del catálogo inicial, las tolerancias y el tratamiento de restricciones. Usar casos ficticios con y sin alternativas.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)
 
@@ -365,17 +372,17 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 6. Demostrar correo inválido, teléfono corto y nacimiento futuro. Mostrar en código qué valida JSF y qué valida la fachada. Corregir y guardar.
 7. Buscar el correo ficticio, recargar y comprobar persistencia. Editar su texto ficticio de alergias. Salir/entrar y volver a buscarlo.
 8. Mostrar el duplicado rechazado y Cancelar/Nuevo sin valores antiguos. Relacionarlo con las alternativas del modelo de comportamiento.
-9. Pulsar Eliminar del registro ficticio: No conserva, Sí elimina. Verificar que desaparece. No borrar muestras ajenas ni registros reales.
-10. Cerrar con la matriz de historias. Mostrar los recorridos verificados de agenda, gráficas y portal. La generación de planes con IA y el asistente conversacional de WhatsApp siguen pendientes.
+9. Guardar una meta con sus macros. Generar el borrador en **Plan alimenticio**, revisar las porciones y aprobar. Abrir el portal del paciente ficticio antes y después de pulsar **Entregar al portal**.
+10. Cerrar con la matriz de historias. Eliminar únicamente el registro ficticio de la demostración y comprobar que desaparece.
 
 ### Guía breve por perfil
 
 | Perfil | Recorrido en NutriVida |
 |---|---|
 | Administración | En **Administración**, crea o edita las cuentas de tu consultorio. En **Horarios**, guarda los horarios y el periodo para pacientes activos. Revisa el resultado en **Inicio**. |
-| Nutrición | En **Pacientes**, abre el expediente, registra las mediciones y cierra la consulta. Guarda el objetivo en **Cálculo dietético** y revisa el cambio en **Evolución y gráficas**. |
+| Nutrición | En **Pacientes**, abre el expediente, registra las mediciones y cierra la consulta. Guarda la meta y los macros en **Cálculo dietético**. En **Plan alimenticio**, revisa el borrador SMAE, aprueba y entrega. |
 | Recepción | En **Agenda**, confirma, reprograma o cancela citas. En **Pagos**, filtra por nombre y fecha de consulta. Elige el método y confirma **Liquidar** cuando se haya recibido el pago. |
-| Paciente | En el enlace público del consultorio, elige un horario y guarda el código de cita. Usa el código de portal que entrega el consultorio para confirmar o cancelar la próxima cita, consultar las gráficas e imprimir el resumen. |
+| Paciente | En el enlace público del consultorio, elige un horario y guarda el código de cita. Usa el código de portal que entrega el consultorio para consultar la cita, las gráficas y las porciones del plan que se entregó. |
 
 ## 9. Ejecución y evidencia
 

@@ -14,6 +14,7 @@
         <class>com.nutricion.entidades.Recordatorio</class>
         <class>com.nutricion.entidades.Consulta</class>
         <class>com.nutricion.entidades.PlanTratamiento</class>
+        <class>com.nutricion.entidades.PlanAlimenticio</class>
         <class>com.nutricion.entidades.HorarioLaboral</class>
         <class>com.nutricion.entidades.ConfiguracionAgenda</class>
         <class>com.nutricion.entidades.VinculoGoogleCalendar</class>

@@ -114,6 +114,9 @@ public class Paciente implements Serializable {
     @OrderBy("fecha DESC, id DESC")
     private List<Consulta> consultas = new ArrayList<>();
 
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.REMOVE)
+    private List<PlanTratamiento> planesTratamiento = new ArrayList<>();
+
     @PrePersist
     void alCrear() {
         if (fechaRegistro == null) {

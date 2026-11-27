@@ -333,8 +333,8 @@ Matriz actualizada el 26-11-2026. De las 44 historias, **26 están probadas en l
 | HU-22 | Parcial | Se comprobaron la precarga de peso, talla y grasa, el GEB y GET de las cinco fórmulas con un paciente ficticio y el recálculo al cambiar el factor de actividad. Katch-McArdle y Cunningham muestran un aviso cuando falta la grasa e impiden guardar. Queda validar los coeficientes, factores y rangos con el nutriólogo. |
 | HU-23 | Probada en local | Se verificó el ajuste sugerido para pérdida, mantenimiento y ganancia. Al editarlo se actualizó la meta y, tras guardar, el objetivo y la meta se recuperaron al recargar. |
 | HU-24 | Probada en local | Edge verificó los porcentajes y gramos para los tres objetivos, el recálculo al pegar valores y salir del campo, y la persistencia tras recargar. El formulario y la fachada rechazan campos omitidos, porcentajes fuera de 0 a 100 y distribuciones que no suman 100. En Edge los intentos inválidos dejaron intacto el plan válido. |
-| HU-25 | Parcial | El generador local toma la meta y los gramos del cálculo guardado. Propone cinco tiempos en medios equivalentes y valida el aporte estimado de energía y macros en Java. Se probó que genera en menos de un minuto. Quedan el catálogo autorizado, la calibración de tolerancias y la integración con el proveedor de IA. |
-| HU-26 | Parcial | Se comprobó la exclusión de alimentos restringidos, los avisos cuando faltan alternativas o hay restricciones no verificables y la revalidación al aprobar y entregar. Si el plan entregado pierde compatibilidad, el portal lo oculta al actualizar. Queda validar la cobertura del catálogo y los alérgenos con el consultorio. |
+| HU-25 | Parcial | El generador local toma la meta y los gramos del cálculo guardado, propone cinco tiempos en medios equivalentes y completa el borrador en menos de un minuto en la prueba local. La consulta muestra las 16 medidas por equivalente y el borrador muestra los márgenes que calcula Java. Quedan el catálogo autorizado, la calibración de tolerancias y la integración con el proveedor de IA. |
+| HU-26 | Parcial | La consulta del catálogo indica las exclusiones, las restricciones que carecen de ingrediente coincidente y las que quedan pendientes de verificar. Generar, aprobar y entregar vuelven a leer las restricciones. Si el plan entregado pierde compatibilidad, el portal lo oculta al actualizar. Queda acordar con el consultorio la cobertura y el tratamiento de los casos pendientes. |
 | HU-27 | Pendiente | Ajustes en lenguaje natural sobre el mismo borrador. |
 | HU-28 | Probada en local | Nutrición confirmó la revisión y aprobó un borrador que persistió al recargar. El portal mostró el plan tras la acción de entrega y para el código del paciente correspondiente. Descartar o recargar retiró los borradores de la vista. |
 | HU-29 | Pendiente | Repertorio de preparaciones oaxaqueñas y preferencia regional al generar. |
@@ -360,7 +360,15 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 
 - **HU-10.** Abrir una nota ficticia y revisar el nombre, orden y contenido esperado de cada apartado. Registrar qué campos considera obligatorios el consultorio y confirmar la nota cerrada de solo lectura.
 - **HU-22.** Revisar con el nutriólogo la referencia de las cinco fórmulas, sus coeficientes, las poblaciones aplicables y los factores de actividad del README. Acordar cómo tratar las mediciones faltantes y validar los resultados con casos ficticios aprobados por el consultorio.
-- **HU-25 y HU-26.** Revisar las cantidades y los grupos de alimentos del catálogo inicial, las tolerancias y el tratamiento de restricciones. Usar casos ficticios con y sin alternativas.
+- **HU-25 y HU-26.** En un expediente ficticio, abrir **Plan alimenticio → Revisar catálogo SMAE**. Las 16 medidas por equivalente coinciden con la lista de intercambio del IMSS. Confirmar con nutrición los subgrupos de aporte de grasa de huevo, pollo y atún, los márgenes aceptables y la cobertura de restricciones antes de dar por cerradas las historias. [Cartera de Alimentación del IMSS, pp. 9–11](https://www.imss.gob.mx/sites/all/statics/salud/guias_salud/CARTERA_ALIMENTACION_2024_DIGITAL.pdf#page=9) · [Guía 225GRR del IMSS, tabla 1](https://www.imss.gob.mx/sites/all/statics/guiasclinicas/225GRR.pdf#page=9).
+
+| Caso ficticio | Resultado que se puede revisar |
+|---|---|
+| Meta de prueba de 1800 kcal con distribución 20%, 30% y 50% | Los márgenes visibles son ±90 kcal, ±9 g de proteína, ±6 g de grasa y ±22,5 g de carbohidratos. Confirmar si los márgenes del generador sirven para el proceso del consultorio, también con metas pequeñas o de 0 g. |
+| Lactosa, huevo o pescado | La tabla explica la exclusión de leche descremada, huevo o atún, según la restricción. Verificar las alternativas del borrador y qué revisión de etiquetas y contacto cruzado se requiere. |
+| Gluten / Trigo, soya, cacahuate, frutos secos o mariscos y crustáceos | La restricción se reconoce y figura sin alimento base coincidente. Revisar qué presentaciones y productos requerirían controles adicionales. |
+| Fructosa o sulfitos | Aparecen como pendientes de verificar y bloquean el borrador. Acordar cómo registrar estas restricciones y qué ingredientes podrían verificarse. |
+| Restricciones que dejan al catálogo sin una combinación compatible | El generador informa que faltan alternativas. Identificar qué alimentos adicionales necesitaría el consultorio. |
 
 ## 8. Guion para demostrar el avance (10-15 minutos)
 

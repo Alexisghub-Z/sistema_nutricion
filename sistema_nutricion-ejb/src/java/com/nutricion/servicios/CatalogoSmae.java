@@ -7,10 +7,12 @@ import com.nutricion.entidades.TiempoComida;
 import static com.nutricion.entidades.TiempoComida.*;
 import com.nutricion.util.ReglaNegocioException;
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -82,6 +84,10 @@ final class CatalogoSmae {
         }
 
         PorcionPlan porcion(TiempoComida tiempo, int medios) {
+            return new PorcionPlan(tiempo, name(), etiqueta, grupo.etiqueta, medios, medida(medios));
+        }
+
+        String medida(int medios) {
             int cantidad = numerador * medios;
             int divisor = denominador * 2;
             int enteros = cantidad / divisor;
@@ -92,7 +98,7 @@ final class CatalogoSmae {
                 medida = (enteros == 0 ? "" : enteros + " ") + resto / comun + "/" + divisor / comun;
             }
             String unidades = enteros > 0 && cantidad > divisor && !"g".equals(unidad) ? unidad + "s" : unidad;
-            return new PorcionPlan(tiempo, name(), etiqueta, grupo.etiqueta, medios, medida + " " + unidades);
+            return medida + " " + unidades;
         }
     }
 
@@ -103,8 +109,46 @@ final class CatalogoSmae {
 
     static Set<Alimento> permitidos(Paciente paciente, List<Alergia> alergias) {
         Set<Alimento> permitidos = EnumSet.allOf(Alimento.class);
+        for (Map.Entry<String, Set<Alimento>> restriccion : evaluar(paciente, alergias).entrySet()) {
+            if (restriccion.getValue() == null) {
+                throw new ReglaNegocioException("El catálogo SMAE inicial no puede verificar la restricción «"
+                        + restriccion.getKey() + "». Revisa su registro en Alergias e intolerancias antes de continuar.");
+            }
+            permitidos.removeAll(restriccion.getValue());
+        }
+        return permitidos;
+    }
+
+    static RevisionCatalogoSmae revisar(Paciente paciente, List<Alergia> alergias) {
+        Map<String, Set<Alimento>> restricciones = evaluar(paciente, alergias);
+        List<String> sinVerificar = new ArrayList<>();
+        List<String> sinCoincidencia = new ArrayList<>();
+        restricciones.forEach((nombre, alimentos) -> {
+            if (alimentos == null) {
+                sinVerificar.add(nombre);
+            } else if (alimentos.isEmpty()) {
+                sinCoincidencia.add(nombre);
+            }
+        });
+        List<RevisionCatalogoSmae.Ficha> fichas = new ArrayList<>();
+        for (Alimento alimento : Alimento.values()) {
+            List<String> motivos = new ArrayList<>();
+            restricciones.forEach((nombre, excluidos) -> {
+                if (excluidos != null && excluidos.contains(alimento)) {
+                    motivos.add(nombre);
+                }
+            });
+            fichas.add(new RevisionCatalogoSmae.Ficha(alimento.etiqueta, alimento.grupo.etiqueta,
+                    alimento.medida(2), String.join(" · ", motivos)));
+        }
+        return new RevisionCatalogoSmae(fichas, sinCoincidencia, sinVerificar);
+    }
+
+    // Una restricción sin regla conserva un valor nulo. Un conjunto vacío indica que el ingrediente no está en el catálogo.
+    private static Map<String, Set<Alimento>> evaluar(Paciente paciente, List<Alergia> alergias) {
+        Map<String, Set<Alimento>> restricciones = new LinkedHashMap<>();
         for (Alergia alergia : alergias) {
-            excluir(permitidos, alergia.getNombre());
+            evaluarNombre(restricciones, alergia.getNombre());
         }
         for (String campo : Arrays.asList(paciente.getAlergias(), paciente.getIntolerancias(), paciente.getAlergiasOtras())) {
             if (campo == null || campo.trim().isEmpty()) {
@@ -116,28 +160,23 @@ final class CatalogoSmae {
                 continue;
             }
             if (RESTRICCIONES.containsKey(valor)) {
-                excluir(permitidos, campo);
+                evaluarNombre(restricciones, campo);
             } else {
                 for (String parte : campo.split("[,;\\r\\n]+(?![^()]*\\))")) {
                     if (!parte.trim().isEmpty()) {
-                        excluir(permitidos, parte);
+                        evaluarNombre(restricciones, parte);
                     }
                 }
                 if (valor.matches("[,; ]+")) {
-                    excluir(permitidos, campo);
+                    evaluarNombre(restricciones, campo);
                 }
             }
         }
-        return permitidos;
+        return restricciones;
     }
 
-    private static void excluir(Set<Alimento> permitidos, String nombre) {
-        Set<Alimento> excluir = RESTRICCIONES.get(normalizar(nombre));
-        if (excluir == null) {
-            throw new ReglaNegocioException("El catálogo SMAE inicial no puede verificar la restricción «" + nombre.trim()
-                    + "». Revisa su registro en Alergias e intolerancias antes de continuar.");
-        }
-        permitidos.removeAll(excluir);
+    private static void evaluarNombre(Map<String, Set<Alimento>> restricciones, String nombre) {
+        restricciones.put(nombre.trim(), RESTRICCIONES.get(normalizar(nombre)));
     }
 
     private static Map<String, Set<Alimento>> restricciones() {

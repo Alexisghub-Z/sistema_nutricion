@@ -232,11 +232,14 @@ Configura `nutricion.recuperacion.urlBase` con la URL de NutriVida, incluido su 
 #### Probar el primer plan alimenticio SMAE
 
 1. Inicia sesión como nutrición o como administrador del consultorio. Abre un expediente ficticio en **Pacientes** y guarda la meta y los macros en **Cálculo dietético**. En **Alergias e intolerancias**, guarda las restricciones que apliquen al ejemplo.
-2. Abre **Plan alimenticio** y pulsa **Generar borrador SMAE**. Compara la meta guardada con el aporte diario y revisa los alimentos, cantidades y equivalentes de cada tiempo de comida. Si el catálogo inicial no puede verificar una restricción o generar una combinación compatible, la pantalla muestra el motivo.
-3. Confirma la revisión y pulsa **Aprobar plan**. Para compartirlo, pulsa **Entregar al portal**. Ambos pasos vuelven a leer el cálculo y las alergias. Si el cálculo cambió o una restricción impide usar una porción, genera otro borrador.
-4. Abre el **Portal del paciente** con el código de ese expediente. **Tu plan alimenticio** muestra los alimentos y cantidades del plan entregado. Si guardas una restricción incompatible, la sección desaparece al pulsar **Actualizar portal** o al volver a entrar.
+2. Abre **Plan alimenticio** y pulsa **Revisar catálogo SMAE** para consultar las medidas por equivalente y las restricciones guardadas. La tabla indica qué alimentos se excluyen y distingue las restricciones sin ingrediente coincidente de las pendientes de verificar.
+3. Pulsa **Generar borrador SMAE**. Compara la meta guardada, el aporte diario y los márgenes que aplica el generador. Revisa los alimentos, cantidades y equivalentes de cada tiempo. Si alguna restricción queda pendiente de verificar o no hay una combinación compatible, la pantalla muestra el motivo.
+4. Confirma la revisión y pulsa **Aprobar plan**. Para compartirlo, pulsa **Entregar al portal**. Ambos pasos vuelven a leer el cálculo y las alergias. Si el cálculo cambió o una restricción impide usar una porción, genera otro borrador.
+5. Abre el **Portal del paciente** con el código de ese expediente. **Tu plan alimenticio** muestra los alimentos y cantidades del plan entregado. Si guardas una restricción incompatible, la sección desaparece al pulsar **Actualizar portal** o al volver a entrar.
 
 El borrador propone un día en cinco tiempos con medios equivalentes. Este primer cálculo usa 16 alimentos de ocho grupos y admite un desvío de hasta ±5% en energía y ±10% en cada macro, con un margen mínimo de 2 g para metas positivas. Una meta de 0 g exige 0 g. La revisión clínica cubre las porciones, el etiquetado y el contacto cruzado. Queda validar el alcance del catálogo y las tolerancias con el consultorio. [Aportes por equivalente del IMSS](https://www.imss.gob.mx/sites/all/statics/guiasclinicas/225GRR.pdf#page=9) · [Medidas caseras del IMSS](https://www.imss.gob.mx/sites/all/statics/salud/guias_salud/CARTERA_ALIMENTACION_2024_DIGITAL.pdf#page=9).
+
+[Casos ficticios para revisar el catálogo, las restricciones y los márgenes con el consultorio](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#revisión-con-el-consultorio).
 
 `scripts/probar-validaciones.ps1` comprueba el rechazo de porcentajes negativos, mayores de 100 u omitidos, y de una suma distinta de 100. También verifica que la fachada guarde los valores válidos de los extremos del rango.
 

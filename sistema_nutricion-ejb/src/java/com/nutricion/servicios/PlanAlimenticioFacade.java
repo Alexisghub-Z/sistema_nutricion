@@ -43,6 +43,12 @@ public class PlanAlimenticioFacade extends AbstractFacade<PlanAlimenticio> {
         return GeneradorPlanes.generar(tratamiento, permitidos(paciente));
     }
 
+    public RevisionCatalogoSmae revisarCatalogo(Long pacienteId, Long usuarioId) {
+        Usuario usuario = usuarioClinico(usuarioId, LockModeType.NONE);
+        Paciente paciente = expediente(pacienteId, usuario, LockModeType.NONE);
+        return CatalogoSmae.revisar(paciente, alergiasRegistradas(paciente));
+    }
+
     public PlanAlimenticio ultimoAprobado(Long pacienteId, Long usuarioId) {
         Usuario usuario = usuarioClinico(usuarioId, LockModeType.NONE);
         Paciente paciente = expediente(pacienteId, usuario, LockModeType.NONE);
@@ -136,11 +142,14 @@ public class PlanAlimenticioFacade extends AbstractFacade<PlanAlimenticio> {
     }
 
     private Set<Alimento> permitidos(Paciente paciente) {
-        List<Alergia> alergias = em.createQuery("SELECT a FROM Paciente p JOIN p.alergiasCatalogo a "
+        return CatalogoSmae.permitidos(paciente, alergiasRegistradas(paciente));
+    }
+
+    private List<Alergia> alergiasRegistradas(Paciente paciente) {
+        return em.createQuery("SELECT a FROM Paciente p JOIN p.alergiasCatalogo a "
                         + "WHERE p.id = :paciente AND p.consultorio.id = :consultorio", Alergia.class)
                 .setParameter("paciente", paciente.getId()).setParameter("consultorio", paciente.getConsultorio().getId())
                 .setHint(REFRESCAR, CacheStoreMode.REFRESH).getResultList();
-        return CatalogoSmae.permitidos(paciente, alergias);
     }
 
     private PlanAlimenticio ultimo(Paciente paciente, boolean entregado) {

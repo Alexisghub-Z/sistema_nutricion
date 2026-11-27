@@ -10,6 +10,13 @@
             <dt>Aporte diario estimado</dt>
             <dd>#{plan.kcal} kcal · #{plan.proteinas} g de proteína · #{plan.lipidos} g de grasa · #{plan.carbohidratos} g de carbohidratos</dd>
         </dl>
+        <p class="texto-ayuda">
+            <strong>Margen del generador respecto a la meta</strong><br />
+            ±<h:outputText value="#{plan.margenKcal}"><f:convertNumber maxFractionDigits="3" locale="es_MX" /></h:outputText> kcal ·
+            ±<h:outputText value="#{plan.margenProteinas}"><f:convertNumber maxFractionDigits="2" locale="es_MX" /></h:outputText> g de proteína ·
+            ±<h:outputText value="#{plan.margenLipidos}"><f:convertNumber maxFractionDigits="2" locale="es_MX" /></h:outputText> g de grasa ·
+            ±<h:outputText value="#{plan.margenCarbohidratos}"><f:convertNumber maxFractionDigits="2" locale="es_MX" /></h:outputText> g de carbohidratos
+        </p>
     </h:panelGroup>
     <div class="plan-smae-tiempos">
         <ui:repeat value="#{tiempos}" var="tiempo">

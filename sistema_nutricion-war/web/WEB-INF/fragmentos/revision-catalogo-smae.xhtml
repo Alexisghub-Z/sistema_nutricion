@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:param name="revision" value="#{expedienteBean.revisionCatalogoSmae}" />
+    <h:panelGroup rendered="#{revision != null}" layout="block">
+        <details open="open" class="tarjeta plan-smae-catalogo">
+            <summary>Alimentos y restricciones del expediente</summary>
+            <p class="texto-ayuda">Cada medida corresponde a un equivalente. Las coincidencias se revisan sobre los ingredientes base. Comprueba las etiquetas y el contacto cruzado antes de aprobar.</p>
+            <h:panelGroup rendered="#{not empty revision.sinVerificar}" layout="block" styleClass="alerta-solo-lectura">
+                <strong>Restricciones pendientes de verificar</strong>
+                <p>Estas restricciones bloquean la generación, la aprobación y las entregas pendientes. Revísalas en Alergias e intolerancias.</p>
+                <ul>
+                    <ui:repeat value="#{revision.sinVerificar}" var="restriccion">
+                        <li><h:outputText value="#{restriccion}" /></li>
+                    </ui:repeat>
+                </ul>
+            </h:panelGroup>
+            <h:panelGroup rendered="#{not empty revision.sinCoincidencia}" layout="block">
+                <strong>Restricciones sin ingrediente coincidente en este catálogo</strong>
+                <ul>
+                    <ui:repeat value="#{revision.sinCoincidencia}" var="restriccion">
+                        <li><h:outputText value="#{restriccion}" /></li>
+                    </ui:repeat>
+                </ul>
+            </h:panelGroup>
+            <h:dataTable value="#{revision.alimentos}" var="alimento">
+                <h:column>
+                    <f:facet name="header">Alimento y restricción</f:facet>
+                    <strong>#{alimento.nombre}</strong>
+                    <h:panelGroup rendered="#{alimento.grupo ne alimento.nombre}" styleClass="texto-ayuda" layout="block">
+                        #{alimento.grupo}
+                    </h:panelGroup>
+                    <h:panelGroup styleClass="plan-smae-estado" layout="block">
+                        <h:outputText rendered="#{not empty alimento.motivoExclusion}" value="Excluido · #{alimento.motivoExclusion}" />
+                        <h:outputText rendered="#{empty alimento.motivoExclusion}"
+                                      value="#{empty revision.sinVerificar ? 'Sin coincidencia registrada' : 'Pendiente de revisión'}" />
+                    </h:panelGroup>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Medida</f:facet>
+                    <h:outputText value="#{alimento.medida}" />
+                </h:column>
+            </h:dataTable>
+        </details>
+    </h:panelGroup>
+</ui:composition>

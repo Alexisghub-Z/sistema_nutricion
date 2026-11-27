@@ -8,9 +8,15 @@
         <h:panelGroup rendered="#{empty expedienteBean.planesGuardados}" layout="block" styleClass="alerta-solo-lectura">
             Guarda primero la meta y los macros en Cálculo dietético.
         </h:panelGroup>
-        <h:panelGroup rendered="#{not empty expedienteBean.planesGuardados}" layout="block" styleClass="acciones-form">
+        <div class="acciones-form">
             <p:commandButton value="Generar borrador SMAE" action="#{expedienteBean.generarPlanAlimenticio}"
+                             rendered="#{not empty expedienteBean.planesGuardados}"
                              process="@this" update="@form :growl" styleClass="btn-primario" />
+            <p:commandButton value="Revisar catálogo SMAE" action="#{expedienteBean.revisarCatalogoSmae}"
+                             process="@this" update="revisionCatalogoSmae :growl" styleClass="btn-secundario" />
+        </div>
+        <h:panelGroup id="revisionCatalogoSmae" layout="block">
+            <ui:include src="/WEB-INF/fragmentos/revision-catalogo-smae.xhtml" />
         </h:panelGroup>
 
         <h:panelGroup id="borradorAlimenticio" rendered="#{expedienteBean.borradorAlimenticio != null}" layout="block" styleClass="tarjeta">

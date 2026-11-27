@@ -18,6 +18,7 @@ import com.nutricion.servicios.ConsultaFacade;
 import com.nutricion.servicios.PacienteFacade;
 import com.nutricion.servicios.PlanAlimenticioFacade;
 import com.nutricion.servicios.PlanTratamientoFacade;
+import com.nutricion.servicios.RevisionCatalogoSmae;
 import com.nutricion.util.CalculosNutricion;
 import com.nutricion.util.ReglaNegocioException;
 import com.nutricion.web.util.Mensajes;
@@ -97,6 +98,7 @@ public class ExpedienteBean implements Serializable {
     private List<PlanTratamiento> planesGuardados = new ArrayList<>();
     private PlanAlimenticio borradorAlimenticio;
     private PlanAlimenticio planAlimenticioAprobado;
+    private RevisionCatalogoSmae revisionCatalogoSmae;
     private boolean revisionAlimenticiaConfirmada;
 
     private List<ArchivoAdjunto> adjuntos = Collections.emptyList();
@@ -136,6 +138,7 @@ public class ExpedienteBean implements Serializable {
     }
 
     private void recargarExpediente() {
+        revisionCatalogoSmae = null;
         if (!loginBean.isPuedeVerExpedientes()) {
             paciente = null;
             return;
@@ -315,6 +318,15 @@ public class ExpedienteBean implements Serializable {
         }
     }
 
+    public void revisarCatalogoSmae() {
+        revisionCatalogoSmae = null;
+        try {
+            revisionCatalogoSmae = planAlimenticioFacade.revisarCatalogo(pacienteId, usuarioClinicoId());
+        } catch (Exception e) {
+            Mensajes.error(e);
+        }
+    }
+
     public void descartarBorradorAlimenticio() {
         borradorAlimenticio = null;
         revisionAlimenticiaConfirmada = false;
@@ -486,6 +498,7 @@ public class ExpedienteBean implements Serializable {
     public void guardarAlergias() {
         try {
             pacienteFacade.guardarAlergias(paciente, alergiasSeleccionadas, loginBean.getConsultorioActivo());
+            revisionCatalogoSmae = null;
             cargarDatosPaciente();
             Mensajes.info("Alergias e intolerancias actualizadas.");
         } catch (Exception e) {
@@ -595,6 +608,7 @@ public class ExpedienteBean implements Serializable {
     public List<PlanTratamiento> getPlanesGuardados() { return planesGuardados; }
     public PlanAlimenticio getBorradorAlimenticio() { return borradorAlimenticio; }
     public PlanAlimenticio getPlanAlimenticioAprobado() { return planAlimenticioAprobado; }
+    public RevisionCatalogoSmae getRevisionCatalogoSmae() { return revisionCatalogoSmae; }
     public boolean isRevisionAlimenticiaConfirmada() { return revisionAlimenticiaConfirmada; }
     public void setRevisionAlimenticiaConfirmada(boolean confirmada) { revisionAlimenticiaConfirmada = confirmada; }
     public TiempoComida[] getTiemposComida() { return TiempoComida.values(); }

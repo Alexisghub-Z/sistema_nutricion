@@ -75,10 +75,10 @@ final class GeneradorPlanes {
         }
         if (tiempos.size() != TIEMPOS.length || kcal != plan.getKcal() || proteinas != plan.getProteinas()
                 || lipidos != plan.getLipidos() || carbohidratos != plan.getCarbohidratos()
-                || !enTolerancia(kcal, plan.getMetaKcal(), plan.getMetaKcal() * 0.05)
-                || !enTolerancia(proteinas, plan.getMetaProteinas(), toleranciaMacro(plan.getMetaProteinas()))
-                || !enTolerancia(lipidos, plan.getMetaLipidos(), toleranciaMacro(plan.getMetaLipidos()))
-                || !enTolerancia(carbohidratos, plan.getMetaCarbohidratos(), toleranciaMacro(plan.getMetaCarbohidratos()))) {
+                || !enTolerancia(kcal, plan.getMetaKcal(), plan.getMargenKcal())
+                || !enTolerancia(proteinas, plan.getMetaProteinas(), plan.getMargenProteinas())
+                || !enTolerancia(lipidos, plan.getMetaLipidos(), plan.getMargenLipidos())
+                || !enTolerancia(carbohidratos, plan.getMetaCarbohidratos(), plan.getMargenCarbohidratos())) {
             throw new ReglaNegocioException("Las porciones no cumplen la meta guardada. Genera otro borrador.");
         }
     }
@@ -136,11 +136,9 @@ final class GeneradorPlanes {
         return Math.abs(valor - meta) <= tolerancia;
     }
 
-    private static double toleranciaMacro(double meta) { return meta == 0 ? 0 : Math.max(2, meta * 0.10); }
-
     private static final class Busqueda {
         private final double metaKcal, metaProteinas, metaLipidos, metaCarbohidratos;
-        private final double margenProteinas, margenLipidos, margenCarbohidratos;
+        private final double margenKcal, margenProteinas, margenLipidos, margenCarbohidratos;
         private final Set<Grupo> disponibles = EnumSet.noneOf(Grupo.class);
         private final int[] cantidades = new int[GRUPOS.length];
         private double mejorPuntuacion = Double.POSITIVE_INFINITY;
@@ -152,9 +150,10 @@ final class GeneradorPlanes {
             metaProteinas = tratamiento.getGramosProteinas();
             metaLipidos = tratamiento.getGramosLipidos();
             metaCarbohidratos = tratamiento.getGramosCarbohidratos();
-            margenProteinas = toleranciaMacro(metaProteinas);
-            margenLipidos = toleranciaMacro(metaLipidos);
-            margenCarbohidratos = toleranciaMacro(metaCarbohidratos);
+            margenKcal = PlanAlimenticio.margenEnergia(metaKcal);
+            margenProteinas = PlanAlimenticio.margenMacro(metaProteinas);
+            margenLipidos = PlanAlimenticio.margenMacro(metaLipidos);
+            margenCarbohidratos = PlanAlimenticio.margenMacro(metaCarbohidratos);
             permitidos.forEach(alimento -> disponibles.add(alimento.grupo));
         }
 
@@ -194,9 +193,9 @@ final class GeneradorPlanes {
                     double lRestantes = metaLipidos - baseLipidos;
                     double kcalRestantes = metaKcal - baseKcal;
                     int grasaMinima = Math.max(minimo(grasa, lRestantes - margenLipidos, grasa.lipidos),
-                            minimo(grasa, kcalRestantes - metaKcal * 0.05, grasa.kcal));
+                            minimo(grasa, kcalRestantes - margenKcal, grasa.kcal));
                     int grasaMaxima = Math.min(maximo(grasa, lRestantes + margenLipidos, grasa.lipidos),
-                            maximo(grasa, kcalRestantes + metaKcal * 0.05, grasa.kcal));
+                            maximo(grasa, kcalRestantes + margenKcal, grasa.kcal));
                     for (int g = grasaMinima; g <= grasaMaxima; g++) {
                         cantidades[grasa.ordinal()] = g;
                         double nuevasKcal = baseKcal + g * grasa.kcal / 2.0;
@@ -215,7 +214,7 @@ final class GeneradorPlanes {
         }
 
         private void evaluar(double energia, double p, double l, double hc) {
-            if (!enTolerancia(energia, metaKcal, metaKcal * 0.05) || !enTolerancia(p, metaProteinas, margenProteinas)
+            if (!enTolerancia(energia, metaKcal, margenKcal) || !enTolerancia(p, metaProteinas, margenProteinas)
                     || !enTolerancia(l, metaLipidos, margenLipidos) || !enTolerancia(hc, metaCarbohidratos, margenCarbohidratos)) {
                 return;
             }

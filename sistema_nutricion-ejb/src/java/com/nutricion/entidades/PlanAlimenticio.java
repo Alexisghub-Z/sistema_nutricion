@@ -97,12 +97,19 @@ public class PlanAlimenticio implements Serializable {
         return porciones.stream().filter(p -> p.getTiempo() == tiempo).collect(Collectors.toList());
     }
 
+    public static double margenEnergia(double meta) { return meta * 0.05; }
+    public static double margenMacro(double meta) { return meta == 0 ? 0 : Math.max(2, meta * 0.10); }
+
     public Long getId() { return id; }
     public String getFolioBorrador() { return folioBorrador; }
     public double getMetaKcal() { return metaKcal; }
     public double getMetaProteinas() { return metaProteinas; }
     public double getMetaLipidos() { return metaLipidos; }
     public double getMetaCarbohidratos() { return metaCarbohidratos; }
+    public double getMargenKcal() { return margenEnergia(metaKcal); }
+    public double getMargenProteinas() { return margenMacro(metaProteinas); }
+    public double getMargenLipidos() { return margenMacro(metaLipidos); }
+    public double getMargenCarbohidratos() { return margenMacro(metaCarbohidratos); }
     public double getKcal() { return kcal; }
     public double getProteinas() { return proteinas; }
     public double getLipidos() { return lipidos; }

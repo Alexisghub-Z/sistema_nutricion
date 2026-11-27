@@ -388,7 +388,8 @@
                         </div>
                         <div class="acciones-form">
                             <p:commandButton value="Guardar alergias y preferencias" action="#{expedienteBean.guardarAlergias}"
-                                             process="@form" update="@form :resumenExpediente :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                                             process="@form" update="@form :resumenExpediente :tabsExpediente:frmPlanAlimenticio:revisionCatalogoSmae :growl"
+                                             icon="ui-icon-check" styleClass="btn-primario" />
                         </div>
                     </h:form>
                 </p:tab>

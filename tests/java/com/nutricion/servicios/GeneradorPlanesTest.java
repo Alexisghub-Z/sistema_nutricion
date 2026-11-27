@@ -31,6 +31,12 @@ public class GeneradorPlanesTest {
         comprobar(Math.abs(plan.getKcal() - 1800) <= 90 && Math.abs(plan.getProteinas() - 90) <= 9
                 && Math.abs(plan.getLipidos() - 60) <= 6 && Math.abs(plan.getCarbohidratos() - 225) <= 22.5,
                 "La energía y los tres macros quedan en sus tolerancias.");
+        comprobar(plan.getMargenKcal() == 90 && plan.getMargenProteinas() == 9
+                && plan.getMargenLipidos() == 6 && plan.getMargenCarbohidratos() == 22.5,
+                "Los márgenes de revisión corresponden a la meta guardada.");
+        comprobar(PlanAlimenticio.margenMacro(0) == 0 && PlanAlimenticio.margenMacro(15) == 2
+                && PlanAlimenticio.margenMacro(30) == 3,
+                "Para macros se conserva cero estricto, el mínimo de 2 g y el margen proporcional.");
         comprobar(plan.getPorciones().stream().allMatch(p -> p.getMediosEquivalentes() > 0),
                 "Las porciones son múltiplos positivos de medio equivalente.");
         comprobar(Alimento.ARROZ.porcion(TiempoComida.COMIDA, 1).getMedida().equals("1/8 taza")
@@ -54,6 +60,23 @@ public class GeneradorPlanesTest {
         rechaza(() -> GeneradorPlanes.validar(plan, permitidos), "alimento restringido");
         paciente.setAlergiasOtras("Fructosa o alguna fruta pendiente de identificar");
         rechaza(() -> CatalogoSmae.permitidos(paciente, Collections.emptyList()), "no puede verificar la restricción");
+
+        paciente.setAlergiasOtras("Frutos secos (nuez, almendra); Fructosa; Sulfitos");
+        RevisionCatalogoSmae revision = CatalogoSmae.revisar(paciente, Collections.singletonList(huevo));
+        comprobar(revision.getAlimentos().size() == catalogo.size()
+                && revision.getAlimentos().stream().anyMatch(ficha ->
+                    ficha.getNombre().equals("Arroz cocido") && ficha.getMedida().equals("1/4 taza")),
+                "La revisión incluye el catálogo completo con la medida por equivalente.");
+        comprobar(revision.getSinVerificar().equals(Arrays.asList("Fructosa", "Sulfitos"))
+                && revision.getSinCoincidencia().equals(Collections.singletonList("Frutos secos (nuez, almendra)")),
+                "Las restricciones pendientes se distinguen de los ingredientes ausentes.");
+        comprobar(revision.getAlimentos().stream().anyMatch(ficha ->
+                    ficha.getNombre().equals("Leche descremada") && ficha.getMotivoExclusion().equals("Lactosa"))
+                && revision.getAlimentos().stream().anyMatch(ficha ->
+                    ficha.getNombre().equals("Huevo") && ficha.getMotivoExclusion().equals("Huevo")),
+                "La consulta refleja exclusiones guardadas por catálogo y texto.");
+        rechaza(() -> CatalogoSmae.permitidos(paciente, Collections.emptyList()), "«Fructosa»");
+
         rechaza(() -> GeneradorPlanes.generar(tratamiento, EnumSet.of(Alimento.OLIVA)), "No se encontró una combinación");
         rechaza(() -> GeneradorPlanes.generar(tratamiento(1800, 0, 0, 100), catalogo), "No se encontró una combinación");
         rechaza(() -> GeneradorPlanes.generar(new PlanTratamiento(), catalogo), "Guarda una meta");

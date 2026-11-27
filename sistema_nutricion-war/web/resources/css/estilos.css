@@ -232,6 +232,17 @@ a { color: var(--verde); }
 .plan-smae-tiempos li + li { margin-top: 6px; }
 .plan-smae-meta dt { font-weight: 600; }
 .plan-smae-meta dd { margin: 2px 0 8px; }
+.plan-smae-catalogo summary { cursor: pointer; font-weight: 600; }
+.plan-smae-catalogo table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.plan-smae-catalogo th, .plan-smae-catalogo td {
+    padding: 8px 6px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--borde);
+    overflow-wrap: anywhere;
+}
+.plan-smae-catalogo th:nth-child(2) { width: clamp(88px, 39%, 180px); }
+.plan-smae-estado { margin-top: 4px; }
 .plan-smae-revision { display: flex; align-items: flex-start; gap: 8px; }
 .plan-smae-revision input { margin: 3px 0 0; }
 .cita-resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-block: 16px; }

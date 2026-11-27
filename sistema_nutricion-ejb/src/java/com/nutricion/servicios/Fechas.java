@@ -44,6 +44,13 @@ public final class Fechas {
         return c.getTime();
     }
 
+    public static Date inicioMesAnterior(Date d) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(inicioDelMes(d));
+        c.add(Calendar.MONTH, -1);
+        return c.getTime();
+    }
+
     /** Fecha con hora concreta, útil para datos de ejemplo. */
     public static Date en(int diasDesdeHoy, int hora, int minuto) {
         Calendar c = Calendar.getInstance();

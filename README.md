@@ -208,6 +208,21 @@ del WAR. La carga y la descarga están disponibles a administración y nutrició
 
 El botón **Actualizar datos** del expediente vuelve a leer la ficha y recalcula los resultados dietéticos que dependen de ella. Los campos de los formularios clínicos conservan lo que estás capturando.
 
+#### Consultar el panel, el comparativo y los pagos
+
+1. En **Horarios**, guarda **Periodo de pacientes activos** entre 7 y 365 días. El valor inicial es 60. **Inicio** cuenta una vez a cada paciente con una consulta cerrada o una cita ligada completada dentro de ese periodo. El panel visible actualiza los indicadores y citas cada 20 segundos.
+2. En **Inicio**, compara los ingresos del mes actual y anterior. La variación se muestra cuando el mes anterior tiene ingresos. La tabla de asistencia usa citas pasadas **Completada** y **No asistió**. Un porcentaje inferior a 80 se resalta para seguimiento.
+3. En **Pagos**, administración, nutrición y recepción pueden filtrar cobros de consultas cerradas por nombre y fecha. Selecciona el método, pulsa **Liquidar** y confirma. El cobro sale de la lista y aparece en los ingresos del mes de liquidación.
+4. En un expediente con dos consultas, abre **Evolución y gráficas**. El comparativo muestra los valores y cambios de los indicadores. El último objetivo guardado aplica el resaltado al peso para pérdida o mantenimiento y a la masa muscular para ganancia.
+
+El cobro se registra en la fila de la consulta con monto, método, estado y `fecha_pago`. El panel usa la fecha de la consulta para los cobros históricos que ya estaban pagados y carecen de fecha de liquidación. El total incluye cobros liquidados de la sede. Un cobro marcado **Parcial** aparece en el listado hasta liquidar el total de la consulta.
+
+#### Recuperar contraseña (HU-04)
+
+En **Acceso**, abre **¿Olvidaste tu contraseña?** y escribe el correo de la cuenta. El enlace del mensaje dura 30 minutos y permite un solo cambio. Tras cambiar la contraseña, vuelve a iniciar sesión. Las sesiones anteriores de esa cuenta pierden acceso.
+
+Configura `nutricion.recuperacion.urlBase` con la URL de NutriVida, incluido su contexto web. El enlace usa HTTPS o HTTP para pruebas en `localhost` o `127.0.0.1`. El correo usa `mail/nutricion`. Si el dominio tiene un recurso de correo separado, indica su nombre JNDI en `nutricion.recuperacion.recursoCorreo`. [OWASP sobre recuperación de contraseña](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html).
+
 #### Comprobar la edición de macros
 
 1. En un expediente ficticio, abre **Cálculo dietético** con una consulta cerrada que tenga peso, talla y porcentaje de grasa.

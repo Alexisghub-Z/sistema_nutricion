@@ -396,50 +396,28 @@
                 <!-- PESTAÑA 5: EVOLUCIÓN, GRÁFICAS Y COMPARATIVO (HU-09, HU-11) -->
                 <p:tab title="Evolución y gráficas">
                     <h:form id="frmEvolucion">
-                        <h:panelGroup rendered="#{expedienteBean.hayComparativo}" layout="block" style="margin-bottom: 24px;">
-                            <h2 class="subtitulo-seccion">Última consulta y consulta anterior</h2>
-                            <div class="comparativo-grid">
-                                <div class="comparativo-card">
-                                    <span class="comparativo-etiqueta">Peso corporal</span>
-                                    <div class="comparativo-valores">
-                                        <strong>#{expedienteBean.ultimaConsulta.peso != null ? expedienteBean.ultimaConsulta.peso : '—'} kg</strong>
-                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.peso != null ? expedienteBean.consultaAnterior.peso : '—'} kg</span>
-                                    </div>
-                                    <span class="badge badge-neutro">
-                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.peso, expedienteBean.consultaAnterior.peso, 'kg')}
-                                    </span>
+                        <h:panelGroup id="comparacion" layout="block">
+                            <h:panelGroup rendered="#{expedienteBean.hayComparativo}" layout="block" style="margin-bottom: 24px;">
+                                <h2 class="subtitulo-seccion">Última consulta y consulta anterior</h2>
+                                <h:outputText rendered="#{expedienteBean.objetivoComparativo ne null}" styleClass="comparativo-objetivo"
+                                              value="Último objetivo guardado · #{expedienteBean.objetivoComparativo.etiqueta}" />
+                                <div class="comparativo-grid">
+                                    <ui:repeat value="#{expedienteBean.medicionesComparadas}" var="medicion">
+                                        <div class="comparativo-card">
+                                            <span class="comparativo-etiqueta">#{medicion.nombre}</span>
+                                            <div class="comparativo-valores">
+                                                <strong>#{medicion.actual ne null ? medicion.actual : '—'} #{medicion.unidad}</strong>
+                                                <span class="comparativo-ant">Anterior #{medicion.anterior ne null ? medicion.anterior : '—'} #{medicion.unidad}</span>
+                                            </div>
+                                            <span class="badge badge-neutro">
+                                                #{expedienteBean.formatDiferencia(medicion.actual, medicion.anterior, medicion.unidad)}
+                                            </span>
+                                            <h:outputText rendered="#{medicion.evaluaObjetivo}" value="#{medicion.resultadoObjetivo}"
+                                                          styleClass="badge #{medicion.claseObjetivo}" />
+                                        </div>
+                                    </ui:repeat>
                                 </div>
-                                <div class="comparativo-card">
-                                    <span class="comparativo-etiqueta">IMC</span>
-                                    <div class="comparativo-valores">
-                                        <strong>#{expedienteBean.ultimaConsulta.imc != null ? expedienteBean.ultimaConsulta.imc : '—'}</strong>
-                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.imc != null ? expedienteBean.consultaAnterior.imc : '—'}</span>
-                                    </div>
-                                    <span class="badge badge-neutro">
-                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.imc, expedienteBean.consultaAnterior.imc, '')}
-                                    </span>
-                                </div>
-                                <div class="comparativo-card">
-                                    <span class="comparativo-etiqueta">% Grasa corporal</span>
-                                    <div class="comparativo-valores">
-                                        <strong>#{expedienteBean.ultimaConsulta.grasaCorporal != null ? expedienteBean.ultimaConsulta.grasaCorporal : '—'}%</strong>
-                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.grasaCorporal != null ? expedienteBean.consultaAnterior.grasaCorporal : '—'}%</span>
-                                    </div>
-                                    <span class="badge badge-neutro">
-                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.grasaCorporal, expedienteBean.consultaAnterior.grasaCorporal, '%')}
-                                    </span>
-                                </div>
-                                <div class="comparativo-card">
-                                    <span class="comparativo-etiqueta">Cintura</span>
-                                    <div class="comparativo-valores">
-                                        <strong>#{expedienteBean.ultimaConsulta.cintura != null ? expedienteBean.ultimaConsulta.cintura : '—'} cm</strong>
-                                        <span class="comparativo-ant">ant: #{expedienteBean.consultaAnterior.cintura != null ? expedienteBean.consultaAnterior.cintura : '—'} cm</span>
-                                    </div>
-                                    <span class="badge badge-neutro">
-                                        #{expedienteBean.formatDiferencia(expedienteBean.ultimaConsulta.cintura, expedienteBean.consultaAnterior.cintura, 'cm')}
-                                    </span>
-                                </div>
-                            </div>
+                            </h:panelGroup>
                         </h:panelGroup>
 
                         <div class="encabezado-pagina" style="margin-bottom: 14px;">
@@ -600,7 +578,7 @@
 
                         <div class="acciones-form">
                             <p:commandButton value="Guardar plan de tratamiento" action="#{expedienteBean.guardarPlanTratamiento}"
-                                             update="@form :growl" icon="ui-icon-check" styleClass="btn-primario" />
+                                             update="@form :growl :tabsExpediente:frmEvolucion:comparacion" icon="ui-icon-check" styleClass="btn-primario" />
                         </div>
 
                         <h2 class="subtitulo-seccion" style="margin-top:24px;">Planes de tratamiento guardados</h2>

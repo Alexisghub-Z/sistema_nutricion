@@ -52,6 +52,10 @@
                         <h:link outcome="/vistas/agenda/agenda" styleClass="#{view.viewId eq '/vistas/agenda/agenda.xhtml' ? 'activo' : ''}">
                             <span class="ico">📅</span> Agenda
                         </h:link>
+                        <h:link outcome="/vistas/pagos/pendientes"
+                                styleClass="#{view.viewId eq '/vistas/pagos/pendientes.xhtml' ? 'activo' : ''}">
+                            <span class="ico" aria-hidden="true">$</span> Pagos
+                        </h:link>
                         <h:link outcome="/vistas/agenda/configuracion" rendered="#{loginBean.puedeVerExpedientes}"
                                 styleClass="#{view.viewId eq '/vistas/agenda/configuracion.xhtml' ? 'activo' : ''}">
                             <span class="ico">⏱</span> Horarios

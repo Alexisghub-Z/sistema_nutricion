@@ -39,6 +39,13 @@
                             <f:validateLongRange minimum="5" maximum="1440" />
                         </p:inputText>
                     </div>
+                    <div class="campo">
+                        <p:outputLabel for="cfgDiasActivo" value="Periodo de pacientes activos (días)" />
+                        <p:inputText id="cfgDiasActivo" value="#{configAgendaBean.configuracion.diasPacienteActivo}"
+                                     label="Periodo de pacientes activos" required="true" maxlength="3">
+                            <f:validateLongRange minimum="7" maximum="365" />
+                        </p:inputText>
+                    </div>
                 </div>
             </div>
 

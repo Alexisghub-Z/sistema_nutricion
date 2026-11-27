@@ -1,5 +1,8 @@
 package com.nutricion.util;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
@@ -49,6 +52,22 @@ public final class Seguridad {
 
     public static String codigoPortal() {
         return codigo(12);
+    }
+
+    public static String generarTokenRecuperacion() {
+        byte[] aleatorio = new byte[32];
+        RANDOM.nextBytes(aleatorio);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(aleatorio);
+    }
+
+    public static String huellaTokenRecuperacion(String token) {
+        if (token == null || !token.matches("[A-Za-z0-9_-]{43}")) return null;
+        try {
+            byte[] huella = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.US_ASCII));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(huella);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("No se pudo verificar el enlace de recuperación.", e);
+        }
     }
 
     private static String codigo(int longitud) {

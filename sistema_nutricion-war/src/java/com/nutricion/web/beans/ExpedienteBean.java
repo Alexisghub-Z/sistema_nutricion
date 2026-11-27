@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -312,7 +313,69 @@ public class ExpedienteBean implements Serializable {
         Double pct = CalculosNutricion.variacionPorcentual(actual, anterior);
         String signo = diff > 0 ? "+" : "";
         String pctTxt = pct == null ? "" : " (" + signo + pct + "%)";
-        return signo + diff + " " + unidad + pctTxt;
+        return signo + diff + (unidad.isEmpty() ? "" : " " + unidad) + pctTxt;
+    }
+
+    public ObjetivoTratamiento getObjetivoComparativo() {
+        return planesGuardados.isEmpty() ? null : planesGuardados.get(0).getObjetivo();
+    }
+
+    public List<MedicionComparada> getMedicionesComparadas() {
+        if (!hayComparativo) return Collections.emptyList();
+        Consulta reciente = getUltimaConsulta();
+        ObjetivoTratamiento objetivo = getObjetivoComparativo();
+        Integer sentidoPeso = null;
+        if (objetivo == ObjetivoTratamiento.PERDIDA) sentidoPeso = -1;
+        if (objetivo == ObjetivoTratamiento.MANTENIMIENTO) sentidoPeso = 0;
+        return Arrays.asList(
+                new MedicionComparada("Peso corporal", "kg", reciente.getPeso(), consultaAnterior.getPeso(), sentidoPeso),
+                new MedicionComparada("Masa muscular", "kg", reciente.getMasaMuscular(), consultaAnterior.getMasaMuscular(),
+                        objetivo == ObjetivoTratamiento.GANANCIA ? 1 : null),
+                new MedicionComparada("IMC", "", reciente.getImc(), consultaAnterior.getImc(), null),
+                new MedicionComparada("Grasa corporal", "%", reciente.getGrasaCorporal(), consultaAnterior.getGrasaCorporal(), null),
+                new MedicionComparada("Grasa visceral", "", reciente.getGrasaVisceral(), consultaAnterior.getGrasaVisceral(), null),
+                new MedicionComparada("Agua corporal", "%", reciente.getPorcentajeAgua(), consultaAnterior.getPorcentajeAgua(), null),
+                new MedicionComparada("Talla", "m", reciente.getTalla(), consultaAnterior.getTalla(), null),
+                new MedicionComparada("Cintura", "cm", reciente.getCintura(), consultaAnterior.getCintura(), null),
+                new MedicionComparada("Cadera", "cm", reciente.getCadera(), consultaAnterior.getCadera(), null));
+    }
+
+    public static final class MedicionComparada {
+        private final String nombre;
+        private final String unidad;
+        private final Double actual;
+        private final Double anterior;
+        private final Integer sentidoObjetivo;
+
+        MedicionComparada(String nombre, String unidad, Double actual, Double anterior, Integer sentidoObjetivo) {
+            this.nombre = nombre;
+            this.unidad = unidad;
+            this.actual = actual;
+            this.anterior = anterior;
+            this.sentidoObjetivo = sentidoObjetivo;
+        }
+
+        public String getNombre() { return nombre; }
+        public String getUnidad() { return unidad; }
+        public Double getActual() { return actual; }
+        public Double getAnterior() { return anterior; }
+        public boolean isEvaluaObjetivo() { return sentidoObjetivo != null; }
+        public String getClaseObjetivo() {
+            if (!isEvaluaObjetivo() || actual == null || anterior == null) return "badge-neutro";
+            int sentido = sentido();
+            if (sentido == sentidoObjetivo) return "badge-exito";
+            return sentido == 0 ? "badge-neutro" : "badge-alerta";
+        }
+        public String getResultadoObjetivo() {
+            if (!isEvaluaObjetivo()) return "";
+            if (actual == null || anterior == null) return "Faltan mediciones";
+            int sentido = sentido();
+            if (sentido == sentidoObjetivo) return "A favor del objetivo";
+            return sentido == 0 ? "Sin cambio" : "En contra del objetivo";
+        }
+        private int sentido() {
+            return (int) Math.signum(CalculosNutricion.redondear(actual - anterior, 2));
+        }
     }
 
     public void nuevaConsulta() {

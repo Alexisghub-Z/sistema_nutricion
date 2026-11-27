@@ -123,6 +123,10 @@ public class Consulta implements Serializable {
     @Column(name = "estado_pago", nullable = false, length = 20)
     private EstadoPago estadoPago = EstadoPago.PAGADO;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_pago")
+    private Date fechaPago;
+
     @PrePersist
     @PreUpdate
     void calcular() {
@@ -203,6 +207,8 @@ public class Consulta implements Serializable {
     public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
     public EstadoPago getEstadoPago() { return estadoPago; }
     public void setEstadoPago(EstadoPago estadoPago) { this.estadoPago = estadoPago; }
+    public Date getFechaPago() { return fechaPago; }
+    public void setFechaPago(Date fechaPago) { this.fechaPago = fechaPago; }
 
     @Override
     public int hashCode() { return id == null ? 0 : id.hashCode(); }

@@ -18,16 +18,20 @@
             <h1>Hola, #{loginBean.usuario.nombre}</h1>
             <h:form id="frmPanel" styleClass="filtro-fechas">
                 <span class="badge badge-neutro">#{loginBean.consultorioActivo.nombre}</span>
-                <p:commandButton value="Actualizar panel" process="@this" update=":resumenPanel"
+                <p:commandButton value="Actualizar panel" process="@this" update=":resumenPanel :asistenciaPanel"
                                  icon="ui-icon-refresh" styleClass="btn-secundario js-actualizar-al-volver" />
+                <p:poll id="pollPanel" interval="20" process="@this" update=":resumenPanel" global="false"
+                        onstart="return !document.hidden;" />
             </h:form>
         </div>
 
         <h:panelGroup id="resumenPanel" layout="block">
         <div class="indicadores">
             <div class="indicador">
-                <span class="indicador-valor">#{dashboardBean.totalPacientes}</span>
-                <span class="indicador-nombre">Pacientes</span>
+                <span id="pacientesActivos" class="indicador-valor">#{dashboardBean.pacientesActivos}</span>
+                <span class="indicador-nombre">Pacientes activos</span>
+                <span class="indicador-detalle">Últimos #{dashboardBean.diasPacienteActivo} días</span>
+                <span class="indicador-detalle">#{dashboardBean.totalPacientes} expedientes registrados</span>
             </div>
             <div class="indicador">
                 <span class="indicador-valor">#{dashboardBean.citasPorAtenderHoy}</span>
@@ -39,13 +43,42 @@
                 <span class="indicador-nombre">Consultas este mes</span>
             </div>
             <h:panelGroup rendered="#{loginBean.puedeVerExpedientes}" layout="block" styleClass="indicador">
-                <span class="indicador-valor">
+                <span id="ingresosActuales" class="indicador-valor">
                     <h:outputText value="#{dashboardBean.ingresosMes}">
                         <f:convertNumber type="currency" currencySymbol="$" locale="es_MX" />
                     </h:outputText>
                 </span>
                 <span class="indicador-nombre">Ingresos del mes</span>
+                <span class="indicador-detalle">
+                    Mes anterior
+                    <h:outputText id="ingresosAnteriores" value="#{dashboardBean.ingresosMesAnterior}">
+                        <f:convertNumber type="currency" currencySymbol="$" locale="es_MX" />
+                    </h:outputText>
+                </span>
+                <h:panelGroup rendered="#{dashboardBean.variacionIngresos ne null}" styleClass="indicador-detalle">
+                    Variación
+                    <span id="variacionIngresos">
+                        <h:outputText value="#{dashboardBean.variacionIngresos}">
+                            <f:convertNumber maxFractionDigits="1" locale="es_MX" />
+                        </h:outputText> %
+                    </span>
+                </h:panelGroup>
+                <h:outputText rendered="#{dashboardBean.variacionIngresos eq null}" styleClass="indicador-detalle"
+                              value="Sin ingresos el mes anterior" />
             </h:panelGroup>
+        </div>
+
+        <div class="tarjeta">
+            <h2>Citas de hoy</h2>
+            <div class="tabla-pagos" role="region" aria-label="Citas de hoy" tabindex="0">
+                <p:dataTable value="#{dashboardBean.citasHoy}" var="c" emptyMessage="No hay citas para hoy.">
+                    <p:column headerText="Hora">
+                        <h:outputText value="#{c.fechaHora}"><f:convertDateTime pattern="HH:mm" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Paciente">#{c.paciente.nombre}</p:column>
+                    <p:column headerText="Estado">#{c.estado.etiqueta}</p:column>
+                </p:dataTable>
+            </div>
         </div>
 
         <div class="tarjeta">
@@ -62,6 +95,23 @@
                 <p:column headerText="Estado">#{c.estado.etiqueta}</p:column>
             </p:dataTable>
         </div>
+        </h:panelGroup>
+        <h:panelGroup id="asistenciaPanel" layout="block" styleClass="tarjeta">
+            <h2>Asistencia a consultas y seguimientos</h2>
+            <p class="texto-ayuda">Últimos #{dashboardBean.diasPacienteActivo} días. Asistencia baja por debajo del #{dashboardBean.umbralAsistenciaBaja}%.</p>
+            <div class="tabla-pagos" role="region" aria-label="Asistencia por paciente" tabindex="0">
+                <p:dataTable value="#{dashboardBean.asistencia}" var="registro" rows="8" paginator="true"
+                             paginatorAlwaysVisible="false" emptyMessage="Aún no hay citas con asistencia registrada en el periodo.">
+                    <p:column headerText="Paciente">#{registro.paciente}</p:column>
+                    <p:column headerText="Completadas">#{registro.asistidas}</p:column>
+                    <p:column headerText="No asistió">#{registro.ausencias}</p:column>
+                    <p:column headerText="Asistencia">
+                        <span class="badge #{registro.asistenciaBaja ? 'badge-alerta' : 'badge-neutro'}">
+                            #{registro.porcentaje}%<h:outputText value=" · Baja" rendered="#{registro.asistenciaBaja}" />
+                        </span>
+                    </p:column>
+                </p:dataTable>
+            </div>
         </h:panelGroup>
         <h:outputScript name="js/actualizar-al-volver.js" target="body" />
     </ui:define>

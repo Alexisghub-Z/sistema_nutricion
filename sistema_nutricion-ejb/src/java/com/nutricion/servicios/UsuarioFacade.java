@@ -18,6 +18,8 @@ public class UsuarioFacade extends AbstractFacade<Usuario> {
 
     public static final int MAX_INTENTOS = 3;
     public static final int MINUTOS_BLOQUEO = 15;
+    public static final int MINUTOS_RECUPERACION = 30;
+    private static final int MINUTOS_ENTRE_ENLACES = 2;
 
     @PersistenceContext(unitName = "NutricionPU")
     private EntityManager em;
@@ -37,12 +39,14 @@ public class UsuarioFacade extends AbstractFacade<Usuario> {
                 .getResultList();
     }
 
-    public boolean sesionVigente(Long id, Rol rol, Long consultorioId) {
+    public boolean sesionVigente(Long id, Rol rol, Long consultorioId, long revision) {
         return em.createQuery("SELECT COUNT(u) FROM Usuario u WHERE u.id = :id AND u.activo = true "
-                + "AND u.rol = :rol AND u.consultorio.id = :consultorio", Long.class)
+                + "AND u.rol = :rol AND u.consultorio.id = :consultorio "
+                + "AND COALESCE(u.revisionCredencial, 0) = :revision", Long.class)
                 .setParameter("id", id)
                 .setParameter("rol", rol)
                 .setParameter("consultorio", consultorioId)
+                .setParameter("revision", revision)
                 .getSingleResult() == 1L;
     }
 
@@ -106,6 +110,60 @@ public class UsuarioFacade extends AbstractFacade<Usuario> {
         return guardarUsuario(u, password, consultorio);
     }
 
+    public String emitirEnlaceRecuperacion(String correo) {
+        Usuario u = porEmail(correo);
+        if (u == null) return null;
+        em.refresh(u, LockModeType.PESSIMISTIC_WRITE);
+        Date ahora = new Date();
+        if (!u.isActivo() || u.getConsultorio() == null || !u.getEmail().equals(correo)
+                || (u.getRecuperacionVence() != null && u.getRecuperacionVence().after(
+                        Fechas.sumarMinutos(ahora, MINUTOS_RECUPERACION - MINUTOS_ENTRE_ENLACES)))) {
+            return null;
+        }
+        String token = Seguridad.generarTokenRecuperacion();
+        u.setRecuperacionHuella(Seguridad.huellaTokenRecuperacion(token));
+        u.setRecuperacionVence(Fechas.sumarMinutos(ahora, MINUTOS_RECUPERACION));
+        return token;
+    }
+
+    public String restablecerPassword(String token, String password, String confirmacion) {
+        if (password == null || password.length() < 6 || password.length() > 128 || password.trim().isEmpty()) {
+            throw new ReglaNegocioException("Escribe una contraseña de 6 a 128 caracteres.");
+        }
+        if (!password.equals(confirmacion)) {
+            throw new ReglaNegocioException("Las contraseñas deben coincidir.");
+        }
+        String huella = Seguridad.huellaTokenRecuperacion(token);
+        if (huella == null) throw enlaceInvalido();
+        Usuario u = em.createQuery("SELECT u FROM Usuario u WHERE u.recuperacionHuella = :huella", Usuario.class)
+                .setParameter("huella", huella).setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getResultStream().findFirst().orElse(null);
+        if (u != null) em.refresh(u, LockModeType.PESSIMISTIC_WRITE);
+        if (u == null || !u.isActivo() || u.getConsultorio() == null || !huella.equals(u.getRecuperacionHuella())
+                || u.getRecuperacionVence() == null || !u.getRecuperacionVence().after(new Date())) {
+            throw enlaceInvalido();
+        }
+        cambiarPassword(u, password);
+        u.setIntentosFallidos(0);
+        u.setBloqueadoHasta(null);
+        return u.getEmail();
+    }
+
+    private ReglaNegocioException enlaceInvalido() {
+        return new ReglaNegocioException("El enlace ya no está disponible. Solicita uno nuevo.");
+    }
+
+    private void limpiarRecuperacion(Usuario usuario) {
+        usuario.setRecuperacionHuella(null);
+        usuario.setRecuperacionVence(null);
+    }
+
+    private void cambiarPassword(Usuario usuario, String password) {
+        usuario.setPasswordHash(Seguridad.hash(password));
+        usuario.setRevisionCredencial(usuario.getRevisionCredencial() + 1L);
+        limpiarRecuperacion(usuario);
+    }
+
     /** Crea o actualiza un usuario con rol, consultorio y cambio opcional de contraseña (HU-03). */
     public Usuario guardarUsuario(Usuario u, String nuevaPassword, Consultorio consultorio) {
         if (u == null) {
@@ -163,13 +221,16 @@ public class UsuarioFacade extends AbstractFacade<Usuario> {
             }
         }
 
+        if (!esNuevo && (!mail.equals(anterior.getEmail()) || !u.isActivo())) {
+            limpiarRecuperacion(anterior);
+        }
         anterior.setNombre(nombre);
         anterior.setEmail(mail);
         anterior.setRol(u.getRol());
         anterior.setActivo(u.isActivo());
         anterior.setConsultorio(consultorio);
         if (nuevaPassword != null && !nuevaPassword.isEmpty()) {
-            anterior.setPasswordHash(Seguridad.hash(nuevaPassword));
+            cambiarPassword(anterior, nuevaPassword);
         }
         if (esNuevo) {
             em.persist(anterior);

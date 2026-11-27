@@ -51,6 +51,16 @@ public class Usuario implements Serializable {
     @Column(name = "fecha_registro", nullable = false)
     private Date fechaRegistro;
 
+    @Column(name = "recuperacion_huella", length = 43, unique = true)
+    private String recuperacionHuella;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "recuperacion_vence")
+    private Date recuperacionVence;
+
+    @Column(name = "revision_credencial")
+    private Long revisionCredencial;
+
     @PrePersist
     void alCrear() {
         if (fechaRegistro == null) {
@@ -79,6 +89,12 @@ public class Usuario implements Serializable {
     public boolean isBloqueadoAhora() { return bloqueadoHasta != null && bloqueadoHasta.after(new Date()); }
     public Date getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(Date fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+    public String getRecuperacionHuella() { return recuperacionHuella; }
+    public void setRecuperacionHuella(String huella) { this.recuperacionHuella = huella; }
+    public Date getRecuperacionVence() { return recuperacionVence; }
+    public void setRecuperacionVence(Date vence) { this.recuperacionVence = vence; }
+    public long getRevisionCredencial() { return revisionCredencial == null ? 0L : revisionCredencial; }
+    public void setRevisionCredencial(long revision) { this.revisionCredencial = revision; }
 
     @Override
     public int hashCode() { return id == null ? 0 : id.hashCode(); }

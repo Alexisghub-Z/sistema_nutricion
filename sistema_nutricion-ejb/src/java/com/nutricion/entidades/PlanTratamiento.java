@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "planes_tratamiento")
 @NamedQueries({
-    @NamedQuery(name = "PlanTratamiento.porPaciente", query = "SELECT p FROM PlanTratamiento p WHERE p.paciente = :paciente ORDER BY p.fecha DESC")
+    @NamedQuery(name = "PlanTratamiento.porPaciente", query = "SELECT p FROM PlanTratamiento p WHERE p.paciente = :paciente ORDER BY p.fecha DESC, p.id DESC")
 })
 public class PlanTratamiento implements Serializable {
 

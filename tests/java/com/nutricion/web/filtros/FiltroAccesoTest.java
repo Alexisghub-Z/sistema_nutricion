@@ -23,8 +23,8 @@ public class FiltroAccesoTest {
         usuarios.setAccessible(true);
         usuarios.set(filtro, new UsuarioFacade() {
             @Override
-            public boolean sesionVigente(Long id, Rol rol, Long consultorioId) {
-                return true;
+            public boolean sesionVigente(Long id, Rol rol, Long consultorioId, long revision) {
+                return revision == 0L;
             }
         });
 
@@ -33,6 +33,11 @@ public class FiltroAccesoTest {
         automatico.invocar(filtro, "frmRecordatorios:pollRecordatorios");
         verificar("El sondeo de avisos conserva el instante de actividad",
                 automatico.permitida && !automatico.invalidada && automatico.actividad() == inicio);
+
+        Solicitud panel = new Solicitud(inicio);
+        panel.invocar(filtro, "frmPanel:pollPanel");
+        verificar("El sondeo del panel conserva el instante de actividad",
+                panel.permitida && !panel.invalidada && panel.actividad() == inicio);
 
         Solicitud manual = new Solicitud(inicio);
         manual.invocar(filtro, "frmPanel:actualizar");
@@ -49,7 +54,12 @@ public class FiltroAccesoTest {
         previa.invocar(filtro, "frmPanel:actualizar");
         verificar("Una sesión previa registra actividad al abrir la interfaz",
                 previa.permitida && !previa.invalidada && previa.actividad() > inicio);
-        System.out.println("RESULTADO 4 comprobaciones de actividad de sesion correctas");
+
+        Solicitud revocada = new Solicitud(inicio);
+        revocada.atributos.put(LoginBean.ATRIBUTO_REVISION_CREDENCIAL, 8L);
+        revocada.invocar(filtro, "frmPanel:actualizar");
+        verificar("Una revisión de credencial revocada invalida la sesión", !revocada.permitida && revocada.invalidada);
+        System.out.println("RESULTADO 6 comprobaciones de actividad de sesion correctas");
     }
 
     private static void verificar(String nombre, boolean correcta) {

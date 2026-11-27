@@ -89,6 +89,16 @@ public class CitaFacade extends AbstractFacade<Cita> {
         return r.isEmpty() ? null : r.get(0);
     }
 
+    public List<ResumenAsistencia> asistenciaEntre(Consultorio consultorio, Date desde, Date hasta) {
+        return em.createQuery("SELECT NEW com.nutricion.servicios.ResumenAsistencia(p.nombre, COUNT(c), "
+                + "SUM(CASE WHEN c.estado = :asistio THEN 1 ELSE 0 END)) FROM Cita c JOIN c.paciente p "
+                + "WHERE p.consultorio = :consultorio AND c.fechaHora >= :desde AND c.fechaHora <= :hasta "
+                + "AND c.estado IN (:asistio, :ausente) GROUP BY p.id, p.nombre ORDER BY p.nombre, p.id",
+                ResumenAsistencia.class).setParameter("consultorio", consultorio).setParameter("desde", desde)
+                .setParameter("hasta", hasta).setParameter("asistio", EstadoCita.COMPLETADA)
+                .setParameter("ausente", EstadoCita.NO_ASISTIO).getResultList();
+    }
+
     /** Agenda (o reprograma) una cita validando horario y empalmes. */
     public Cita guardar(Cita c, Consultorio consultorio) {
         bloquearConsultorio(consultorio);

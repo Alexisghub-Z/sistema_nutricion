@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantilla.xhtml">
+    <ui:define name="titulo">Cambiar contraseña · NutriVida</ui:define>
+    <ui:define name="notificaciones" />
+    <ui:define name="content">
+        <div class="acceso">
+            <section class="tarjeta tarjeta-acceso">
+                <h1>Cambiar contraseña</h1>
+                <p:messages id="mensajes" />
+                <h:panelGroup rendered="#{recuperacionBean.restablecida}" layout="block">
+                    <p role="status">Tu contraseña se actualizó. Inicia sesión con la nueva contraseña.</p>
+                    <h:link outcome="/acceso" value="Ir al acceso" styleClass="acceso-enlace" />
+                </h:panelGroup>
+                <h:form id="frmRestablecer" styleClass="form-restablecer" rendered="#{not recuperacionBean.restablecida}">
+                    <h:inputHidden id="codigo" value="#{recuperacionBean.codigo}" />
+                    <div class="campo">
+                        <p:outputLabel for="nueva" value="Nueva contraseña" />
+                        <p:password id="nueva" value="#{recuperacionBean.password}" required="true" maxlength="128"
+                                    pt:autocomplete="new-password" requiredMessage="Escribe la nueva contraseña."
+                                    validatorMessage="Escribe una contraseña de 6 a 128 caracteres.">
+                            <f:validateLength minimum="6" maximum="128" />
+                        </p:password>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="confirmacion" value="Repite la contraseña" />
+                        <p:password id="confirmacion" value="#{recuperacionBean.confirmacion}" required="true" maxlength="128"
+                                    pt:autocomplete="new-password" requiredMessage="Repite la nueva contraseña." />
+                    </div>
+                    <p:commandButton value="Cambiar contraseña" action="#{recuperacionBean.restablecer}" ajax="false"
+                                     styleClass="btn-primario btn-bloque acceso-accion" />
+                    <h:link outcome="/recuperar" value="Solicitar otro enlace" styleClass="acceso-enlace" />
+                </h:form>
+            </section>
+        </div>
+        <h:outputScript name="js/restablecer.js" target="body" />
+    </ui:define>
+</ui:composition>

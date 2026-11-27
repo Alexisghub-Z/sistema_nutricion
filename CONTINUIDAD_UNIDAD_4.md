@@ -6,6 +6,25 @@ El informe detallado y su resumen de exposición están en `C:\Users\yaxti_cm5rg
 
 ## Continuación del 26 de noviembre de 2026
 
+### Panel, pagos, comparativo y recuperación de contraseña
+
+- **HU-37 y HU-41.** Inicio muestra las citas de hoy y cuenta pacientes distintos con consulta atendida en el periodo configurado en **Horarios**. Los indicadores y citas se actualizan cada 20 segundos mientras se ve el panel. El sondeo conserva la última actividad de sesión. La asistencia se calcula con citas pasadas completadas y ausencias registradas. El panel resalta los porcentajes inferiores a 80.
+- **HU-38 y HU-39.** El panel compara ingresos del mes actual y anterior. Administración, nutrición y recepción pueden consultar cobros de consultas cerradas y liquidarlos desde **Pagos**. Se registra un cobro por consulta con método, estado y fecha de liquidación en `consultas.fecha_pago`. Los cobros históricos que ya estaban pagados conservan la fecha de consulta como referencia cuando falta la fecha de liquidación.
+- **HU-11.** Evolución compara nueve indicadores. El último objetivo guardado resalta el cambio de peso en pérdida o mantenimiento y de masa muscular en ganancia. Edge probó los tres objetivos.
+- **HU-04.** Acceso enlaza a recuperación por correo. MySQL guarda una huella del código, su vencimiento y la revisión de credencial. El enlace dura 30 minutos y se consume al cambiar la contraseña. El cambio revoca sesiones anteriores y conserva el reingreso por Acceso. La entrega se comprobó en SMTP ficticio y se retiró la configuración temporal.
+
+Ant compiló el EAR raíz con JDK 17. Payara 5.2022.3 sirve `.cache/despliegues/20261126-195010-351`. La portada devolvió HTTP 200, el ping de `NutricionMySQLPool` pasó y MySQL 8.0.41 mostró las 14 tablas y las columnas nuevas. [NutriVida local](http://localhost:8080/sistema_nutricion-war/).
+
+Pasaron 27 comprobaciones de panel, pagos y comparativo, 15 de recuperación en Edge y 40 de regresión de agenda, expediente y portal. La prueba de recuperación adelantó el vencimiento de un enlace ficticio en la base local. En Java pasaron 22 comprobaciones de pacientes, 5 de macros y 6 de sesión. Los recorridos retiraron sus propios registros ficticios.
+
+| Comprobación | Evidencia en `.cache/revision-continuacion/` |
+|---|---|
+| Panel, pagos y comparativo a 390 px y en escritorio | `indicadores-pagos-20261126/recorrido-final.txt`, `pagos-390.png`, `pagos-escritorio.png` y `panel-escritorio.png` en esa carpeta |
+| Recuperación y regresión del portal | `recuperacion-20261126/recorrido-final.txt` y `regresion-portal.txt` en esa carpeta |
+| Build, servicios y publicación | `recuperacion-20261126/despliegue-final.txt`, `ping-jdbc.txt`, `mysql-final.txt` y `publicacion.txt` en esa carpeta |
+
+La matriz de 44 historias registra **24 probadas en local, 7 parciales y 13 pendientes**. Siguen pendientes la validación con el consultorio de HU-10 y HU-22, el catálogo SMAE y el proveedor para planes, y las cuentas autorizadas para conectar Calendar, correo y WhatsApp. [Matriz y revisión con el consultorio](docs/UNIDAD_4_REVISION_Y_ENTREGA.md#7-trazabilidad-de-historias-y-pendientes).
+
 ### Caducidad real de sesión y validación de macronutrientes
 
 - **HU-02.** En el EAR de `70496e8`, Edge recibió 59 sondeos automáticos durante la espera sin acciones manuales. Volvió a `/acceso.xhtml` a los 1800,20 segundos. La solicitud posterior a la vista privada devolvió HTTP 302 y la misma cuenta ficticia pudo iniciar sesión de nuevo. El ensayo terminó antes del redespliegue y se eliminó su consultorio ficticio.
@@ -283,8 +302,8 @@ Ensayar el guion y el cuestionario, comprobar qué formato de entrega pide el pr
 
 ## Prompt listo para otro chat
 
-> Continúa NutriVida en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y docs/UNIDAD_4_REVISION_Y_ENTREGA.md. Comprueba HEAD de main, SHA en GitHub, cambios locales, Payara y MySQL. El cierre del 26 de noviembre registra la validación de macros sobre la base `70496e8` y la expiración real de sesión.
+> Continúa NutriVida en la ruta de Windows indicada arriba. Lee AGENTS.md, CONTINUIDAD_UNIDAD_4.md, README.md y docs/UNIDAD_4_REVISION_Y_ENTREGA.md. Comprueba HEAD de main, SHA en GitHub, cambios locales, Payara y MySQL. El cierre del 26 de noviembre añadió HU-04, HU-11, HU-37, HU-38, HU-39 y HU-41 sobre `28e8baf`.
 >
-> Mantén el EAR raíz con Java EE 8 `javax.*`, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3 y PrimeFaces 5.0. El EAR activo quedó en `.cache/despliegues/20261126-144514-239`. La portada respondió HTTP 200, pasó el ping de `NutricionMySQLPool` y MySQL 8.0.41 mostró las 14 tablas esperadas. Edge volvió a `/acceso.xhtml` a los 1800,20 segundos y pasó 28 comprobaciones de cálculo y 40 de regresión del portal. Usa datos ficticios y limpia solo los registros de cada prueba.
+> Mantén el EAR raíz con Java EE 8 `javax.*`, NetBeans/Ant, JDK 17, Payara 5.2022.3, JSF 2.3 y PrimeFaces 5.0. El EAR activo quedó en `.cache/despliegues/20261126-195010-351` con HTTP 200, ping de `NutricionMySQLPool` y 14 tablas en MySQL 8.0.41. Pasaron 27 comprobaciones de panel, pagos y comparativo, 15 de recuperación con SMTP ficticio y 40 de regresión. Usa datos ficticios y limpia solo los registros de cada prueba.
 >
-> La matriz registra 18 historias probadas en local, 10 parciales y 16 pendientes. Queda confirmar los siete apartados de HU-10 con el consultorio y validar HU-22 con el nutriólogo. Calendar y la entrega de confirmaciones requieren cuentas autorizadas. Actualiza `NutriVida - Avance y resumen.docx` en Descargas después de cada avance e inserta la entrada fechada antes de «Resumen para exponer».
+> La matriz registra 24 historias probadas en local, 7 parciales y 13 pendientes. Confirma los apartados de HU-10 y revisa las fórmulas de HU-22 con el consultorio. Retoma planes con el catálogo SMAE autorizado. Calendar, correo y WhatsApp requieren cuentas autorizadas para las pruebas reales. Actualiza el mismo Word de Descargas y deja «Resumen para exponer» al final.

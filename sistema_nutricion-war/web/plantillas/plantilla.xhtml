@@ -37,7 +37,9 @@
         </div>
 
         <div id="content" class="center_content">
-            <p:growl id="growl" showDetail="false" life="5000" />
+            <ui:insert name="notificaciones">
+                <p:growl id="growl" showDetail="false" life="5000" />
+            </ui:insert>
             <ui:insert name="content">Content</ui:insert>
         </div>
 

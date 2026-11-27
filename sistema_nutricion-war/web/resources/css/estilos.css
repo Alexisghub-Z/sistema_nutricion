@@ -108,13 +108,37 @@ a { color: var(--verde); }
 .boton-primario:hover { background: var(--verde-oscuro); }
 
 /* Indicadores del inicio */
-.indicadores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.indicadores { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
 .indicador {
     background: var(--blanco); border: 1px solid var(--borde); border-radius: var(--radio);
     padding: 18px; display: flex; flex-direction: column; gap: 4px;
 }
 .indicador-valor { font-size: 28px; font-weight: 700; color: var(--verde-oscuro); }
 .indicador-nombre { color: var(--texto-suave); font-size: 13px; }
+.indicador-detalle { color: var(--texto-suave); font-size: 13px; }
+.filtros-pago {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.filtros-pago .ui-inputfield { width: 100%; min-height: 44px; }
+.acciones-pago, .encabezado-pago {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+}
+.acciones-pago { margin-top: 16px; }
+.encabezado-pago { justify-content: space-between; margin-bottom: 14px; }
+.encabezado-pago .subtitulo-seccion { margin: 0; }
+.tabla-pagos { overflow-x: auto; }
+.tabla-pagos table { min-width: 430px; }
+.etiqueta-pago-movil { display: none; }
+.acciones-pago .ui-button, .tabla-pagos .ui-button { min-height: 44px; }
+.tabla-pagos:focus-visible, .acciones-pago .ui-button:focus-visible {
+    outline: 2px solid var(--verde);
+    outline-offset: 2px;
+}
 
 /* ---------- página pública ---------- */
 .hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: center; padding: 24px 0 40px; }
@@ -135,6 +159,9 @@ a { color: var(--verde); }
 .tarjeta-acceso h1 { font-size: 22px; margin: 0; text-align: center; }
 .acceso-logo { width: 56px; height: 56px; align-self: center; }
 .tarjeta-acceso input { width: 100%; }
+.acceso-enlace { display: inline-block; align-self: center; padding: 8px 0; color: var(--verde-oscuro); }
+.acceso-accion.ui-button { min-height: 44px; }
+.form-restablecer { display: flex; flex-direction: column; gap: 14px; }
 .nota { font-size: 12px; color: var(--texto-suave); text-align: center; margin: 0; }
 
 /* ---------- expediente clínico (HU-06, HU-07, HU-08, HU-10) ---------- */
@@ -209,6 +236,7 @@ a { color: var(--verde); }
 .comparativo-valores { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .comparativo-valores strong { font-size: 20px; color: var(--texto); }
 .comparativo-ant { font-size: 12px; color: var(--texto-suave); }
+.comparativo-objetivo { display: block; margin-bottom: 12px; color: var(--verde-oscuro); font-weight: 600; }
 
 .filtro-fechas { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .adjuntos-filtro { margin-bottom: 12px; }
@@ -252,9 +280,27 @@ a { color: var(--verde); }
 @media (max-width: 860px) {
     .hero, .servicios, .rejilla, .rejilla-cuatro, .comparativo-grid { grid-template-columns: 1fr; }
     .graficas-grid { grid-template-columns: minmax(0, 1fr); }
-    .indicadores { grid-template-columns: 1fr 1fr; }
+    .indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .filtros-pago { grid-template-columns: 1fr; }
     #cuerpo { flex-direction: column; }
     #menu { width: auto; border-right: 0; border-bottom: 1px solid var(--borde); padding: 8px; }
     .menu-lateral { flex-direction: row; overflow-x: auto; }
     .hero h1 { font-size: 30px; }
+}
+
+@media (max-width: 560px) {
+    .lista-cobros table { min-width: 0; }
+    .lista-cobros thead {
+        position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+    }
+    .lista-cobros tbody, .lista-cobros table { display: block; }
+    .lista-cobros tbody tr {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px;
+        padding: 12px; border: 1px solid var(--borde); border-radius: var(--radio); margin-bottom: 10px;
+    }
+    .lista-cobros tbody td { border: 0; padding: 0; }
+    .lista-cobros .cobro-paciente, .lista-cobros .ui-datatable-empty-message td { grid-column: 1 / -1; }
+    .lista-cobros .cobro-paciente { font-weight: 600; overflow-wrap: anywhere; }
+    .lista-cobros .etiqueta-pago-movil { display: block; color: var(--texto-suave); font-size: 13px; margin-bottom: 4px; }
+    .lista-cobros .ui-button { max-width: 100%; }
 }

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/plantillas/plantillamenu.xhtml">
+
+    <ui:define name="titulo">Pagos pendientes</ui:define>
+    <ui:define name="content">
+        <div class="encabezado-pagina">
+            <div>
+                <h1>Pagos pendientes</h1>
+                <p class="texto-ayuda">Consulta y liquida los cobros de consultas cerradas.</p>
+            </div>
+        </div>
+
+        <h:form id="frmPagos">
+            <div class="tarjeta">
+                <p:messages id="mensajes" />
+                <h:panelGroup id="filtros" layout="block" styleClass="filtros-pago">
+                    <div class="campo">
+                        <p:outputLabel for="paciente" value="Paciente" />
+                        <p:inputText id="paciente" value="#{pagosBean.paciente}" maxlength="120" />
+                    </div>
+                    <div class="campo">
+                        <h:outputLabel for="desde" value="Consulta desde" />
+                        <h:inputText id="desde" value="#{pagosBean.desde}" pt:type="date" styleClass="ui-inputfield ui-state-default ui-corner-all">
+                            <f:convertDateTime pattern="yyyy-MM-dd" />
+                        </h:inputText>
+                    </div>
+                    <div class="campo">
+                        <h:outputLabel for="hasta" value="Consulta hasta" />
+                        <h:inputText id="hasta" value="#{pagosBean.hasta}" pt:type="date" styleClass="ui-inputfield ui-state-default ui-corner-all">
+                            <f:convertDateTime pattern="yyyy-MM-dd" />
+                        </h:inputText>
+                    </div>
+                </h:panelGroup>
+                <div class="acciones-pago">
+                    <p:commandButton value="Filtrar" icon="ui-icon-search" action="#{pagosBean.filtrar}" styleClass="btn-primario"
+                                     process="@this filtros" update="mensajes resultados :growl" />
+                    <p:commandButton value="Limpiar filtros" action="#{pagosBean.limpiar}" process="@this"
+                                     update="filtros mensajes resultados" resetValues="true" styleClass="btn-secundario" />
+                </div>
+            </div>
+
+            <div class="tarjeta">
+                <div class="encabezado-pago">
+                    <h2 class="subtitulo-seccion">Cobros por liquidar</h2>
+                    <div class="campo">
+                        <p:outputLabel for="metodo" value="Método para registrar el pago" />
+                        <p:selectOneMenu id="metodo" value="#{pagosBean.metodo}" required="true">
+                            <f:selectItems value="#{catalogosBean.metodosPago}" var="m"
+                                           itemLabel="#{m.etiqueta}" itemValue="#{m}" />
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <h:panelGroup id="resultados" layout="block">
+                    <p class="texto-ayuda" role="status">#{pagosBean.pendientes.size()} cobros encontrados</p>
+                    <div class="tabla-pagos" role="region" aria-label="Cobros pendientes por paciente" tabindex="0">
+                        <p:dataTable id="tabla" value="#{pagosBean.pendientes}" var="pago" rows="8" styleClass="lista-cobros"
+                                     paginator="true" paginatorAlwaysVisible="false"
+                                     emptyMessage="No hay cobros pendientes con estos filtros.">
+                            <p:column headerText="Paciente" styleClass="cobro-paciente">
+                                <h:outputText value="#{pago.nombrePaciente}" />
+                            </p:column>
+                            <p:column headerText="Fecha de consulta">
+                                <span class="etiqueta-pago-movil" aria-hidden="true">Consulta</span>
+                                <h:outputText value="#{pago.fecha}"><f:convertDateTime pattern="dd/MM/yyyy" /></h:outputText>
+                            </p:column>
+                            <p:column headerText="Monto de consulta">
+                                <span class="etiqueta-pago-movil" aria-hidden="true">Monto</span>
+                                <h:outputText value="#{pago.monto}">
+                                    <f:convertNumber type="currency" currencySymbol="$" locale="es_MX" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Estado">
+                                <span class="badge badge-alerta">#{pago.estado.etiqueta}</span>
+                            </p:column>
+                            <p:column headerText="Registrar">
+                                <p:commandButton value="Liquidar" icon="ui-icon-check" action="#{pagosBean.liquidar}"
+                                                 process="@this :frmPagos:metodo" update=":frmPagos:resultados :growl">
+                                    <f:param name="consultaCobro" value="#{pago.id}" />
+                                    <p:confirm header="Registrar pago" message="¿Confirmas que el pago de #{pago.nombrePaciente} quedó liquidado?" />
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                </h:panelGroup>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>

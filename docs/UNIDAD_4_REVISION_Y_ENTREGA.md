@@ -303,21 +303,21 @@ En servicios también hay reglas de citas (9:00-19:00, no domingo, duración 15-
 
 ## 7. Trazabilidad de historias y pendientes
 
-Matriz actualizada el 26-11-2026. De las 44 historias, **18 están probadas en local, 10 parciales y 16 pendientes**. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. El README conserva los criterios de aceptación.
+Matriz actualizada el 26-11-2026. De las 44 historias, **24 están probadas en local, 7 parciales y 13 pendientes**. Las secciones de modelo y guion base documentan el recorrido del 15 al 16 de noviembre. El README conserva los criterios de aceptación.
 
 | Historias | Estado local | Evidencia y criterios pendientes |
 |---|---|---|
 | HU-01 | Probada en local | Dos consultorios ficticios creados con credenciales independientes. Se verificó que la lista de sedes con reservación pública muestra ambas al guardar y tras recargar Administración. |
 | HU-02 | Probada en local | Edge comprobó acceso, cierre de sesión, bloqueo y desbloqueo. En la espera real se aceptaron 59 sondeos automáticos y Edge volvió a `/acceso.xhtml` a los 1800,20 segundos. La vista privada respondió HTTP 302 y la misma cuenta pudo iniciar sesión de nuevo. |
 | HU-03 | Probada en local | Administración creó, editó y desactivó una cuenta ficticia de recepción. El correo editado funcionó con la contraseña anterior. Recepción pudo operar la agenda y recibió una redirección al intentar abrir el expediente y el cálculo dietético. La desactivación revocó la sesión abierta y bloqueó el nuevo acceso. |
-| HU-04 | Pendiente | Recuperación de contraseña por correo. |
+| HU-04 | Probada en local | Edge y un buzón SMTP ficticio verificaron el enlace de 30 minutos, el rechazo al vencer y al repetir su uso, la longitud mínima, la confirmación, la revocación de la sesión anterior y la entrada con la nueva contraseña. La entrega externa requiere configurar correo y URL de la instancia. |
 | HU-05 | Parcial | Listas, expedientes, agenda, horarios, descargas, ocupaciones y avisos de consulta mantienen el ámbito por consultorio. Correo y teléfono son únicos dentro de cada consultorio. Queda verificar el mismo ámbito en los módulos pendientes. |
 | HU-06 | Probada en local | Nutrición creó un expediente. Se rechazó el alta sin nombre, nacimiento, correo y teléfono. Los antecedentes heredofamiliares y los personales patológicos y no patológicos persistieron al iniciar una nueva sesión. La edición de nombre y teléfono conserva los antecedentes guardados. |
 | HU-07 | Parcial | La selección del catálogo y el texto libre persisten al recargar el expediente. Queda usar el catálogo en la validación de planes. |
 | HU-08 | Probada en local | El IMC se recalculó en pantalla al cambiar el peso. Se rechazaron entradas por debajo y por encima del rango configurado para peso, talla, grasa, masa muscular, grasa visceral y agua. Una nueva sesión confirmó que los intentos inválidos dejaron el historial vacío. Las seis mediciones válidas y el IMC se recuperaron en la consulta fechada. |
 | HU-09 | Probada en local | Cuatro gráficas visibles, dos consultas del mismo día representadas y filtro por fechas aplicado y limpiado en Edge. |
 | HU-10 | Parcial | Se guardó un texto distinto en cada uno de los siete apartados. Los siete reaparecieron al abrir el borrador y quedaron en solo lectura al reabrir la consulta cerrada. Queda confirmar con el consultorio el contenido de los apartados. |
-| HU-11 | Parcial | Diferencia numérica y porcentual entre las últimas dos consultas. Pendiente relacionar la valoración de cambios con el objetivo del tratamiento. |
+| HU-11 | Probada en local | Nueve indicadores con valor previo y cambio numérico y porcentual. Con datos ficticios, el último plan resaltó el sentido del cambio en peso para pérdida y mantenimiento y en músculo para ganancia. |
 | HU-12 | Probada en local | Carga y descarga de PDF, JPG y PNG hasta 10 MB, con fecha de carga. Se comprobó rechazo por tamaño y firma incorrecta, y acceso limitado por rol y consultorio. |
 | HU-13 | Probada en local | Laboratorio, Estudio y Fotografía de progreso se asignan al subir. La tabla filtra cada categoría. |
 | HU-14 | Probada en local | Línea de tiempo por fecha de la foto y comparación lado a lado de dos fechas distintas. |
@@ -333,9 +333,11 @@ Matriz actualizada el 26-11-2026. De las 44 historias, **18 están probadas en l
 | HU-24 | Probada en local | Edge verificó los porcentajes y gramos para los tres objetivos, el recálculo al pegar valores y salir del campo, y la persistencia tras recargar. El formulario y la fachada rechazan campos omitidos, porcentajes fuera de 0 a 100 y distribuciones que no suman 100. En Edge los intentos inválidos dejaron intacto el plan válido. |
 | HU-25, HU-26, HU-27, HU-28, HU-29 | Pendientes | Sin generación/validación/aprobación de planes IA-SMAE. El texto de plan de una muestra no es generación. |
 | HU-30, HU-31, HU-32, HU-33, HU-34, HU-35, HU-36 | Pendientes | Canal de WhatsApp, apartados, recordatorios de pacientes y derivación de conversaciones. |
-| HU-37 | Parcial | Panel con pacientes, próximas citas y contadores de citas por atender y completadas. Se refresca al volver a la vista o pulsar Actualizar panel. Queda implementar pacientes activos según el periodo configurable. |
-| HU-38 | Parcial | Suma importes PAGADO de consultas del mes; no entidad Pago ni comparación con mes anterior. |
-| HU-39, HU-40, HU-41 | Pendientes | Sin listado de pendientes, bandeja WhatsApp o adherencia. |
+| HU-37 | Probada en local | Panel de citas de hoy y pacientes distintos con consulta atendida en el periodo configurable. Edge comprobó el cambio de 60 a 7 días, la persistencia tras recargar y el sondeo de la vista visible. |
+| HU-38 | Probada en local | Ingresos por consultorio con comparación porcentual del mes anterior. Una consulta previa liquidada durante la prueba se sumó al mes de liquidación. Los registros históricos sin esa fecha conservan la del servicio. |
+| HU-39 | Probada en local | Recepción consultó los cobros pendientes de su sede, filtró por nombre y por fechas inclusivas y eligió el método al liquidar. La fila pagada salió del listado y la consulta permaneció cerrada. |
+| HU-40 | Pendiente | Bandeja de conversaciones de WhatsApp con orden de espera y acción de atención. |
+| HU-41 | Probada en local | El panel estima la asistencia por paciente a partir de citas pasadas completadas y ausencias registradas durante el periodo configurado. Edge comprobó 50% resaltado, exclusión de cancelaciones y estado vacío en otra sede. |
 | HU-42 | Probada en local | Código de portal propio en el expediente. La confirmación pública entrega el código de la cita. |
 | HU-43 | Probada en local | Próxima cita con ubicación, confirmación y cancelación visibles desde agenda. El portal abierto vuelve a consultar su estado con Actualizar portal. |
 | HU-44 | Probada en local | Mediciones cerradas y gráficas de peso e IMC en el portal a 390 px y en el PDF de impresión de una página. Borradores, notas y planes internos quedan reservados al expediente. |
@@ -344,9 +346,14 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 
 ### Orden recomendado de continuación
 
-1. Confirmar con el consultorio los siete apartados de la nota (HU-10) y revisar con el nutriólogo los coeficientes, factores y rangos del cálculo (HU-22).
-2. Validar el vínculo de Calendar (HU-16 y HU-19) y la entrega de confirmaciones (HU-21) con cuentas autorizadas.
-3. Actualizar el guion académico conforme se comprueben los flujos restantes.
+1. Confirmar los siete apartados de la nota con el consultorio (HU-10) y revisar con el nutriólogo los coeficientes, factores y rangos del cálculo (HU-22).
+2. Incorporar el catálogo SMAE autorizado por el consultorio y probar el borrador, las restricciones y la aprobación (HU-07 y HU-25 a HU-29).
+3. Validar Calendar y correo o WhatsApp con cuentas autorizadas. Verificar la atención y la bandeja de conversaciones al incorporar el asistente (HU-16, HU-19, HU-21, HU-30 a HU-36 y HU-40).
+
+### Revisión con el consultorio
+
+- **HU-10.** Abrir una nota ficticia y revisar el nombre, orden y contenido esperado de cada apartado. Registrar qué campos considera obligatorios el consultorio y confirmar la nota cerrada de solo lectura.
+- **HU-22.** Revisar con el nutriólogo la referencia de las cinco fórmulas, sus coeficientes, las poblaciones aplicables y los factores de actividad del README. Acordar cómo tratar las mediciones faltantes y validar los resultados con casos ficticios aprobados por el consultorio.
 
 ## 8. Guion para demostrar el avance (10-15 minutos)
 
@@ -360,6 +367,15 @@ Historias técnicas: HT-03, HT-04 y HT-08 tienen avances de arquitectura/modelo 
 8. Mostrar el duplicado rechazado y Cancelar/Nuevo sin valores antiguos. Relacionarlo con las alternativas del modelo de comportamiento.
 9. Pulsar Eliminar del registro ficticio: No conserva, Sí elimina. Verificar que desaparece. No borrar muestras ajenas ni registros reales.
 10. Cerrar con la matriz de historias. Mostrar los recorridos verificados de agenda, gráficas y portal. La generación de planes con IA y el asistente conversacional de WhatsApp siguen pendientes.
+
+### Guía breve por perfil
+
+| Perfil | Recorrido en NutriVida |
+|---|---|
+| Administración | En **Administración**, crea o edita las cuentas de tu consultorio. En **Horarios**, guarda los horarios y el periodo para pacientes activos. Revisa el resultado en **Inicio**. |
+| Nutrición | En **Pacientes**, abre el expediente, registra las mediciones y cierra la consulta. Guarda el objetivo en **Cálculo dietético** y revisa el cambio en **Evolución y gráficas**. |
+| Recepción | En **Agenda**, confirma, reprograma o cancela citas. En **Pagos**, filtra por nombre y fecha de consulta. Elige el método y confirma **Liquidar** cuando se haya recibido el pago. |
+| Paciente | En el enlace público del consultorio, elige un horario y guarda el código de cita. Usa el código de portal que entrega el consultorio para confirmar o cancelar la próxima cita, consultar las gráficas e imprimir el resumen. |
 
 ## 9. Ejecución y evidencia
 
